@@ -25,7 +25,7 @@ pl2Model *pl2ModelLoad(const char *name)
 		t->hsize = READUINT16(data);
 		t->vsize = READUINT16(data);
 		uint32_t size = t->hsize * t->vsize;
-		t->pixels = calloc(4, size);
+		t->pixels = malloc(4 * size);
 		READSTRING(size, t->pixels, data);
 	}
 	
@@ -36,10 +36,13 @@ pl2Model *pl2ModelLoad(const char *name)
 	for(i = 0; i < model->nmaterials; i++)
 	{
 		pl2Material *m = model->materials + i;
+		/*
 		m->ambient .r = READFLOAT(data);
 		m->ambient .g = READFLOAT(data);
 		m->ambient .b = READFLOAT(data);
 		m->ambient .a = READFLOAT(data);
+		*/
+		READCOLOR4(&m->ambient, data);
 		m->diffuse .r = READFLOAT(data);
 		m->diffuse .g = READFLOAT(data);
 		m->diffuse .b = READFLOAT(data);
@@ -92,5 +95,7 @@ pl2Model *pl2ModelLoad(const char *name)
 			READTEXCOORD2(&(o->vertices[j].texcoord), data);
 		}
 	}
+	
+	return model;
 }
 

@@ -397,9 +397,9 @@ void pl2LayerDraw(pl2Layer *layer);
 #define READUINT16(p) (*(uint16_t*)(p)++)
 #define READUINT32(p) (*(uint32_t*)(p)++)
 
-#define READSTRING(n,o,p) { memcpy((o),(p),(n)); (uint8_t*)(p) += (n); }
+#define READSTRING(n,o,p) { memcpy(o, p, n); p = (uint8_t*)(p) + n; }
+#define READFLOAT(p)  (*(float*)(p)++)
 
-#define READFLOAT(p)  (*((float*)(p))++)
 #define READTEXCOORD2(T,p) { \
 	ftexcoord2_t *t = (ftexcoord2_t*)(T); \
 	t->u = READFLOAT(p); \
