@@ -4,11 +4,15 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <malloc.h>
+#include <string.h>
 #include <sys/param.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/******************************************************************************/
 
 #define PL2_MAX_CHARPARTS 16
 #define PL2_MAX_MENUITEMS 8
@@ -47,6 +51,8 @@ enum pl2SoundChannel
 	PL2_CHAN_BGSOUND,
 	PL2_CHAN_MUSIC,
 };
+
+/******************************************************************************/
 
 typedef struct
 {
@@ -89,6 +95,8 @@ typedef struct
 __attribute__((packed))
 fcolor4_t;
 
+/******************************************************************************/
+
 typedef struct
 {
 	uint32_t reserved[4];
@@ -125,6 +133,8 @@ typedef struct
 }
 pl2PackageFile;
 
+/******************************************************************************/
+
 typedef struct
 {
 	uint32_t magic;
@@ -138,6 +148,8 @@ typedef struct
 }
 __attribute__((packed))
 pl2Sequence;
+
+/******************************************************************************/
 
 typedef struct
 {
@@ -167,8 +179,8 @@ pl2Material;
 typedef struct
 {
 	fvector3_t vertex;
-	float weight[3];
-	uint8_t bone[4];
+	float weights[3];
+	uint8_t bones[4];
 	fvector3_t normal;
 	uint32_t color;
 	ftexcoord2_t texcoord;
@@ -202,7 +214,7 @@ typedef struct
 {
 	char name[32];
 	fmatrix4_t transform;
-	uint32_t nvertices;
+	uint32_t ntriangles;
 	uint32_t reserved;
 	uint32_t nmaterials;
 	pl2ObjMtl *materials;
@@ -235,6 +247,8 @@ typedef struct
 }
 __attribute__((packed))
 pl2Model;
+
+/******************************************************************************/
 
 typedef struct
 {
@@ -294,8 +308,7 @@ pl2Layer;
 
 typedef struct
 {
-	uint16_t text[63];
-	bool enabled;
+	uint16_t text[64];
 }
 pl2MenuItem;
 
@@ -305,6 +318,128 @@ typedef struct
 	pl2MenuItem items[PL2_MAX_MENUITEMS];
 }
 pl2Menu;
+
+/******************************************************************************/
+
+int pl2GetErrorCode();
+const char *pl2GetErrorMessage(int code);
+void pl2ClearError();
+
+/******************************************************************************/
+
+/**
+ * Builds an index of PL2 packages in the `add-ons' directory.
+ */
+int pl2PackageBuildIndex();
+void pl2PackageClearIndex();
+pl2PackageFile *pl2PackageGetFile(const char *name);
+
+pl2Package *pl2PackageOpen(const char *filename);
+int pl2PackageReopen(pl2Package *package);
+void pl2PackageClose(pl2Package *package);
+void pl2PackageFree(pl2Package *package);
+
+pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name);
+void pl2PackageFileFree(pl2PackageFile *file);
+
+/******************************************************************************/
+
+pl2Sequence *pl2SequenceLoad(const char *name);
+void pl2SequenceFree(pl2Sequence *sequence);
+
+/******************************************************************************/
+
+pl2Model *pl2ModelLoad(const char *name);
+void pl2ModelFree(pl2Model *model);
+
+/******************************************************************************/
+
+pl2CameraPath *pl2CameraPathLoad(const char *name);
+void pl2CameraPathFree(pl2CameraPath *path);
+
+/******************************************************************************/
+
+void pl2CharacterSetSequence(pl2Character *character, pl2Sequence *sequence);
+void pl2CharacterUpdate(pl2Character *character, float dt);
+void pl2CharacterDraw(pl2Character *character);
+
+/******************************************************************************/
+
+void pl2CameraSetPath(pl2Camera *camera, pl2CameraPath *path);
+void pl2CameraUpdate(pl2Camera *camera, float dt);
+void pl2CameraDraw(pl2Camera *camera);
+void pl2CameraRotate1P(pl2Camera *camera, float angle, const fvector3_t *axis);
+void pl2CameraRotate3P(pl2Camera *camera, float angle, const fvector3_t *axis);
+
+/******************************************************************************/
+
+void pl2MenuClear(pl2Menu *menu);
+void pl2MenuAddItem(pl2Menu *menu, const char *item);
+void pl2MenuDraw(pl2Menu *menu);
+
+/******************************************************************************/
+
+void pl2LayerFade(pl2Layer *layer, float target, float length);
+void pl2LayerUpdate(pl2Layer *layer, float dt);
+void pl2LayerDraw(pl2Layer *layer);
+
+/******************************************************************************/
+
+#define NEWARRAY(n,t) ((t*)calloc(sizeof(t),(n)))
+#define NEW(t)        ((t*)calloc(sizeof(t),1))
+#define NEWVAR(t,x)   ((t*)calloc(sizeof(t)+(x),1))
+
+/******************************************************************************/
+
+/* TODO: make these endian-portable */
+
+#define READUINT8(p)  (*(uint8_t *)(p)++)
+#define READUINT16(p) (*(uint16_t*)(p)++)
+#define READUINT32(p) (*(uint32_t*)(p)++)
+
+#define READSTRING(n,o,p) { memcpy((o),(p),(n)); (uint8_t*)(p) += (n); }
+
+#define READFLOAT(p)  (*((float*)(p))++)
+#define READTEXCOORD2(T,p) { \
+	ftexcoord2_t *t = (ftexcoord2_t*)(T); \
+	t->u = READFLOAT(p); \
+	t->v = READFLOAT(p); \
+	}
+#define READVECTOR3(V,p) { \
+	fvector3_t *v = (fvector3_t*)(V); \
+	v->x = READFLOAT(p); \
+	v->y = READFLOAT(p); \
+	v->z = READFLOAT(p); \
+	}
+#define READVECTOR4(V,p) { \
+	fvector4_t *v = (fvector4_t*)(V); \
+	v->x = READFLOAT(p); \
+	v->y = READFLOAT(p); \
+	v->z = READFLOAT(p); \
+	v->w = READFLOAT(p); \
+	}
+#define READMATRIX3(M,p) { \
+	fmatrix3_t *m = (fmatrix3_t*)(M); \
+	READVECTOR3(&(m->x), p); \
+	READVECTOR3(&(m->y), p); \
+	READVECTOR3(&(m->z), p); \
+	}
+#define READMATRIX4(M,p) { \
+	fmatrix4_t *m = (fmatrix4_t*)(M); \
+	READVECTOR4(&(m->x), p); \
+	READVECTOR4(&(m->y), p); \
+	READVECTOR4(&(m->z), p); \
+	READVECTOR4(&(m->w), p); \
+	}
+#define READCOLOR4(C,p) { \
+	fcolor4_t *c = (fcolor4_t*)(C); \
+	c->r = READFLOAT(p); \
+	c->g = READFLOAT(p); \
+	c->b = READFLOAT(p); \
+	c->a = READFLOAT(p); \
+	}
+
+/******************************************************************************/
 
 #ifdef __cplusplus
 };
