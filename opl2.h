@@ -23,6 +23,11 @@ extern "C" {
 #define PL2_MAX_CHARPARTS 16
 #define PL2_MAX_MENUITEMS 8
 
+#define PL2_MAX_CHARS 4
+#define PL2_MAX_LIGHTS 4
+#define PL2_MAX_CAMERAS 2
+#define PL2_MAX_LAYERS 2
+
 enum pl2ErrorCode
 {
     PL2_ERR_NONE     =    0,
@@ -154,7 +159,7 @@ typedef struct
     fmatrix3_t *unknown;
 }
 __attribute__((packed))
-pl2Sequence;
+pl2Anim;
 
 /******************************************************************************/
 
@@ -264,7 +269,7 @@ pl2Light;
 typedef struct
 {
     fvector3_t eye;
-    fvector3_t center;
+    fvector3_t focus;
     float fov;
 }
 pl2CameraFrame;
@@ -279,10 +284,11 @@ pl2CameraPath;
 typedef struct
 {
     fvector3_t eye;
-    fvector3_t center;
+    fvector3_t focus;
     fvector3_t up;
     float fov;
-    bool loop, locked;
+    bool loop;
+    bool locked;
     pl2CameraPath *path;
     float time;
 }
@@ -291,7 +297,7 @@ pl2Camera;
 typedef struct
 {
     pl2Model *models[PL2_MAX_CHARPARTS];
-    pl2Sequence *sequence;
+    pl2Anim *anim;
     uint32_t frame;
     float time;
     bool visible;
@@ -369,8 +375,8 @@ void pl2PackageFileFree(pl2PackageFile *file);
 
 /******************************************************************************/
 
-pl2Sequence *pl2SequenceLoad(const char *name);
-void pl2SequenceFree(pl2Sequence *sequence);
+pl2Anim *pl2AnimLoad(const char *name);
+void pl2AnimFree(pl2Anim *anim);
 
 /******************************************************************************/
 
@@ -384,7 +390,7 @@ void pl2CameraPathFree(pl2CameraPath *path);
 
 /******************************************************************************/
 
-void pl2CharacterSetSequence(pl2Character *character, pl2Sequence *sequence);
+void pl2CharacterSetanim(pl2Character *character, pl2Anim *anim);
 void pl2CharacterUpdate(pl2Character *character, float dt);
 void pl2CharacterDraw(pl2Character *character);
 

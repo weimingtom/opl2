@@ -5,7 +5,10 @@ pl2Model *pl2ModelLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
-    pl2PackageFile *file = pl2PackageGetFile(name);
+    char temp[FILENAME_MAX];
+    snprintf(temp, sizeof(temp), "%s.tmb", name);
+
+    pl2PackageFile *file = pl2PackageGetFile(temp);
 
     if(NULL == file)
     {
@@ -75,6 +78,18 @@ pl2Model *pl2ModelLoad(const char *name)
         }
 
         READSTRING(size, t->pixels, data);
+
+        uint32_t *pixels = (uint32_t*)(t->pixels);
+
+        int j, k = t->width * t->height;
+
+        for(j = 0; j < k; j++)
+        {
+            pixels[j] =
+                ((pixels[j] & 0x000000ff) << 16) |
+                ((pixels[j] & 0x00ff0000) >> 16) |
+                ((pixels[j] & 0xff00ff00));
+        }
     }
 
     model->numMaterials = READUINT32(data);

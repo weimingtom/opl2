@@ -34,6 +34,14 @@ extern int pl2_error;
 #define PL2_CLEAR_ERROR() (pl2_error=PL2_ERR_NONE)
 #define PL2_ERROR(err) ({PL2_SET_ERROR((err));return 0;})
 
+extern int pl2_screen_width, pl2_screen_height;
+extern float pl2_screen_aspect, pl2_screen_scale;
+
+extern pl2Character pl2_chars[PL2_MAX_CHARS];
+extern pl2Light pl2_lights[PL2_MAX_LIGHTS];
+extern pl2Camera pl2_cameras[PL2_MAX_CAMERAS];
+extern pl2Layer pl2_layers[PL2_MAX_LAYERS];
+
 /******************************************************************************/
 
 /* TODO: make these endian-portable */

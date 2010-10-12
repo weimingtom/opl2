@@ -1,11 +1,14 @@
 #include "opl2.h"
 #include "opl2_int.h"
 
-pl2Sequence *pl2SequenceLoad(const char *name)
+pl2Anim *pl2AnimLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
-    pl2PackageFile *file = pl2PackageGetFile(name);
+    char temp[FILENAME_MAX];
+    snprintf(temp, sizeof(temp), "%s.tsb", name);
+
+    pl2PackageFile *file = pl2PackageGetFile(temp);
 
     if(NULL == file)
     {
@@ -21,70 +24,70 @@ pl2Sequence *pl2SequenceLoad(const char *name)
         PL2_ERROR(PL2_ERR_INTERNAL);
     }
 
-    pl2Sequence *sequence = NEW(pl2Sequence);
+    pl2Anim *anim = NEW(pl2Anim);
 
-    if (!sequence)
+    if (!anim)
     {
         pl2PackageFileFree(file);
-        pl2SequenceFree(sequence);
+        pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
 
-    sequence->magic = READUINT32(data);
+    anim->magic = READUINT32(data);
 
-    if (sequence->magic != PL2_TSB_MAGIC)
+    if (anim->magic != PL2_TSB_MAGIC)
     {
         DEBUGPRINT("%s: magic != TSB_MAGIC\n", __func__);
         pl2PackageFileFree(file);
-        pl2SequenceFree(sequence);
+        pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
 
-    sequence->reserved[0] = READUINT32(data);
-    sequence->reserved[1] = READUINT32(data);
-    sequence->reserved[2] = READUINT32(data);
+    anim->reserved[0] = READUINT32(data);
+    anim->reserved[1] = READUINT32(data);
+    anim->reserved[2] = READUINT32(data);
 
-    sequence->numBones   = READUINT32(data);
-    sequence->numFrames  = READUINT32(data);
-    sequence->loopFrame  = READUINT32(data);
-    sequence->numUnknown = READUINT32(data);
+    anim->numBones   = READUINT32(data);
+    anim->numFrames  = READUINT32(data);
+    anim->loopFrame  = READUINT32(data);
+    anim->numUnknown = READUINT32(data);
 
-    sequence->bones = NEWARR(sequence->numFrames * sequence->numBones, fmatrix4_t);
+    anim->bones = NEWARR(anim->numFrames * anim->numBones, fmatrix4_t);
 
-    if (!sequence->bones)
+    if (!anim->bones)
     {
         pl2PackageFileFree(file);
-        pl2SequenceFree(sequence);
+        pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
 
     int i, j, k = 0;
-    for(i = 0; i < sequence->numFrames; i++)
+    for(i = 0; i < anim->numFrames; i++)
     {
-        for(j = 0; j < sequence->numBones; j++)
+        for(j = 0; j < anim->numBones; j++)
         {
-            READMATRIX4(sequence->bones[k], data);
+            READMATRIX4(anim->bones[k], data);
             k++;
         }
     }
 
     pl2PackageFileFree(file);
-    return sequence;
+    return anim;
 }
 
-void pl2SequenceFree(pl2Sequence *sequence)
+void pl2AnimFree(pl2Anim *anim)
 {
-    if(sequence)
+    if(anim)
     {
-        if(sequence->bones)
+        if(anim->bones)
         {
-            DELETE(sequence->bones);
+            DELETE(anim->bones);
         }
-        if(sequence->unknown)
+        if(anim->unknown)
         {
-            DELETE(sequence->unknown);
+            DELETE(anim->unknown);
         }
 
-        DELETE(sequence);
+        DELETE(anim);
     }
 }
