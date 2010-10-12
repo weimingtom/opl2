@@ -416,7 +416,7 @@ static int l_pl2Camera_setPath(lua_State *L)
     cam->time = 0;
     cam->loop = loop;
 
-    DEBUGPRINT("%s: cam == %p, cam->path == %p\n", __func__, cam, cam->path);
+    //DEBUGPRINT("%s: cam == %p, cam->path == %p\n", __func__, cam, cam->path);
 
     return 0;
 }

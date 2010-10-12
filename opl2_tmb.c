@@ -46,7 +46,7 @@ pl2Model *pl2ModelLoad(const char *name)
 
     model->numTextures = READUINT32(data);
 
-    DEBUGPRINT("%s: numTextures == %d\n", __func__, model->numTextures);
+    //DEBUGPRINT("%s: numTextures == %d\n", __func__, model->numTextures);
 
     //DEBUGPRINT("%s: allocating %d textures == %d bytes for model->textures\n",
     //           __func__, model->numTextures, ARRSIZE(model->numTextures, pl2Texture));
@@ -95,7 +95,7 @@ pl2Model *pl2ModelLoad(const char *name)
 
     model->numMaterials = READUINT32(data);
 
-    DEBUGPRINT("%s: numMaterials == %d\n", __func__, model->numMaterials);
+    //DEBUGPRINT("%s: numMaterials == %d\n", __func__, model->numMaterials);
 
     //DEBUGPRINT("%s: allocating %d bytes for model->materials\n",
     //           __func__, ARRSIZE(model->numMaterials, pl2Material));
@@ -118,14 +118,14 @@ pl2Model *pl2ModelLoad(const char *name)
         READCOLOR4(m->emissive, data);
         m->shininess = READFLOAT(data);
 
-        //m->ambient.a = m->diffuse.a = m->specular.a = 1.0f;
+        m->ambient.a = m->diffuse.a = m->specular.a = 1.0f;
 
-		DEBUGPRINT("%s: Material %d\n", __func__, i);
-        DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
-        DEBUGPRINT("%s: m->diffuse  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->diffuse .r, m->diffuse .g, m->diffuse .b, m->diffuse .a);
-        DEBUGPRINT("%s: m->specular == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->specular.r, m->specular.g, m->specular.b, m->specular.a);
-        DEBUGPRINT("%s: m->emissive == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->emissive.r, m->emissive.g, m->emissive.b, m->emissive.a);
-        DEBUGPRINT("%s: m->shininess == %.3f\n", __func__, m->shininess);
+        //DEBUGPRINT("%s: Material %d\n", __func__, i);
+        //DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
+        //DEBUGPRINT("%s: m->diffuse  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->diffuse .r, m->diffuse .g, m->diffuse .b, m->diffuse .a);
+        //DEBUGPRINT("%s: m->specular == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->specular.r, m->specular.g, m->specular.b, m->specular.a);
+        //DEBUGPRINT("%s: m->emissive == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->emissive.r, m->emissive.g, m->emissive.b, m->emissive.a);
+        //DEBUGPRINT("%s: m->shininess == %.3f\n", __func__, m->shininess);
 
         uint32_t texid = READUINT32(data);
         m->texture = (texid < model->numTextures) ? &(model->textures[texid]) : NULL;
@@ -135,7 +135,7 @@ pl2Model *pl2ModelLoad(const char *name)
 
     model->numObjects = READUINT32(data);
 
-    DEBUGPRINT("%s: numObjects == %d\n", __func__, model->numObjects);
+    //DEBUGPRINT("%s: numObjects == %d\n", __func__, model->numObjects);
 
     model->objects = NEWARR(model->numObjects, pl2Object);
 
@@ -211,7 +211,7 @@ pl2Model *pl2ModelLoad(const char *name)
 
     model->numBones = READUINT32(data);
 
-    DEBUGPRINT("%s: numBones == %d\n", __func__, model->numBones);
+    //DEBUGPRINT("%s: numBones == %d\n", __func__, model->numBones);
 
     model->bones = NEWARR(model->numBones, fmatrix4_t);
 

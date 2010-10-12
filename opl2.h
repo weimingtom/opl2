@@ -402,8 +402,8 @@ void pl2CharacterDraw(pl2Character *character);
 void pl2CameraSetPath(pl2Camera *camera, pl2CameraPath *path);
 void pl2CameraUpdate(pl2Camera *camera, float dt);
 void pl2CameraDraw(pl2Camera *camera);
-void pl2CameraRotate1P(pl2Camera *camera, const fvector3_t *rotate);
-void pl2CameraRotate3P(pl2Camera *camera, const fvector3_t *rotate);
+void pl2CameraRotate1P(pl2Camera *camera, float xr, float yr);
+void pl2CameraRotate3P(pl2Camera *camera, float xr, float yr);
 
 /******************************************************************************/
 

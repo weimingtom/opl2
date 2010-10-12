@@ -198,14 +198,16 @@ void pl2CameraUpdate(pl2Camera *cam, float dt)
     }
 }
 
-void pl2CameraRotate1P(pl2Camera *cam, const fvector3_t *rotate)
+void pl2CameraRotate1P(pl2Camera *cam, float xr, float yr)
 {
-   pl2VectorOrbit(&cam->focus, &cam->eye, &cam->up, rotate);
+    fvector3_t r = { yr, -xr, 0 };
+    pl2VectorOrbit(&cam->focus, &cam->eye, &cam->up, &r);
 }
 
-void pl2CameraRotate3P(pl2Camera *cam, const fvector3_t *rotate)
+void pl2CameraRotate3P(pl2Camera *cam, float xr, float yr)
 {
-   pl2VectorOrbit(&cam->eye, &cam->focus, &cam->up, rotate);
+    fvector3_t r = { yr, xr, 0 };
+    pl2VectorOrbit(&cam->eye, &cam->focus, &cam->up, &r);
 }
 
 void pl2CameraZoom(pl2Camera *cam, float distance)
@@ -487,12 +489,22 @@ static void pl2GlutKeyboardFunc(unsigned char k, int x, int y)
 #if !_PSP_FW_VERSION
     if(k == 13)
     {
-        glutFullScreen();
-        glutSetCursor(GLUT_CURSOR_NONE);
-        //static int gm = 0;
-        //gm = !gm;
-        //if(gm) glutEnterGameMode();
-        //else   glutLeaveGameMode();
+        //glutFullScreen();
+        //glutSetCursor(GLUT_CURSOR_NONE);
+
+        /*
+        static int gm = 0;
+        if(!gm)
+        {
+            gm = 1;
+            glutEnterGameMode();
+        }
+        else
+        {
+            gm = 0;
+            glutLeaveGameMode();
+        }
+        */
     }
     if(k == 27) exit(0);
 #endif
@@ -507,7 +519,10 @@ static void pl2GlutSpecialFunc(int k, int x, int y)
 
 enum
 {
-   MOVE_NONE, MOVE_3P, MOVE_1P, MOVE_ORTHO,
+   MOVE_NONE  = 0,
+   MOVE_3P    = 1,
+   MOVE_1P    = 2,
+   MOVE_ORTHO = 4,
 };
 
 static int move_mode = 0, mouse_x = -1, mouse_y = -1;
@@ -525,6 +540,9 @@ static void pl2GlutMouseFunc(int button, int state, int x, int y)
             case GLUT_RIGHT_BUTTON:
                move_mode |= MOVE_1P;
                break;
+            case GLUT_MIDDLE_BUTTON:
+               move_mode |= MOVE_ORTHO;
+               break;
          }
          break;
 
@@ -536,6 +554,9 @@ static void pl2GlutMouseFunc(int button, int state, int x, int y)
                break;
             case GLUT_RIGHT_BUTTON:
                move_mode &= ~MOVE_1P;
+               break;
+            case GLUT_MIDDLE_BUTTON:
+               move_mode &= ~MOVE_ORTHO;
                break;
          }
          break;
@@ -553,26 +574,35 @@ static void pl2GlutMotionFunc(int x, int y)
    float x_angle = 2.0f * M_PI * (float)dx / (float)pl2_screen_width;
    float y_angle = 2.0f * M_PI * (float)dy / (float)pl2_screen_height;
 
-   fvector3_t rotate = { y_angle, x_angle, 0 };
+   //fvector3_t rotate = { y_angle, x_angle, 0 };
 
    switch (move_mode)
    {
       case MOVE_3P:
          //printf("left dragging @ (%4d, %4d) [x_angle:%6.3f y_angle:%6.3f]\n", x, y, x_angle, y_angle);
-         pl2CameraRotate3P(&(pl2_cameras[0]), &rotate);
+         pl2CameraRotate3P(&(pl2_cameras[0]), x_angle, y_angle);
          break;
 
       case MOVE_1P:
-         pl2CameraRotate1P(&(pl2_cameras[0]), &rotate);
+         pl2CameraRotate1P(&(pl2_cameras[0]), x_angle, y_angle);
          break;
 
       case MOVE_ORTHO:
-         pl2CameraZoom(&(pl2_cameras[0]), -5.0f * (float)dy / (float)pl2_screen_height);
+         pl2CameraZoom(&(pl2_cameras[0]), 10.0f * (float)dy / (float)pl2_screen_height);
          break;
    }
 
    mouse_x = x; mouse_y = y;
 }
+
+static struct { int width, height, bpp; }
+pl2_displayModes[] =
+{
+    { 1024, 768, 32 }, { 1024, 768, 16 },
+    {  800, 600, 32 }, {  800, 600, 16 },
+    {  640, 480, 32 }, {  640, 480, 16 },
+    { 0, 0, 0 }
+};
 
 int pl2GlInit(int *argc, char *argv[])
 {
@@ -580,7 +610,56 @@ int pl2GlInit(int *argc, char *argv[])
     glutInit(argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 
-    glutCreateWindow("OPL2");
+    int windowed = 0;
+
+    int i;
+    for(i = 1; i < *argc; i++)
+    {
+        DEBUGPRINT("%s: argv[%d] == \"%s\"\n", __func__, i, argv[i]);
+
+        if(!strcmp(argv[i], "-window"))
+        {
+            windowed = 1;
+        }
+    }
+
+    do
+    {
+        if(!windowed)
+        {
+            int fullscreen = 0;
+
+            for(i = 0; pl2_displayModes[i].width && pl2_displayModes[i].height; i++)
+            {
+                char mode[32];
+                snprintf(mode, sizeof(mode),
+                         pl2_displayModes[i].bpp ? "%dx%d:%d" : "%dx%d",
+                         pl2_displayModes[i].width,
+                         pl2_displayModes[i].height,
+                         pl2_displayModes[i].bpp);
+
+                DEBUGPRINT("%s: trying fullscreen mode %s\n", __func__, mode);
+
+                glutGameModeString(mode);
+
+                if(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) && glutEnterGameMode())
+                {
+                    atexit(glutLeaveGameMode);
+                    DEBUGPRINT("%s: using fullscreen mode\n", __func__);
+                    fullscreen = 1;
+                    break;
+                }
+            }
+
+            if(fullscreen) break;
+
+            DEBUGPRINT("%s: fullscreen mode unavailable\n", __func__);
+        }
+
+        DEBUGPRINT("%s: using windowed mode\n", __func__);
+        glutCreateWindow("OPL2");
+    }
+    while(0);
 
     glutIdleFunc(pl2GlutIdleFunc);
     glutDisplayFunc(pl2GlutDisplayFunc);

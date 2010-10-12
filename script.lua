@@ -56,19 +56,22 @@ local actions = {
 
 ani:setModel(0, "ani_bodyA_00")
 
-imo:setModel(0, "imo_bodyA_02")
-imo:setModel(1, "imo_hairA_00")
-imo:setModel(2, "imo_eye_00")
+imo:setModel(0, "imo_bodyB_00")
+imo:setModel(1, "imo_eye_saver_30")
+imo:setModel(2, "imo_underA_01A")
+imo:setModel(3, "imo_underA_01B")
+imo:setModel(4, "imo_socksC_00")
+imo:setModel(5, "imo_cos_saver_40A")
+imo:setModel(6, "imo_cos_saver_40B")
+imo:setModel(11, "imo_shoes_saver_30")
+imo:setModel(12, "imo_hair_saver_30")
 
---imo:setModel(3, "imo_cos_saver_40A")
---imo:setModel(4, "imo_cos_saver_40B")
-
-imo:setModel(3, "imo_cos_vocaloid_00A");
-imo:setModel(4, "imo_cos_vocaloid_00B");
+--imo:setModel(3, "imo_cos_vocaloid_00A");
+--imo:setModel(4, "imo_cos_vocaloid_00B");
 
 --imo:setAnim("event_01")
 
---room:setModel(0, "room_01")
+room:setModel(0, "room_01")
 
 --room:setModel(0, "room_02")
 
@@ -78,9 +81,9 @@ imo:setModel(4, "imo_cos_vocaloid_00B");
 
 --room:setModel(0, "class01")
 
-room:setModel(0, "beach01a")
-room:setModel(1, "beach01b")
-room:setAnim("beach01b")
+--room:setModel(0, "beach01a")
+--room:setModel(1, "beach01b")
+--room:setAnim("beach01b")
 
 math.randomseed(os.time())
 local i = math.random(1, #actions)
@@ -91,6 +94,6 @@ imo:setAnim("event_02")
 
 imo:setVisible(true)
 --ani:setVisible(true)
-room:setVisible(true)
+--room:setVisible(true)
 
 back:fade(1, 5)
