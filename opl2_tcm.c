@@ -179,9 +179,9 @@ pl2CameraPath *pl2CameraPathLoad(const char *name)
         PL2_ERROR(PL2_ERR_FORMAT);
     }
 
-    DEBUGPRINT("%s: first == %d, last == %d\n", __func__, first, last);
-
     int numFrames = last - first + 1;
+
+    DEBUGPRINT("%s: first == %d, last == %d, numFrames == %d\n", __func__, first, last, numFrames);
 
     pl2CameraPath *path = NEWVAR(pl2CameraPath, numFrames * sizeof(pl2CameraFrame));
 

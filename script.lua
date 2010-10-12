@@ -70,17 +70,17 @@ imo:setModel(4, "imo_cos_vocaloid_00B");
 
 --room:setModel(0, "room_01")
 
-room:setModel(0, "room_02")
+--room:setModel(0, "room_02")
 
---room:setModel(0, "room_03")
---room:setModel(1, "room_03A")
+--room:setModel(1, "room_03")
+--room:setModel(0, "room_03A")
 --room:setAnim("room_03A")
 
 --room:setModel(0, "class01")
 
---room:setModel(0, "beach01a")
---room:setModel(1, "beach01b")
---room:setAnim("beach01b")
+room:setModel(0, "beach01a")
+room:setModel(1, "beach01b")
+room:setAnim("beach01b")
 
 math.randomseed(os.time())
 local i = math.random(1, #actions)

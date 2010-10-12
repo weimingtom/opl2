@@ -3,7 +3,7 @@ include objects.mak
 CC = gcc
 CFLAGS += -Wall -g
 
-LIBS += -llua -lglut32 -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+LIBS += -llua -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
 CFLAGS += -DFREEGLUT_STATIC
 TARGET = opl2.exe
 

@@ -328,6 +328,9 @@ pl2Menu;
 
 /******************************************************************************/
 
+void pl2GameInit(int *argc, char *argv[]);
+int pl2GameRun();
+
 int pl2GetErrorCode();
 const char *pl2GetErrorMessage(int code);
 void pl2ClearError();

@@ -118,13 +118,14 @@ pl2Model *pl2ModelLoad(const char *name)
         READCOLOR4(m->emissive, data);
         m->shininess = READFLOAT(data);
 
-        m->ambient.a = m->diffuse.a = m->specular.a = 1.0f;
+        //m->ambient.a = m->diffuse.a = m->specular.a = 1.0f;
 
-        //DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
-        //DEBUGPRINT("%s: m->diffuse  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->diffuse .r, m->diffuse .g, m->diffuse .b, m->diffuse .a);
-        //DEBUGPRINT("%s: m->specular == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->specular.r, m->specular.g, m->specular.b, m->specular.a);
-        //DEBUGPRINT("%s: m->emissive == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->emissive.r, m->emissive.g, m->emissive.b, m->emissive.a);
-        //DEBUGPRINT("%s: m->shininess == %.3f\n", __func__, m->shininess);
+		DEBUGPRINT("%s: Material %d\n", __func__, i);
+        DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
+        DEBUGPRINT("%s: m->diffuse  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->diffuse .r, m->diffuse .g, m->diffuse .b, m->diffuse .a);
+        DEBUGPRINT("%s: m->specular == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->specular.r, m->specular.g, m->specular.b, m->specular.a);
+        DEBUGPRINT("%s: m->emissive == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->emissive.r, m->emissive.g, m->emissive.b, m->emissive.a);
+        DEBUGPRINT("%s: m->shininess == %.3f\n", __func__, m->shininess);
 
         uint32_t texid = READUINT32(data);
         m->texture = (texid < model->numTextures) ? &(model->textures[texid]) : NULL;
