@@ -1,5 +1,6 @@
 #include "opl2.h"
 #include "opl2_int.h"
+#include "opl2_vm.h"
 
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -13,10 +14,6 @@
 #if _PSP_FW_VERSION
 # include <pspuser.h>
 # include <psprtc.h>
-
-PSP_MODULE_INFO("opl2psp",0,1,0);
-PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_VFPU);
-PSP_HEAP_SIZE_MAX();
 
 static SceUInt32 tick_res = 0;
 static SceUInt64 first_tick = 0;
@@ -50,6 +47,70 @@ int glutGet(GLenum what)
 }
 
 #endif
+
+/******************************************************************************/
+
+void pl2LayerUpdate(pl2Layer *layer, float delta)
+{
+    if (layer)
+    {
+        layer->fade_time += delta;
+
+        if (layer->fade_time < layer->fade_length)
+        {
+            layer->fade_level += delta *
+                (layer->fade_target - layer->fade_level) /
+                (layer->fade_length - layer->fade_time);
+
+            if (layer->fade_level < 0.0f)
+                layer->fade_level = 0.0f;
+            else if (layer->fade_level > 1.0f)
+                layer->fade_level = 1.0f;
+        }
+        else
+        {
+            layer->fade_level = layer->fade_target;
+        }
+    }
+}
+
+void pl2LayerDraw(pl2Layer *layer)
+{
+    if(layer)
+    {
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, 1, 1, 0, 0, 0);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_CULL_FACE);
+
+        glDisable(GL_LIGHTING);
+
+        glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
+        //float mtl[] = { 0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level };
+        //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat*)mtl);
+
+        glBegin(GL_TRIANGLE_FAN);
+            glVertex2f(0, 0);
+            glVertex2f(0, 1);
+            glVertex2f(1, 1);
+            glVertex2f(1, 0);
+        glEnd();
+
+        glEnable(GL_LIGHTING);
+
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+    }
+}
 
 /******************************************************************************/
 
@@ -137,85 +198,22 @@ void pl2CameraUpdate(pl2Camera *cam, float dt)
     }
 }
 
+void pl2CameraRotate1P(pl2Camera *cam, const fvector3_t *rotate)
+{
+   pl2VectorOrbit(&cam->focus, &cam->eye, &cam->up, rotate);
+}
+
+void pl2CameraRotate3P(pl2Camera *cam, const fvector3_t *rotate)
+{
+   pl2VectorOrbit(&cam->eye, &cam->focus, &cam->up, rotate);
+}
+
+void pl2CameraZoom(pl2Camera *cam, float distance)
+{
+   pl2VectorZoom(&cam->eye, &cam->focus, distance);
+}
+
 /******************************************************************************/
-
-void pl2MultMatrix(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
-{
-#if _PSP_FW_VERSION
-    asm volatile (
-        "ulv.q   c100,  0+%1\n"
-        "ulv.q   c110, 16+%1\n"
-        "ulv.q   c120, 32+%1\n"
-        "ulv.q   c130, 48+%1\n"
-        "ulv.q   c200,  0+%2\n"
-        "ulv.q   c210, 16+%2\n"
-        "ulv.q   c220, 32+%2\n"
-        "ulv.q   c230, 48+%2\n"
-        "vmmul.q m000, m100, m200\n"
-        "usv.q   c000,  0+%0\n"
-        "usv.q   c010,  0+%0\n"
-        "usv.q   c020,  0+%0\n"
-        "usv.q   c030,  0+%0\n"
-        :"=m"(*out)
-        :"m"(*a), "m"(*b)
-    );
-#else
-    fmatrix4_t c;
-# define MMUL(i,j) \
-    c.i.j = a->x.j * b->i.x + a->y.j * b->i.y + a->z.j * b->i.z + a->w.j*b->i.w
-    MMUL(x,x); MMUL(y,x); MMUL(z,x); MMUL(w,x);
-    MMUL(x,y); MMUL(y,y); MMUL(z,y); MMUL(w,y);
-    MMUL(x,z); MMUL(y,z); MMUL(z,z); MMUL(w,z);
-    MMUL(x,w); MMUL(y,w); MMUL(z,w); MMUL(w,w);
-# undef MMUL
-    *out = c;
-#endif // _PSP_FW_VERSION
-}
-
-void pl2TransformVector(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v)
-{
-#if _PSP_FW_VERSION
-    asm volatile (
-        "ulv.q   c100,  0+%1\n"
-        "ulv.q   c110, 16+%1\n"
-        "ulv.q   c120, 32+%1\n"
-        "ulv.q   c130, 48+%1\n"
-        "ulv.q   c010,  0+%2\n"
-        "vtfm4.q c000, m100, c010\n"
-        "usv.q   c000,  0+%0\n"
-        :"=m"(*out)
-        :"m"(*m), "m"(*v)
-    );
-#else
-    fvector4_t u;
-# define VTFM(i) \
-    u.i = m->x.i * v->x + m->y.i * v->y + m->z.i * v->z + m->w.i*v->w
-    VTFM(x); VTFM(y); VTFM(z); VTFM(w);
-# undef VTFM
-    *out = u;
-#endif // _PSP_FW_VERSION
-}
-
-void pl2AddScaledVector(fvector3_t *out, const fvector3_t *v, float s)
-{
-#if _PSP_FW_VERSION
-    asm volatile (
-        "mtv    %2, s020\n"
-        "ulv.q  c010, 0+%1\n"
-        "vscl.t c000, c010, s020\n"
-        "sv.s   s000, 0+%0\n"
-        "sv.s   s001, 4+%0\n"
-        "sv.s   s002, 8+%0\n"
-        :"=m"(*out)
-        :"m"(*v), "r"(s)
-    );
-#else
-    if(s != s) DEBUGPRINT("%s: s is NaN!\n", __func__);
-    out->x += v->x * s;
-    out->y += v->y * s;
-    out->z += v->z * s;
-#endif // _PSP_FW_VERSION
-}
 
 void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 {
@@ -238,7 +236,7 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
     for(i = 0; i < numBones; i++)
     {
-        pl2MultMatrix(&(bones[i]), &(seqBones[i]), &(mdlBones[i]));
+        pl2MultMatrix4f(&(bones[i]), &(seqBones[i]), &(mdlBones[i]));
     }
 
     for(i = 0; i < model->numObjects; i++)
@@ -263,31 +261,31 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
                 fvector4_t t;
                 fvector3_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
 
-                pl2TransformVector(&t, &(bones[vert->bones[0]]), &v);
-                pl2AddScaledVector(&tv, (fvector3_t*)&t, w0);
-                pl2TransformVector(&t, &(bones[vert->bones[0]]), &n);
-                pl2AddScaledVector(&tn, (fvector3_t*)&t, w0);
+                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
+                pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w0);
+                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
+                pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w0);
 
                 if(vert->bones[1] != 255)
                 {
-                    pl2TransformVector(&t, &(bones[vert->bones[1]]), &v);
-                    pl2AddScaledVector(&tv, (fvector3_t*)&t, w1);
-                    pl2TransformVector(&t, &(bones[vert->bones[1]]), &n);
-                    pl2AddScaledVector(&tn, (fvector3_t*)&t, w1);
+                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
+                    pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w1);
+                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
+                    pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w1);
 
                     if(vert->bones[2] != 255)
                     {
-                        pl2TransformVector(&t, &(bones[vert->bones[2]]), &v);
-                        pl2AddScaledVector(&tv, (fvector3_t*)&t, w2);
-                        pl2TransformVector(&t, &(bones[vert->bones[2]]), &n);
-                        pl2AddScaledVector(&tn, (fvector3_t*)&t, w2);
+                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
+                        pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w2);
+                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
+                        pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w2);
 
                         if(vert->bones[3] != 255)
                         {
-                            pl2TransformVector(&t, &(bones[vert->bones[3]]), &v);
-                            pl2AddScaledVector(&tv, (fvector3_t*)&t, w3);
-                            pl2TransformVector(&t, &(bones[vert->bones[3]]), &n);
-                            pl2AddScaledVector(&tn, (fvector3_t*)&t, w3);
+                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
+                            pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w3);
+                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
+                            pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w3);
                         }
                     }
                 }
@@ -358,7 +356,7 @@ void pl2ModelRender(const pl2Model *model)
         //DEBUGPRINT("%s: obj == %p, obj->glVertices == %p\n", __func__, obj, obj ? obj->glVertices : NULL);
 
         glPushMatrix();
-        glMultMatrixf((GLfloat*)&(obj->transform));
+        //glMultMatrixf((GLfloat*)&(obj->transform));
 
         glInterleavedArrays(GL_T2F_N3F_V3F, 0, obj->glVertices);
 
@@ -370,10 +368,10 @@ void pl2ModelRender(const pl2Model *model)
             {
                 pl2Material *mtl = m->material;
 
-                //glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  (GLfloat*)&(mtl->emissive));
-                //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   (GLfloat*)&(mtl->ambient));
-                //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   (GLfloat*)&(mtl->diffuse));
-                //glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  (GLfloat*)&(mtl->specular));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  (GLfloat*)&(mtl->emissive));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   (GLfloat*)&(mtl->ambient));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   (GLfloat*)&(mtl->diffuse));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  (GLfloat*)&(mtl->specular));
                 glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, mtl->shininess);
 
                 pl2Texture *tex = mtl->texture;
@@ -422,6 +420,10 @@ static void pl2GlutDisplayFunc()
 
     int i;
 
+    for(i = 0; i < PL2_MAX_LAYERS; i++)
+    {
+        pl2LayerUpdate(&(pl2_layers[i]), dt);
+    }
     for(i = 0; i < PL2_MAX_CAMERAS; i++)
     {
         pl2CameraUpdate(&(pl2_cameras[i]), dt);
@@ -440,12 +442,7 @@ static void pl2GlutDisplayFunc()
     pl2CameraConfig(&(pl2_cameras[0]));
 
     glMatrixMode(GL_MODELVIEW);
-
-    //glLoadIdentity();
-    //gluLookAt(0,12,-20, 0,12,0, 0,1,0);
-
     glPushMatrix();
-    //glLoadIdentity();
 
     glColor3f(1,1,1);
     for(i = 0; i < PL2_MAX_CHARS; i++)
@@ -454,6 +451,8 @@ static void pl2GlutDisplayFunc()
     }
 
     glPopMatrix();
+
+    pl2LayerDraw(&(pl2_layers[0]));
 
     glutSwapBuffers();
 }
@@ -474,32 +473,105 @@ static void pl2GlutReshapeFunc(int w, int h)
     DEBUGPRINT("%s: window resize to %dx%d (aspect == %g, scale == %g)\n", __func__,
                pl2_screen_width, pl2_screen_height, pl2_screen_aspect, pl2_screen_scale);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
     glViewport(0, 0, w, h);
-    gluPerspective(45, pl2_screen_aspect, 1.0f, 1000.0f);
+    //gluPerspective(45, pl2_screen_aspect, 1.0f, 1000.0f);
 
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    //glMatrixMode(GL_MODELVIEW);
+    //glLoadIdentity();
 }
 
 static void pl2GlutKeyboardFunc(unsigned char k, int x, int y)
 {
+#if !_PSP_FW_VERSION
+    if(k == 13)
+    {
+        glutFullScreen();
+        glutSetCursor(GLUT_CURSOR_NONE);
+        //static int gm = 0;
+        //gm = !gm;
+        //if(gm) glutEnterGameMode();
+        //else   glutLeaveGameMode();
+    }
     if(k == 27) exit(0);
+#endif
 }
 
 static void pl2GlutSpecialFunc(int k, int x, int y)
 {
+#if _PSP_FW_VERSION
+    if(k == GLUT_KEY_HOME) exit(0);
+#endif
 }
 
-static void pl2GlutMouseFunc(int btn, int state, int x, int y)
+enum
 {
-    fprintf(stderr, "%s: Button %d %s @ <%d, %d>\n", __func__, btn, state ? "up" : "down", x, y);
+   MOVE_NONE, MOVE_3P, MOVE_1P, MOVE_ORTHO,
+};
+
+static int move_mode = 0, mouse_x = -1, mouse_y = -1;
+
+static void pl2GlutMouseFunc(int button, int state, int x, int y)
+{
+   switch (state)
+   {
+      case GLUT_DOWN:
+         switch (button)
+         {
+            case GLUT_LEFT_BUTTON:
+               move_mode |= MOVE_3P;
+               break;
+            case GLUT_RIGHT_BUTTON:
+               move_mode |= MOVE_1P;
+               break;
+         }
+         break;
+
+      case GLUT_UP:
+         switch (button)
+         {
+            case GLUT_LEFT_BUTTON:
+               move_mode &= ~MOVE_3P;
+               break;
+            case GLUT_RIGHT_BUTTON:
+               move_mode &= ~MOVE_1P;
+               break;
+         }
+         break;
+   }
+
+   mouse_x = x; mouse_y = y;
 }
+
+#include <math.h>
 
 static void pl2GlutMotionFunc(int x, int y)
 {
-    //fprintf(stderr, "%s: <%d, %d>\n", __func__, x, y);
+   int dx = x - mouse_x, dy = y - mouse_y;
+
+   float x_angle = 2.0f * M_PI * (float)dx / (float)pl2_screen_width;
+   float y_angle = 2.0f * M_PI * (float)dy / (float)pl2_screen_height;
+
+   fvector3_t rotate = { y_angle, x_angle, 0 };
+
+   switch (move_mode)
+   {
+      case MOVE_3P:
+         //printf("left dragging @ (%4d, %4d) [x_angle:%6.3f y_angle:%6.3f]\n", x, y, x_angle, y_angle);
+         pl2CameraRotate3P(&(pl2_cameras[0]), &rotate);
+         break;
+
+      case MOVE_1P:
+         pl2CameraRotate1P(&(pl2_cameras[0]), &rotate);
+         break;
+
+      case MOVE_ORTHO:
+         pl2CameraZoom(&(pl2_cameras[0]), -5.0f * (float)dy / (float)pl2_screen_height);
+         break;
+   }
+
+   mouse_x = x; mouse_y = y;
 }
 
 int pl2GlInit(int *argc, char *argv[])
@@ -530,24 +602,24 @@ int pl2GlInit(int *argc, char *argv[])
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
 
-    glAlphaFunc(GL_GREATER, 0);
-    glEnable(GL_ALPHA_TEST);
+    //glAlphaFunc(GL_GREATER, 0);
+    //glEnable(GL_ALPHA_TEST);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
     glEnable(GL_LIGHTING);
 
-    float light_pos[] = { 0, 12, -10, 0 };
-    float light_amb[] = { 0.2f, 0.2f, 0.2f, 1 };
-    float light_dif[] = { 0.8f, 0.8f, 0.8f, 1 };
-    float light_spc[] = { 1.0f, 1.0f, 1.0f, 1 };
+    //float light_pos[] = { 0, 12, -10, 0 };
+    //float light_amb[] = { 0.2f, 0.2f, 0.2f, 1 };
+    //float light_dif[] = { 0.8f, 0.8f, 0.8f, 1 };
+    //float light_spc[] = { 1.0f, 1.0f, 1.0f, 1 };
 
-    glEnable(GL_LIGHT0);
-    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_dif);
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light_spc);
+    //glEnable(GL_LIGHT0);
+    //glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    //glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_dif);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, light_spc);
 
     return 1;
 }

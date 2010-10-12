@@ -3,8 +3,9 @@ include objects.mak
 CC = gcc
 CFLAGS += -Wall -g
 
-LIBS += -llua -lglut -lGLU -lGL -lalut -lopenal
-TARGET = opl2
+LIBS += -llua -lglut32 -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+CFLAGS += -DFREEGLUT_STATIC
+TARGET = opl2.exe
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
@@ -19,4 +20,3 @@ test: $(TARGET)
 	$(TARGET) $(GEOM)
 debug: $(TARGET)
 	gdb -ex run --args $(TARGET) $(GEOM)
-

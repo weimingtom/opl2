@@ -323,7 +323,13 @@ static int l_pl2Camera_setEye(lua_State *L)
 
 static int l_pl2Camera_getEye(lua_State *L)
 {
-    return 0;
+    pl2Camera *cam = *checkpl2Camera(L, 1);
+
+    lua_pushnumber(L, cam->eye.x);
+    lua_pushnumber(L, cam->eye.y);
+    lua_pushnumber(L, cam->eye.z);
+
+    return 3;
 }
 
 static int l_pl2Camera_setFocus(lua_State *L)
@@ -344,7 +350,13 @@ static int l_pl2Camera_setFocus(lua_State *L)
 
 static int l_pl2Camera_getFocus(lua_State *L)
 {
-    return 0;
+    pl2Camera *cam = *checkpl2Camera(L, 1);
+
+    lua_pushnumber(L, cam->focus.x);
+    lua_pushnumber(L, cam->focus.y);
+    lua_pushnumber(L, cam->focus.z);
+
+    return 3;
 }
 
 static int l_pl2Camera_setUp(lua_State *L)
@@ -365,7 +377,13 @@ static int l_pl2Camera_setUp(lua_State *L)
 
 static int l_pl2Camera_getUp(lua_State *L)
 {
-    return 0;
+    pl2Camera *cam = *checkpl2Camera(L, 1);
+
+    lua_pushnumber(L, cam->up.x);
+    lua_pushnumber(L, cam->up.y);
+    lua_pushnumber(L, cam->up.z);
+
+    return 3;
 }
 
 static int l_pl2Camera_setFov(lua_State *L)
@@ -379,7 +397,11 @@ static int l_pl2Camera_setFov(lua_State *L)
 
 static int l_pl2Camera_getFov(lua_State *L)
 {
-    return 0;
+    pl2Camera *cam = *checkpl2Camera(L, 1);
+
+    lua_pushnumber(L, cam->fov);
+
+    return 1;
 }
 
 static int l_pl2Camera_setPath(lua_State *L)
@@ -410,7 +432,11 @@ static int l_pl2Camera_setLocked(lua_State *L)
 
 static int l_pl2Camera_getLocked(lua_State *L)
 {
-    return 0;
+    pl2Camera *cam = *checkpl2Camera(L, 1);
+
+    lua_pushboolean(L, cam->locked);
+
+    return 1;
 }
 
 static luaL_Reg pl2Camera_methods[] =
@@ -438,6 +464,14 @@ static luaL_Reg pl2Camera_meta[] =
 
 static int l_pl2Layer_fade(lua_State *L)
 {
+    pl2Layer *layer = *checkpl2Layer(L, 1);
+
+    float target = luaL_checknumber(L, 2);
+    float length = luaL_checknumber(L, 3);
+
+    layer->fade_target = (target < 0) ? 0 : (target > 1) ? 1 : target;
+    layer->fade_length = (length < 0) ? 0 : length;
+    layer->fade_time   = 0;
     return 0;
 }
 

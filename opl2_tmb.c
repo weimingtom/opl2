@@ -1,5 +1,6 @@
 #include "opl2.h"
 #include "opl2_int.h"
+#include "opl2_vm.h"
 
 pl2Model *pl2ModelLoad(const char *name)
 {
@@ -193,6 +194,10 @@ pl2Model *pl2ModelLoad(const char *name)
             READVECTOR3(v->normal, data);
             v->color = READUINT32(data);
             READTEXCOORD2(v->texcoord, data);
+
+            fvector4_t t = { v->vertex.x, v->vertex.y, v->vertex.z, 1 };
+            pl2VectorTransform4f(&t, &(obj->transform), &t);
+            v->vertex.x = t.x; v->vertex.y = t.y; v->vertex.z = t.z;
 
             pl2GlVertex *glv = &(obj->glVertices[j]);
 
