@@ -48,6 +48,31 @@ int glutGet(GLenum what)
 
 #endif
 
+#define pl2GlPrintErrors() _pl2GlPrintErrors(__func__, __LINE__)
+void _pl2GlPrintErrors(const char *func, int line)
+{
+#define GLERRORCASE(e) case e: DEBUGPRINT("%s(%d): %s\n", func, line, #e); break;
+    int err;
+    while(GL_NO_ERROR != (err = glGetError()))
+    {
+        switch(err)
+        {
+            GLERRORCASE(GL_NO_ERROR);
+            GLERRORCASE(GL_INVALID_ENUM);
+            GLERRORCASE(GL_INVALID_VALUE);
+            GLERRORCASE(GL_INVALID_OPERATION);
+            GLERRORCASE(GL_STACK_OVERFLOW);
+            GLERRORCASE(GL_STACK_UNDERFLOW);
+            GLERRORCASE(GL_OUT_OF_MEMORY);
+            //GLERRORCASE(GL_TABLE_TOO_LARGE);
+
+            default:
+                DEBUGPRINT("%s: %s\n", __func__, "unknown GL error");
+                break;
+        }
+    }
+}
+
 /******************************************************************************/
 
 void pl2LayerUpdate(pl2Layer *layer, float delta)
@@ -66,6 +91,8 @@ void pl2LayerUpdate(pl2Layer *layer, float delta)
                 layer->fade_level = 0.0f;
             else if (layer->fade_level > 1.0f)
                 layer->fade_level = 1.0f;
+
+            DEBUGPRINT("%s: fade_level == %.3g\n", __func__, layer->fade_level);
         }
         else
         {
@@ -81,7 +108,8 @@ void pl2LayerDraw(pl2Layer *layer)
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        glOrtho(0, 1, 1, 0, 0, 0);
+        glOrtho(0, 1, 1, 0, -1, 1);
+
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
         glLoadIdentity();
@@ -96,12 +124,13 @@ void pl2LayerDraw(pl2Layer *layer)
         //float mtl[] = { 0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level };
         //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat*)mtl);
 
-        glBegin(GL_TRIANGLE_FAN);
-            glVertex2f(0, 0);
-            glVertex2f(0, 1);
-            glVertex2f(1, 1);
-            glVertex2f(1, 0);
-        glEnd();
+        //DEBUGPRINT("%s: drawing layer\n", __func__);
+
+        static const struct { float x, y, z; } rect[4] = {
+            { 0, 0, 0 }, { 0, 1, 0 }, { 1, 1, 0 }, { 1, 0, 0 }
+        };
+        glInterleavedArrays(GL_V3F, 0, rect);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
         glEnable(GL_LIGHTING);
 
@@ -441,6 +470,7 @@ static void pl2GlutDisplayFunc()
     {
         pl2LightConfig(&(pl2_lights[i]), i);
     }
+
     pl2CameraConfig(&(pl2_cameras[0]));
 
     glMatrixMode(GL_MODELVIEW);
@@ -595,21 +625,58 @@ static void pl2GlutMotionFunc(int x, int y)
    mouse_x = x; mouse_y = y;
 }
 
+#if !_PSP_FW_VERSION
 static struct { int width, height, bpp; }
-pl2_displayModes[] =
+pl2_displayModes[8] =
 {
     { 1024, 768, 32 }, { 1024, 768, 16 },
     {  800, 600, 32 }, {  800, 600, 16 },
     {  640, 480, 32 }, {  640, 480, 16 },
-    { 0, 0, 0 }
+    {    0,   0,  0 }, {    0,   0,  0 },
 };
+
+static int pl2GlutTryGameMode()
+{
+    int i;
+    for(i = 0; pl2_displayModes[i].width && pl2_displayModes[i].height; i++)
+    {
+        char mode[32];
+        snprintf(mode, sizeof(mode),
+                 pl2_displayModes[i].bpp ? "%dx%d:%d" : "%dx%d",
+                 pl2_displayModes[i].width,
+                 pl2_displayModes[i].height,
+                 pl2_displayModes[i].bpp);
+
+        DEBUGPRINT("%s: trying fullscreen mode %s\n", __func__, mode);
+
+        glutGameModeString(mode);
+
+        if(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) && glutEnterGameMode())
+        {
+            atexit(glutLeaveGameMode);
+            DEBUGPRINT("%s: using fullscreen mode\n", __func__);
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+#endif
 
 int pl2GlInit(int *argc, char *argv[])
 {
+    DEBUGPRINT("%s: before glutInit, argc == %d\n", __func__, *argc);
     glutInitWindowSize(800, 600);
     glutInit(argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+    DEBUGPRINT("%s: after glutInit, argc == %d\n", __func__, *argc);
 
+#if FREEGLUT
+    //atexit(glutExit);
+#endif
+
+#if !_PSP_FW_VERSION
     int windowed = 0;
 
     int i;
@@ -627,31 +694,7 @@ int pl2GlInit(int *argc, char *argv[])
     {
         if(!windowed)
         {
-            int fullscreen = 0;
-
-            for(i = 0; pl2_displayModes[i].width && pl2_displayModes[i].height; i++)
-            {
-                char mode[32];
-                snprintf(mode, sizeof(mode),
-                         pl2_displayModes[i].bpp ? "%dx%d:%d" : "%dx%d",
-                         pl2_displayModes[i].width,
-                         pl2_displayModes[i].height,
-                         pl2_displayModes[i].bpp);
-
-                DEBUGPRINT("%s: trying fullscreen mode %s\n", __func__, mode);
-
-                glutGameModeString(mode);
-
-                if(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) && glutEnterGameMode())
-                {
-                    atexit(glutLeaveGameMode);
-                    DEBUGPRINT("%s: using fullscreen mode\n", __func__);
-                    fullscreen = 1;
-                    break;
-                }
-            }
-
-            if(fullscreen) break;
+            if(pl2GlutTryGameMode()) break;
 
             DEBUGPRINT("%s: fullscreen mode unavailable\n", __func__);
         }
@@ -660,6 +703,7 @@ int pl2GlInit(int *argc, char *argv[])
         glutCreateWindow("OPL2");
     }
     while(0);
+#endif
 
     glutIdleFunc(pl2GlutIdleFunc);
     glutDisplayFunc(pl2GlutDisplayFunc);

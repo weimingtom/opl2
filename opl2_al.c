@@ -4,10 +4,15 @@
 #include <AL/al.h>
 #include <AL/alut.h>
 
+void pl2AlExit()
+{
+    alutExit();
+}
+
 int pl2AlInit(int *argc, char *argv[])
 {
     alutInit(argc, argv);
-    atexit(alutExit);
+    atexit(pl2AlExit);
 
     return 1;
 }

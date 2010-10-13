@@ -5,7 +5,7 @@
 
 #include <dirent.h>
 
-#define PACKAGELOG 1
+//#define PACKAGELOG 1
 
 /* Must be >= likely maximum number of packages (and should be prime) */
 #define PACKAGE_INDEX_SIZE 16381
@@ -19,7 +19,7 @@ pl2PackageIndex[PACKAGE_INDEX_SIZE];
 
 static size_t index_size = 0, hash_collisions = 0;
 
-static FILE *packagelog;
+//static FILE *packagelog;
 
 /******************************************************************************/
 
@@ -91,10 +91,8 @@ static int pl2PackageIndexInsert(const char *filename)
 
     if (!package)
     {
-        if (packagelog)
-        {
-            fprintf(packagelog, "\t<error: %s>\n", pl2GetErrorMessage(pl2GetErrorCode()));
-        }
+        DEBUGPRINT("%s: error opening package \"%s\": %s\n", __func__,
+                   filename, pl2GetErrorMessage(pl2GetErrorCode()));
         return 0;
     }
 
@@ -120,10 +118,10 @@ static int pl2PackageIndexInsert(const char *filename)
 
             if (!pl2PackageIndex[index].package)
             {
-#if PACKAGELOG
-                //printf("\t%s\n", package->entry[i].name);
-                if (packagelog) fprintf(packagelog, "\t%s\n", entry->name);
-#endif
+//#if PACKAGELOG
+//                //printf("\t%s\n", package->entry[i].name);
+//                if (packagelog) fprintf(packagelog, "\t%s\n", entry->name);
+//#endif
 
                 // empty slot, add to index
                 pl2PackageIndex[index].package = package;
@@ -194,29 +192,31 @@ int pl2PackageBuildIndex()
 {
    memset(pl2PackageIndex, 0, sizeof(pl2PackageIndex));
 
-#if PACKAGELOG
-   if (!packagelog) packagelog = fopen("package.log", "wb");
-   if (!packagelog) { PL2_ERROR(PL2_ERR_FILEIO); }
-#endif
+//#if PACKAGELOG
+//   if (!packagelog) packagelog = fopen("package.log", "wb");
+//   if (!packagelog) { PL2_ERROR(PL2_ERR_FILEIO); }
+//#endif
 
    DIR *dir = opendir("add-ons");
    if (NULL == dir)
    {
-#if PACKAGELOG
-      //printf("Error opening 'add-ons' directory\n");
-      fprintf(packagelog, "Error opening 'add-ons' directory\n");
-      fclose(packagelog);
-#endif
+//#if PACKAGELOG
+//      //printf("Error opening 'add-ons' directory\n");
+//      fprintf(packagelog, "Error opening 'add-ons' directory\n");
+//      fclose(packagelog);
+//#endif
 
       PL2_ERROR(PL2_ERR_NOTFOUND);
    }
 
    char filename[64] = { 0 };
 
-#if PACKAGELOG
-   //printf("Add-ons found:\n");
-   fprintf(packagelog, "Add-ons found:\n");
-#endif
+//#if PACKAGELOG
+//   //printf("Add-ons found:\n");
+//   fprintf(packagelog, "Add-ons found:\n");
+//#endif
+
+    DEBUGPRINT("%s: building package index...\n", __func__);
 
    size_t count = 0;
 
@@ -227,10 +227,10 @@ int pl2PackageBuildIndex()
 
       if (0 == strcasecmp(entry->d_name + l - 4, ".pl2"))
       {
-#if PACKAGELOG
-         //printf("\n%s\n", entry);
-         fprintf(packagelog, "\n%s\n", entry->d_name);
-#endif
+//#if PACKAGELOG
+//         //printf("\n%s\n", entry);
+//         fprintf(packagelog, "\n%s\n", entry->d_name);
+//#endif
 
          snprintf(filename, sizeof(filename), "add-ons/%s", entry->d_name);
 
@@ -241,21 +241,7 @@ int pl2PackageBuildIndex()
       }
    }
 
-#if PACKAGELOG
-   if (!count)
-   {
-      //printf("\nNone.\n");
-      fprintf(packagelog, "\nNone.\n");
-   }
-   fprintf(packagelog, "Indexed %u files", index_size);
-   if (hash_collisions)
-   {
-      fprintf(packagelog, " with %u hash collisions", hash_collisions);
-   }
-   fprintf(packagelog, ".\n");
-   fclose(packagelog);
-   packagelog = 0;
-#endif
+    DEBUGPRINT("%s: indexed %u files in %u packages with %u collisions\n", __func__, index_size, count, hash_collisions);
 
    closedir(dir);
    return 1;
