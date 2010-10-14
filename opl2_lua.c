@@ -51,14 +51,14 @@ static int l_pl2Character_setModel(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
     int idx = luaL_checkint(L, 2);
-    const char *name = luaL_checkstring(L, 3);
+    const char *name = luaL_optstring(L, 3, NULL);
 
-    if((idx < 0) || (idx >= PL2_MAX_CHARPARTS))
+    if((idx < 1) || (idx > PL2_MAX_CHARPARTS))
         return 0;
 
-    if(chr->models[idx]) pl2ModelFree(chr->models[idx]);
+    if(chr->models[idx-1]) pl2ModelFree(chr->models[idx-1]);
 
-    chr->models[idx] = pl2ModelLoad(name);
+    chr->models[idx-1] = pl2ModelLoad(name);
 
     return 0;
 }
@@ -66,7 +66,7 @@ static int l_pl2Character_setModel(lua_State *L)
 static int l_pl2Character_setAnim(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
-    const char *name = luaL_checkstring(L, 2);
+    const char *name = luaL_optstring(L, 2, NULL);
 
     if(chr->anim) pl2AnimFree(chr->anim);
 
@@ -407,7 +407,7 @@ static int l_pl2Camera_getFov(lua_State *L)
 static int l_pl2Camera_setPath(lua_State *L)
 {
     pl2Camera *cam = *checkpl2Camera(L, 1);
-    const char *name = luaL_checkstring(L, 2);
+    const char *name = luaL_optstring(L, 2, NULL);
     int loop = lua_toboolean(L, 3);
 
     if(cam->path) pl2CameraPathFree(cam->path);
@@ -491,10 +491,10 @@ static int l_pl2_character(lua_State *L)
 {
     int idx = luaL_checkint(L, 1);
 
-    if((idx < 0) || (idx >= PL2_MAX_CHARS))
+    if((idx < 1) || (idx > PL2_MAX_CHARS))
         return 0;
 
-    *pushpl2Character(L) = &(pl2_chars[idx]);
+    *pushpl2Character(L) = &(pl2_chars[idx-1]);
     return 1;
 }
 
@@ -502,10 +502,10 @@ static int l_pl2_light(lua_State *L)
 {
     int idx = luaL_checkint(L, 1);
 
-    if((idx < 0) || (idx >= PL2_MAX_LIGHTS))
+    if((idx < 1) || (idx > PL2_MAX_LIGHTS))
         return 0;
 
-    *pushpl2Light(L) = &(pl2_lights[idx]);
+    *pushpl2Light(L) = &(pl2_lights[idx-1]);
     return 1;
 }
 
@@ -513,10 +513,10 @@ static int l_pl2_camera(lua_State *L)
 {
     int idx = luaL_checkint(L, 1);
 
-    if((idx < 0) || (idx >= PL2_MAX_CAMERAS))
+    if((idx < 1) || (idx > PL2_MAX_CAMERAS))
         return 0;
 
-    *pushpl2Camera(L) = &(pl2_cameras[idx]);
+    *pushpl2Camera(L) = &(pl2_cameras[idx-1]);
     return 1;
 }
 
@@ -524,11 +524,26 @@ static int l_pl2_layer(lua_State *L)
 {
     int idx = luaL_checkint(L, 1);
 
-    if((idx < 0) || (idx >= PL2_MAX_LAYERS))
+    if((idx < 1) || (idx > PL2_MAX_LAYERS))
         return 0;
 
-    *pushpl2Layer(L) = &(pl2_layers[idx]);
+    *pushpl2Layer(L) = &(pl2_layers[idx-1]);
     return 1;
+}
+
+static int l_pl2_play(lua_State *L)
+{
+    static const char *channels[] = { "voice", "sound", "bgsound", "music", NULL };
+
+    int chan = luaL_checkoption(L, 1, NULL, channels);
+
+    const char *name = luaL_optstring(L, 2, NULL);
+
+    pl2Sound *sound = pl2SoundLoad(name);
+
+    pl2SoundPlay(sound, chan);
+
+    return 0;
 }
 
 static luaL_Reg pl2_functions[] =
@@ -537,10 +552,23 @@ static luaL_Reg pl2_functions[] =
     { "light", l_pl2_light },
     { "camera", l_pl2_camera },
     { "layer", l_pl2_layer },
+    { "play", l_pl2_play },
     { NULL, NULL }
 };
 
 /******************************************************************************/
+
+static char pl2_lua_init[] =
+"light1=pl2.light(1)"
+"light2=pl2.light(2)"
+"camera=pl2.camera(1)"
+"imo1=pl2.character(1)"
+"imo2=pl2.character(2)"
+"ani=pl2.character(3)"
+"room=pl2.character(4)"
+"back=pl2.layer(1)"
+"fore=pl2.layer(2)"
+"imo=imo1";
 
 void luaopen_pl2(lua_State *L)
 {
@@ -582,4 +610,12 @@ void luaopen_pl2(lua_State *L)
     luaL_register(L, NULL, pl2Layer_meta);
     lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
+
+    DEBUGPRINT("%s: sizeof(pl2_lua_init) == %d\n", __func__, sizeof(pl2_lua_init));
+
+    int r = luaL_loadbuffer(L, pl2_lua_init, strlen(pl2_lua_init), "@init.lua");
+
+    if(!r) r = lua_pcall(L, 0, 0, 0);
+
+    if(r) DEBUGPRINT("%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
 }

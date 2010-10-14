@@ -6,6 +6,9 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+// Reference:
+// http://www.opengl.org/sdk/docs/man/
+
 /* use freeglut extensions, if available */
 #if FREEGLUT
 # include <GL/freeglut_ext.h>
@@ -73,6 +76,26 @@ void _pl2GlPrintErrors(const char *func, int line)
     }
 }
 
+void pl2GlBegin2D()
+{
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, pl2_screen_width, pl2_screen_height, 0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+}
+
+void pl2GlEnd2D()
+{
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
 /******************************************************************************/
 
 void pl2LayerUpdate(pl2Layer *layer, float delta)
@@ -92,7 +115,7 @@ void pl2LayerUpdate(pl2Layer *layer, float delta)
             else if (layer->fade_level > 1.0f)
                 layer->fade_level = 1.0f;
 
-            DEBUGPRINT("%s: fade_level == %.3g\n", __func__, layer->fade_level);
+            //DEBUGPRINT("%s: fade_level == %.3g\n", __func__, layer->fade_level);
         }
         else
         {
@@ -105,39 +128,51 @@ void pl2LayerDraw(pl2Layer *layer)
 {
     if(layer)
     {
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho(0, 1, 1, 0, -1, 1);
+        pl2GlBegin2D();
 
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-
-        glDisable(GL_TEXTURE_2D);
         glDisable(GL_DEPTH_TEST);
-        //glDisable(GL_CULL_FACE);
-
         glDisable(GL_LIGHTING);
-
         glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
-        //float mtl[] = { 0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level };
-        //glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, (GLfloat*)mtl);
 
-        //DEBUGPRINT("%s: drawing layer\n", __func__);
-
-        static const struct { float x, y, z; } rect[4] = {
-            { 0, 0, 0 }, { 0, 1, 0 }, { 1, 1, 0 }, { 1, 0, 0 }
+        int w = pl2_screen_width, h = pl2_screen_height;
+        const struct { float x, y, z; } rect[4] = {
+            { 0, 0, 0 }, { 0, h, 0 }, { w, h, 0 }, { w, 0, 0 }
         };
         glInterleavedArrays(GL_V3F, 0, rect);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-        glEnable(GL_LIGHTING);
+        pl2GlEnd2D();
+    }
+}
 
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
+/******************************************************************************/
+
+void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy)
+{
+    if(image)
+    {
+        pl2GlBegin2D();
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        int w = image->width, h = image->height;
+        const struct { float x, y, z; } rect[4] = {
+            { x - cx,     y - cy,     0 },
+            { x - cx,     y - cy + h, 0 },
+            { x - cx + w, y - cy + h, 0 },
+            { x - cx + w, y - cy,     0 }
+        };
+
+        glTexImage2D(GL_TEXTURE_2D, 0, 4, image->width, image->height,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, image->data);
+
+        glInterleavedArrays(GL_V3F, 0, rect);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+        pl2GlEnd2D();
     }
 }
 
@@ -370,11 +405,12 @@ void pl2ModelRender(const pl2Model *model)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    //glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
     glMatrixMode(GL_MODELVIEW);
 
@@ -409,8 +445,8 @@ void pl2ModelRender(const pl2Model *model)
 
                 if(tex)
                 {
-                    glTexImage2D(GL_TEXTURE_2D, 0, 4, tex->width, tex->height, 0,
-                                 GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
+                    glTexImage2D(GL_TEXTURE_2D, 0, 4, tex->width, tex->height,
+                                 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
                 }
 
                 glDrawArrays(GL_TRIANGLES, m->start, m->count * 3);
@@ -627,12 +663,17 @@ static void pl2GlutMotionFunc(int x, int y)
 
 #if !_PSP_FW_VERSION
 static struct { int width, height, bpp; }
-pl2_displayModes[8] =
+pl2_displayModes[] =
 {
-    { 1024, 768, 32 }, { 1024, 768, 16 },
-    {  800, 600, 32 }, {  800, 600, 16 },
-    {  640, 480, 32 }, {  640, 480, 16 },
-    {    0,   0,  0 }, {    0,   0,  0 },
+    {   -1,   -1,  0 }, // reserved for user-specified mode
+    { 1600, 1200, 32 }, { 1600, 1200, 16 }, //{ 1600, 1200, 8 },
+    { 1280, 1024, 32 }, { 1280, 1024, 16 }, //{ 1280, 1024, 8 },
+    { 1024,  768, 32 }, { 1024,  768, 16 }, //{ 1024,  768, 8 },
+    { 1024,  600, 32 }, { 1024,  600, 16 }, //{ 1024,  600, 8 },
+    {  800,  600, 32 }, {  800,  600, 16 }, //{  800,  600, 8 },
+    {  640,  480, 32 }, {  640,  480, 16 }, //{  640,  480, 8 },
+    {  320,  240, 32 }, {  320,  240, 16 }, //{  320,  240, 8 },
+    {    0,    0,  0 },
 };
 
 static int pl2GlutTryGameMode()
@@ -654,7 +695,7 @@ static int pl2GlutTryGameMode()
         if(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE) && glutEnterGameMode())
         {
             atexit(glutLeaveGameMode);
-            DEBUGPRINT("%s: using fullscreen mode\n", __func__);
+            DEBUGPRINT("%s: using fullscreen mode %s\n", __func__, mode);
             return 1;
         }
     }
@@ -666,15 +707,7 @@ static int pl2GlutTryGameMode()
 
 int pl2GlInit(int *argc, char *argv[])
 {
-    DEBUGPRINT("%s: before glutInit, argc == %d\n", __func__, *argc);
-    glutInitWindowSize(800, 600);
-    glutInit(argc, argv);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
-    DEBUGPRINT("%s: after glutInit, argc == %d\n", __func__, *argc);
-
-#if FREEGLUT
-    //atexit(glutExit);
-#endif
+    int init_width = 800, init_height = 600;
 
 #if !_PSP_FW_VERSION
     int windowed = 0;
@@ -687,22 +720,49 @@ int pl2GlInit(int *argc, char *argv[])
         if(!strcmp(argv[i], "-window"))
         {
             windowed = 1;
+
+            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
+            {
+                i++;
+                int r = sscanf(argv[i], "%dx%d", &init_width, &init_height);
+
+                DEBUGPRINT("%s: sscanf returned %d\n", __func__, r);
+            }
+        }
+        else if(!strcmp(argv[i], "-fullscreen"))
+        {
+            windowed = 0;
+
+            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
+            {
+                i++;
+                int r = sscanf(argv[i], "%dx%d:%d",
+                               &pl2_displayModes[0].width,
+                               &pl2_displayModes[0].height,
+                               &pl2_displayModes[0].bpp);
+
+                DEBUGPRINT("%s: sscanf returned %d\n", __func__, r);
+            }
         }
     }
+#endif
 
-    do
+    //DEBUGPRINT("%s: before glutInit, argc == %d\n", __func__, *argc);
+    glutInitWindowSize(init_width, init_height);
+    glutInit(argc, argv);
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
+    //DEBUGPRINT("%s: after glutInit, argc == %d\n", __func__, *argc);
+
+#if FREEGLUT
+    //atexit(glutExit);
+#endif
+
+#if !_PSP_FW_VERSION
+    if(windowed || !pl2GlutTryGameMode())
     {
-        if(!windowed)
-        {
-            if(pl2GlutTryGameMode()) break;
-
-            DEBUGPRINT("%s: fullscreen mode unavailable\n", __func__);
-        }
-
         DEBUGPRINT("%s: using windowed mode\n", __func__);
         glutCreateWindow("OPL2");
     }
-    while(0);
 #endif
 
     glutIdleFunc(pl2GlutIdleFunc);

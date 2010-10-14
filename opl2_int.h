@@ -44,11 +44,24 @@ extern pl2Layer pl2_layers[PL2_MAX_LAYERS];
 
 /******************************************************************************/
 
-/* TODO: make these endian-portable */
+// (READ*BE macros used for reading PSD images)
 
 #define READUINT8(p)  (*(uint8_t *)(p)++)
-#define READUINT16(p) ({uint8_t x = READUINT8(p), y = READUINT8(p); x | (y << 8);})
-#define READUINT32(p) ({uint16_t x = READUINT16(p), y = READUINT16(p); x | (y << 16);})
+#define READUINT16LE(p) ({uint8_t x = READUINT8(p), y = READUINT8(p); x | (y << 8);})
+#define READUINT16BE(p) ({uint8_t x = READUINT8(p), y = READUINT8(p); y | (x << 8);})
+#define READUINT32LE(p) ({uint16_t x = READUINT16LE(p), y = READUINT16LE(p); x | (y << 16);})
+#define READUINT32BE(p) ({uint16_t x = READUINT16BE(p), y = READUINT16BE(p); y | (x << 16);})
+
+#define READUINT16(p) READUINT16LE(p)
+#define READUINT32(p) READUINT32LE(p)
+
+#define READINT16LE(p) ((int16_t)READUINT16LE(p))
+#define READINT16BE(p) ((int16_t)READUINT16BE(p))
+#define READINT32LE(p) ((int32_t)READUINT32LE(p))
+#define READINT32BE(p) ((int32_t)READUINT32BE(p))
+
+#define READINT16(p) READINT16LE(p)
+#define READINT32(p) READINT32LE(p)
 
 #define READSTRING(n,o,p) { memcpy((o), (p), (n)); (p) = (uint8_t*)(p) + (n); }
 #define READFLOAT(p)  ({union{float f; uint32_t i;}t; t.i = READUINT32(p); t.f;})

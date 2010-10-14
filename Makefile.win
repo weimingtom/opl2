@@ -3,7 +3,7 @@ include objects.mak
 CC = gcc
 CFLAGS += -Wall -g
 
-LIBS += -llua -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+LIBS += -llua -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32 -lvorbis -lvorbisfile
 CFLAGS += -DFREEGLUT_STATIC
 TARGET = opl2.exe
 
@@ -15,8 +15,8 @@ clean:
 
 rebuild: clean $(TARGET)
 
-GEOM = -geometry 640x480+0+0
+ARGS = -window 640x480
 test: $(TARGET)
-	$(TARGET) $(GEOM)
+	$(TARGET) $(ARGS)
 debug: $(TARGET)
-	gdb -ex run --args $(TARGET) $(GEOM)
+	gdb -ex run --args $(TARGET) $(ARGS)

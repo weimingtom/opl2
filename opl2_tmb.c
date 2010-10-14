@@ -2,6 +2,8 @@
 #include "opl2_int.h"
 #include "opl2_vm.h"
 
+/******************************************************************************/
+
 pl2Model *pl2ModelLoad(const char *name)
 {
     PL2_CLEAR_ERROR();

@@ -1,6 +1,8 @@
 #include "opl2.h"
 #include "opl2_int.h"
 
+/******************************************************************************/
+
 pl2Anim *pl2AnimLoad(const char *name)
 {
     PL2_CLEAR_ERROR();

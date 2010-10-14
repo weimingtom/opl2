@@ -3,7 +3,7 @@ include objects.mak
 CC = gcc
 CFLAGS += -Wall -g
 
-LIBS += -llua -lglut -lGLU -lGL -lalut -lopenal
+LIBS += -llua -lglut -lGLU -lGL -lalut -lopenal -lvorbis -lvorbisfile
 TARGET = opl2
 
 $(TARGET): $(OBJS)
@@ -14,9 +14,9 @@ clean:
 
 rebuild: clean $(TARGET)
 
-GEOM = -geometry 640x480+0+0
+ARGS = -window 640x480
 test: $(TARGET)
-	$(TARGET) $(GEOM)
+	$(TARGET) $(ARGS)
 debug: $(TARGET)
-	gdb -ex run --args $(TARGET) $(GEOM)
+	gdb -ex run --args $(TARGET) $(ARGS)
 

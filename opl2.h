@@ -56,6 +56,8 @@ enum pl2CharPart
     PL2_PART_HAIR,
 };
 
+#define PL2_NUM_CHANNELS 4
+
 enum pl2SoundChannel
 {
     PL2_CHAN_VOICE,
@@ -258,6 +260,25 @@ pl2Model;
 
 typedef struct
 {
+    uint32_t left, top, width, height;
+    uint8_t *data;
+}
+pl2ImageLayer;
+
+typedef struct
+{
+    uint32_t width, height;
+    uint16_t channels, bits;
+    pl2ImageLayer *layers;
+    uint8_t *data;
+}
+__attribute__((packed))
+pl2Image;
+
+/******************************************************************************/
+
+typedef struct
+{
     fvector3_t position;
     fcolor4_t ambient;
     fcolor4_t diffuse;
@@ -326,6 +347,17 @@ typedef struct
 }
 pl2Menu;
 
+#include <vorbis/vorbisfile.h>
+
+typedef struct
+{
+    pl2PackageFile *file;
+    uint32_t offset;
+    OggVorbis_File vf;
+    int16_t buffer[4096];
+}
+pl2Sound;
+
 /******************************************************************************/
 
 void pl2GameInit(int *argc, char *argv[]);
@@ -385,6 +417,17 @@ void pl2AnimFree(pl2Anim *anim);
 
 pl2Model *pl2ModelLoad(const char *name);
 void pl2ModelFree(pl2Model *model);
+
+/******************************************************************************/
+
+pl2Image *pl2ImageLoad(const char *name);
+void pl2ImageFree(pl2Image *image);
+
+/******************************************************************************/
+
+pl2Sound *pl2SoundLoad(const char *name);
+void pl2SoundFree(pl2Sound *sound);
+void pl2SoundPlay(pl2Sound *sound, int channel);
 
 /******************************************************************************/
 
