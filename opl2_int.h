@@ -5,6 +5,8 @@
  * OPL2 Internals
  ******************************************************************************/
 
+#include "opl2.h"
+
 #ifndef NDEBUG
 # define DEBUGPRINT(x...) (fprintf(stderr,x))
 #else
@@ -12,6 +14,11 @@
 #endif
 
 #define STUB() DEBUGPRINT("%s(%d): %s is a stub function!\n", __FILE__, __LINE__, __func__);
+
+#include <math.h>
+
+#define DEG(r) ((r)*180.0f/M_PI)
+#define RAD(r) ((r)*M_PI/180.0f)
 
 int pl2_strlcpy(char *dst, const char *src, int len);
 

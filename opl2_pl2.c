@@ -160,19 +160,79 @@ static size_t pl2PackageDecompressFile(uint8_t *src, size_t srcsize,
    return dstpos;
 }
 
+pl2PackageFile *pl2PackageReadIndex(pl2Package *package, int index)
+{
+    PL2_CLEAR_ERROR();
+
+    if (!package)
+    {
+        DEBUGPRINT("%s: package == NULL\n", __func__);
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    if ((index < 0) || (index >= package->numEntries))
+    {
+        DEBUGPRINT("%s: index %d out of range\n", __func__, index);
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    pl2PackageEntry *entry = &(package->entries[index]);
+
+    pl2PackageFile *file = NEWVAR(pl2PackageFile, entry->length);
+
+    if(!file)
+    {
+        PL2_ERROR(PL2_ERR_MEMORY);
+    }
+
+    memcpy(file->name, entry->name, 32);
+    file->length = entry->length;
+
+    if(!pl2PackageReopen(package))
+    {
+        pl2PackageFileFree(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    fseek(package->file, entry->offset, SEEK_SET);
+
+    if (entry->length == entry->packedLength)
+    {
+        fread(file->data, file->length, 1, package->file);
+    }
+    else
+    {
+        uint8_t *temp = malloc(entry->length);
+
+        if (!temp)
+        {
+            pl2PackageFileFree(file);
+            PL2_ERROR(PL2_ERR_MEMORY);
+        }
+
+        fread(temp, entry->packedLength, 1, package->file);
+
+        pl2PackageDecompressFile(temp, entry->packedLength,
+                                 file->data, entry->length);
+
+        free(temp);
+    }
+    return file;
+}
+
 pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name)
 {
     PL2_CLEAR_ERROR();
 
     if (!package)
     {
-        DEBUGPRINT("pl2PackageGetFile: package == NULL\n");
+        DEBUGPRINT("%s: package == NULL\n", __func__);
         PL2_ERROR(PL2_ERR_PARAM);
     }
 
     if (!name)
     {
-        DEBUGPRINT("pl2PackageGetFile: filename == NULL\n");
+        DEBUGPRINT("%s: filename == NULL\n", __func__);
         PL2_ERROR(PL2_ERR_PARAM);
     }
 
@@ -225,7 +285,7 @@ pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name)
         }
     }
 
-    //DEBUGPRINT("pl2PackageGetFile: \"%s\" not found\n", filename);
+    //DEBUGPRINT("%s: \"%s\" not found\n", __func__, filename);
     PL2_ERROR(PL2_ERR_NOTFOUND);
 }
 

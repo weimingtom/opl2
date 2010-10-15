@@ -8,14 +8,23 @@
 //#define PACKAGELOG 1
 
 /* Must be >= likely maximum number of packages (and should be prime) */
-#define PACKAGE_INDEX_SIZE 16381
+#define PACKAGE_INDEX_SIZE 8191 //4093 //16381
+/* Must be >= likely maximum number of points (and should be prime) */
+#define POINT_INDEX_SIZE 127
 
 static struct
 {
-   char name[28];
+   char name[32];
    pl2Package *package;
 }
 pl2PackageIndex[PACKAGE_INDEX_SIZE];
+
+static struct
+{
+    int used;
+    pl2Point point;
+}
+pl2PointIndex[POINT_INDEX_SIZE] = {};
 
 static size_t index_size = 0, hash_collisions = 0;
 
@@ -34,7 +43,7 @@ static size_t index_size = 0, hash_collisions = 0;
                        +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
-static uint32_t pl2PackageIndexHash(const char *data, size_t len)
+static uint32_t pl2IndexHash(const char *data, size_t len)
 {
     size_t t = strlen(data);
     if(t < len) len = t;
@@ -104,13 +113,13 @@ static int pl2PackageIndexInsert(const char *filename)
     for (i = 0; i < package->numEntries; ++i)
     {
         pl2PackageEntry *entry = &(package->entries[i]);
-        uint32_t hash = pl2PackageIndexHash(entry->name, 28) % PACKAGE_INDEX_SIZE;
+        uint32_t hash = pl2IndexHash(entry->name, 32) % PACKAGE_INDEX_SIZE;
 
         uint32_t index = hash;
 
         do
         {
-            if (strncmp(entry->name, pl2PackageIndex[index].name, 28) == 0)
+            if (strncmp(entry->name, pl2PackageIndex[index].name, 32) == 0)
             {
                 // already in index, don't add it
                 break;
@@ -125,7 +134,7 @@ static int pl2PackageIndexInsert(const char *filename)
 
                 // empty slot, add to index
                 pl2PackageIndex[index].package = package;
-                pl2_strlcpy(pl2PackageIndex[index].name, entry->name, 28);
+                pl2_strlcpy(pl2PackageIndex[index].name, entry->name, 32);
                 //DEBUGPRINT("Added \"%s\" @ index %u\n", pl2PackageIndex[index].name, index);
 
                 ++index_size;
@@ -145,6 +154,7 @@ static int pl2PackageIndexInsert(const char *filename)
 
     // close file handle (but don't free)
     pl2PackageClose(package);
+
     return 1;
 }
 
@@ -157,11 +167,11 @@ static pl2Package *pl2PackageIndexSearch(const char *name)
         PL2_ERROR(PL2_ERR_PARAM);
     }
 
-    char temp[28];
+    char temp[32];
     memset(temp, 0, sizeof(temp));
     pl2_strlcpy(temp, name, sizeof(temp));
 
-    uint32_t hash = pl2PackageIndexHash(temp, 28) % PACKAGE_INDEX_SIZE;
+    uint32_t hash = pl2IndexHash(temp, 32) % PACKAGE_INDEX_SIZE;
 
     uint32_t index = hash;
 
@@ -169,7 +179,7 @@ static pl2Package *pl2PackageIndexSearch(const char *name)
     {
         //DEBUGPRINT("%s: index[%u] == \"%s\"\n", __func__, index, pl2PackageIndex[index].name);
 
-        if (strncmp(temp, pl2PackageIndex[index].name, 28) == 0)
+        if (strncmp(temp, pl2PackageIndex[index].name, 32) == 0)
         {
             DEBUGPRINT("%s: found \"%s\" @ index %u\n", __func__, pl2PackageIndex[index].name, index);
 
@@ -190,7 +200,7 @@ static pl2Package *pl2PackageIndexSearch(const char *name)
 
 int pl2PackageBuildIndex()
 {
-   memset(pl2PackageIndex, 0, sizeof(pl2PackageIndex));
+    memset(pl2PackageIndex, 0, sizeof(pl2PackageIndex));
 
 //#if PACKAGELOG
 //   if (!packagelog) packagelog = fopen("package.log", "wb");
@@ -281,3 +291,120 @@ pl2PackageFile *pl2PackageGetFile(const char *filename)
 
    PL2_ERROR(PL2_ERR_NOTFOUND);
 }
+
+/******************************************************************************/
+
+__attribute__((constructor))
+static void pl2ClearPointIndex()
+{
+    memset(pl2PointIndex, 0, sizeof(pl2PointIndex));
+}
+
+static int pl2PointIndexInsert(pl2Point *point)
+{
+    if(!point)
+    {
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    uint32_t hash = pl2IndexHash(point->name, 32) % POINT_INDEX_SIZE;
+
+    uint32_t index = hash;
+
+    do
+    {
+        if (!pl2PointIndex[index].used || !strncmp(point->name, pl2PointIndex[index].point.name, 32))
+        {
+            DEBUGPRINT("%s: added \"%s\" @ index %u\n", __func__, point->name, index);
+            pl2PointIndex[index].point = *point;
+            pl2PointIndex[index].used = 1;
+            return 1;
+        }
+
+        if ((index += 17) >= POINT_INDEX_SIZE)
+        {
+            index -= POINT_INDEX_SIZE;
+        }
+    }
+    while (pl2PointIndex[hash].used && (index != hash));
+
+    PL2_ERROR(PL2_ERR_INTERNAL);
+}
+
+static pl2Point *pl2PointIndexSearch(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    if (!name)
+    {
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    uint32_t hash = pl2IndexHash(name, 32) % POINT_INDEX_SIZE;
+
+    uint32_t index = hash;
+
+    do
+    {
+        //DEBUGPRINT("%s: index[%u] == \"%s\"\n", __func__, index, pl2PointIndex[index].name);
+
+        if (pl2PointIndex[index].used && !strncmp(name, pl2PointIndex[index].point.name, 32))
+        {
+            DEBUGPRINT("%s: found \"%s\" @ index %u\n", __func__, pl2PointIndex[index].point.name, index);
+
+            return &(pl2PointIndex[index].point);
+        }
+
+        if ((index += 17) >= POINT_INDEX_SIZE)
+        {
+            index -= POINT_INDEX_SIZE;
+        }
+    }
+    while (pl2PointIndex[index].used && (index != hash));
+
+    DEBUGPRINT("%s: \"%s\" not found\n", __func__, name);
+
+    PL2_ERROR(PL2_ERR_NOTFOUND);
+}
+
+int pl2CharSetPoint(pl2Character *chr, const char *name)
+{
+    if(!chr)
+    {
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    chr->point = pl2PointIndexSearch(name);
+
+    return (chr->point != NULL);
+}
+
+int pl2CameraSetPoint(pl2Camera *cam, const char *name)
+{
+    if(!cam)
+    {
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    cam->point = pl2PointIndexSearch(name);
+
+    return (cam->point != NULL);
+}
+
+int pl2ModelAddPoints(pl2Model *model)
+{
+    if(!model)
+    {
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
+
+    if(!model->points) return 0;
+
+    int i;
+    for(i = 0; i < model->numPoints; i++)
+    {
+        pl2PointIndexInsert(&(model->points[i]));
+    }
+    return 1;
+}
+

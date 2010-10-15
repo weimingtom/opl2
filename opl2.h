@@ -18,6 +18,9 @@ extern "C" {
 #define PL2_TMB_MAGIC ((uint32_t)(0x30424d54)) /* "TMB0" */
 #define PL2_TSB_MAGIC ((uint32_t)(0x30425354)) /* "TSB0" */
 
+#define PL2_NOMINAL_SCREEN_WIDTH 800
+#define PL2_NOMINAL_SCREEN_HEIGHT 600
+
 /******************************************************************************/
 
 #define PL2_MAX_CHARPARTS 16
@@ -78,35 +81,35 @@ typedef struct
 {
     float x, y, z;
 }
-__attribute__((packed))
+//__attribute__((packed))
 fvector3_t;
 
 typedef struct
 {
     float x, y, z, w;
 }
-__attribute__((packed))
+//__attribute__((packed))
 fvector4_t;
 
 typedef struct
 {
     fvector3_t x, y, z;
 }
-__attribute__((packed))
+//__attribute__((packed))
 fmatrix3_t;
 
 typedef struct
 {
     fvector4_t x, y, z, w;
 }
-__attribute__((packed))
+//__attribute__((packed))
 fmatrix4_t;
 
 typedef struct
 {
     float r, g, b, a;
 }
-__attribute__((packed))
+//__attribute__((packed))
 fcolor4_t;
 
 /******************************************************************************/
@@ -115,7 +118,7 @@ typedef struct
 {
     uint32_t reserved[4];
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2PackageHeader;
 
 typedef struct
@@ -126,7 +129,7 @@ typedef struct
     uint32_t length;
     uint32_t reserved;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2PackageEntry;
 
 typedef struct
@@ -160,7 +163,7 @@ typedef struct
     fmatrix4_t *bones;
     fmatrix3_t *unknown;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Anim;
 
 /******************************************************************************/
@@ -172,7 +175,7 @@ typedef struct
     uint8_t *pixels;
     uint32_t flags;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Texture;
 
 typedef struct
@@ -184,7 +187,7 @@ typedef struct
     float shininess;
     pl2Texture *texture;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Material;
 
 typedef struct
@@ -196,7 +199,7 @@ typedef struct
     uint32_t color;
     ftexcoord2_t texcoord; //float u, v;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Vertex;
 
 typedef struct
@@ -206,7 +209,7 @@ typedef struct
     fvector3_t normal; //float nx, ny, nz;
     fvector3_t vertex; //float x, y, z;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2GlVertex;
 
 typedef struct
@@ -215,7 +218,7 @@ typedef struct
     int32_t start;
     uint32_t count;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2ObjMtl;
 
 typedef struct
@@ -229,15 +232,18 @@ typedef struct
     pl2Vertex *vertices;
     pl2GlVertex *glVertices;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Object;
 
 typedef struct
 {
-    float reserved[7];
-    float unknown[3];
+    uint8_t bones[4];
+    fvector3_t translate;
+    fvector3_t rotate;
+    fvector3_t scale;
+    char *name;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Point;
 
 typedef struct
@@ -252,9 +258,21 @@ typedef struct
     pl2Material *materials;
     pl2Object *objects;
     fmatrix4_t *bones;
+    pl2Point *points;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Model;
+
+/******************************************************************************/
+
+typedef struct
+{
+    uint32_t glyphSize;
+    uint32_t numGlyphs;
+    uint16_t *chars;
+    uint8_t *glyphs;
+}
+pl2Font;
 
 /******************************************************************************/
 
@@ -272,7 +290,7 @@ typedef struct
     pl2ImageLayer *layers;
     uint8_t *data;
 }
-__attribute__((packed))
+//__attribute__((packed))
 pl2Image;
 
 /******************************************************************************/
@@ -311,6 +329,7 @@ typedef struct
     bool loop;
     bool locked;
     pl2CameraPath *path;
+    pl2Point *point;
     float time;
 }
 pl2Camera;
@@ -319,6 +338,7 @@ typedef struct
 {
     pl2Model *models[PL2_MAX_CHARPARTS];
     pl2Anim *anim;
+    pl2Point *point;
     uint32_t frame;
     float time;
     bool visible;
@@ -400,9 +420,13 @@ void pl2PackageClose(pl2Package *package);
 void pl2PackageFree(pl2Package *package);
 
 /**
- * Read file entry from a package.
+ * Read file entry from a package by name.
  */
 pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name);
+/**
+ * Read file entry from a package by index.
+ */
+pl2PackageFile *pl2PackageReadIndex(pl2Package *package, int index);
 /**
  * Free package file entry.
  */
@@ -417,6 +441,7 @@ void pl2AnimFree(pl2Anim *anim);
 
 pl2Model *pl2ModelLoad(const char *name);
 void pl2ModelFree(pl2Model *model);
+int pl2ModelAddPoints(pl2Model *model);
 
 /******************************************************************************/
 
@@ -436,9 +461,19 @@ void pl2CameraPathFree(pl2CameraPath *path);
 
 /******************************************************************************/
 
-void pl2CharacterSetanim(pl2Character *character, pl2Anim *anim);
-void pl2CharacterUpdate(pl2Character *character, float dt);
-void pl2CharacterDraw(pl2Character *character);
+pl2Font *pl2FontLoad(const char *name);
+void pl2FontFree(pl2Font *font);
+int pl2FontMeasureText(pl2Font *font, const char *text);
+void pl2FontPrint(pl2Font *font, int x, int y, uint32_t color, const char *text);
+void pl2FontPrintCenter(pl2Font *font, int x, int y, uint32_t color, const char *text);
+void pl2FontPrintRight(pl2Font *font, int x, int y, uint32_t color, const char *text);
+
+/******************************************************************************/
+
+void pl2CharAnimate(pl2Character *character, float dt);
+void pl2CharRender(pl2Character *character);
+int pl2CharSetAnim(pl2Character *character, pl2Anim *anim);
+int pl2CharSetPoint(pl2Character *chr, const char *name);
 
 /******************************************************************************/
 
@@ -447,6 +482,8 @@ void pl2CameraUpdate(pl2Camera *camera, float dt);
 void pl2CameraDraw(pl2Camera *camera);
 void pl2CameraRotate1P(pl2Camera *camera, float xr, float yr);
 void pl2CameraRotate3P(pl2Camera *camera, float xr, float yr);
+void pl2CameraZoom(pl2Camera *camera, float dist);
+int pl2CameraSetPoint(pl2Camera *camera, const char *name);
 
 /******************************************************************************/
 

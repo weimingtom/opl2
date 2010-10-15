@@ -7,7 +7,7 @@
 
 void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile (
         "ulv.q   c100,  0+%1\n"
         "ulv.q   c110, 16+%1\n"
@@ -40,7 +40,7 @@ void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
 
 void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile (
         "ulv.q   c100,  0+%1\n"
         "ulv.q   c110, 16+%1\n"
@@ -64,7 +64,7 @@ void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t
 
 void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile(
         "ulv.q  c000,  0+%1\n"
         "ulv.q  c010, 16+%1\n"
@@ -93,7 +93,7 @@ void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
 
 void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile(
         "ulv.q  c010, 0+%1\n"
         "ulv.q  c020, 0+%2\n"
@@ -112,7 +112,7 @@ void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 
 void pl2VectorSub4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile(
         "ulv.q  c010, 0+%1\n"
         "ulv.q  c020, 0+%2\n"
@@ -136,7 +136,7 @@ float pl2VectorDot4f(const fvector4_t *a, const fvector4_t *b)
 
 void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile(
         "mtv    %2, s020\n"
         "ulv.q  c010, 0+%1\n"
@@ -155,7 +155,7 @@ void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
 
 void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile(
         "mtv    %2, s020\n"
         "ulv.q  c000, 0+%0\n"
@@ -211,7 +211,7 @@ void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
 
 void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
 {
-#if _PSP_FW_VERSION
+#if 0 //_PSP_FW_VERSION
     asm volatile (
         "mtv    %2, s020\n"
         "ulv.q  c010, 0+%1\n"
@@ -287,10 +287,8 @@ void pl2VectorOrbit(fvector3_t *planet, const fvector3_t *sun, const fvector3_t 
 
 void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance)
 {
-   fvector3_t t, v;
-   pl2VectorSub3f(&t, obj, targ);
-   pl2VectorScale3f(&v, &t, distance / pl2VectorLength3f(&t));
-   pl2VectorAdd3f(&t, &t, &v);
-   pl2VectorAdd3f(obj, &t, targ);
+   fvector3_t t;
+   pl2VectorSub3f(&t, targ, obj);
+   pl2VectorScaleAdd3f(obj, &t, distance / pl2VectorLength3f(&t));
 }
 

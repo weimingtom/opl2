@@ -1,11 +1,11 @@
-include objects.mak
-
 CC = gcc
 CFLAGS += -Wall -g
 
 LIBS += -llua -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32 -lvorbis -lvorbisfile
 CFLAGS += -DFREEGLUT_STATIC
 TARGET = opl2.exe
+
+include common.mak
 
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS)
@@ -15,8 +15,11 @@ clean:
 
 rebuild: clean $(TARGET)
 
-ARGS = -window 640x480
+ARGS = -window -geometry 640x480+0+0
 test: $(TARGET)
 	$(TARGET) $(ARGS)
 debug: $(TARGET)
 	gdb -ex run --args $(TARGET) $(ARGS)
+
+pl2ex pl2ex.exe: pl2ex.o opl2_int.o opl2_pl2.o
+	$(CC) -o $@ $^ $(LIBS)

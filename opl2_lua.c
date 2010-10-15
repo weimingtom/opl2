@@ -71,7 +71,18 @@ static int l_pl2Character_setAnim(lua_State *L)
     if(chr->anim) pl2AnimFree(chr->anim);
 
     chr->anim = pl2AnimLoad(name);
-    chr->time = chr->frame = 0;
+    chr->time = 0;
+    chr->frame = -1;
+
+    return 0;
+}
+
+static int l_pl2Character_setPoint(lua_State *L)
+{
+    pl2Character *chr = *checkpl2Character(L, 1);
+    const char *name = luaL_optstring(L, 2, NULL);
+
+    pl2CharSetPoint(chr, name);
 
     return 0;
 }
@@ -135,6 +146,8 @@ static luaL_Reg pl2Character_methods[] =
     //{ "getModel", l_pl2Character_getModel },
     { "setAnim", l_pl2Character_setAnim },
     //{ "getAnim", l_pl2Character_getAnim },
+    { "setPoint", l_pl2Character_setPoint },
+    //{ "getPoint", l_pl2Character_getPoint },
     { "setVisible", l_pl2Character_setVisible },
     { "getVisible", l_pl2Character_getVisible },
     { "setName", l_pl2Character_setName },
@@ -421,6 +434,16 @@ static int l_pl2Camera_setPath(lua_State *L)
     return 0;
 }
 
+static int l_pl2Camera_setPoint(lua_State *L)
+{
+    pl2Camera *cam = *checkpl2Camera(L, 1);
+    const char *name = luaL_optstring(L, 2, NULL);
+
+    pl2CameraSetPoint(cam, name);
+
+    return 0;
+}
+
 static int l_pl2Camera_setLocked(lua_State *L)
 {
     pl2Camera *cam = *checkpl2Camera(L, 1);
@@ -451,6 +474,8 @@ static luaL_Reg pl2Camera_methods[] =
     { "getFov", l_pl2Camera_getFov },
     { "setPath", l_pl2Camera_setPath },
     //{ "getPath", l_pl2Camera_getPath },
+    { "setPoint", l_pl2Camera_setPoint },
+    //{ "getPoint", l_pl2Camera_getPoint },
     { "setLocked", l_pl2Camera_setLocked },
     { "getLocked", l_pl2Camera_getLocked },
     { NULL, NULL }

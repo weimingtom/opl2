@@ -1,0 +1,369 @@
+Binary formats:
+	char = unsigned 1-byte integer
+	int = 4-byte integer
+	short = 2-byte integer
+	color = 4*char, RGBA (or BGRA?)
+	float = 32-bit float (IEEE 754)
+
+Text formats:
+	"text" = literal text
+	"<value>" = placeholder text
+
+================================================================================
+PL2 (archives) - binary
+================================================================================
+
+<char*16> reserved (zero)
+
+for each entry:
+	<char*32> name
+	<int> offset
+	<int> compressed size
+	<int> uncompressed size
+	<int> ?
+
+# of entries = (entry[0].offset - 16) / sizeof(entry)
+
+Compression: LZ77 variant
+
+buffer = char[4096]
+inpos = outpos = 0
+
+write( data )
+{
+	write data to output
+	copy data to buffer[outpos]
+	outpos += len(data)
+}
+
+until end of "uncompressed size":
+	<char> flag byte
+	
+	for each flag:
+		if set (1):
+			<char> raw byte
+			write( byte )
+		else:
+			<char> 0xXX
+			<char> 0xYZ
+			X = low 8 bits of offset
+			Y = high 4 bits of offset
+			Z = 4 bits of length
+			
+			write( 0xZ+3 bytes from buffer[0xYXX+18] )
+
+================================================================================
+TMB (models) - binary
+================================================================================
+
+<char*4> signature "TMB0"
+
+<int> # of textures
+
+for each texture:
+        <char*32> name
+        <short> width
+        <short> height
+        <color*width*height> RGBA data
+
+<int> # of materials
+
+for each material:
+        <float*4> ambient  color (RGBA) (alpha may be junk)
+        <float*4> diffuse  color (RGBA) "
+        <float*4> specular color (RGBA) "
+        <float*4> emissive color (RGBA) "
+        <float> shininess
+        <int> texture id
+
+<int> # of objects
+
+for each object:
+        <char*32> name
+        <float*16> transform matrix
+
+        <int> # of faces
+        <int> ?
+        <int> # of materials
+
+        for each material:
+                <int> material id
+                <int> starting vertex
+                <int> # of faces
+
+        for each face:
+                for 3 vertices:
+                        <float*3> coordinate
+                        <float*3> bone weights
+                        <char*4> bone indexes [W3 = 1.0 - W0 - W1 - W2]
+                        <float*3> vertex normal
+                        <color> RGBA color
+                        <float*2> texture UV
+
+<int> # of bones
+
+for each bone:
+	<float*16> inverse transform matrix
+
+<int> # of points
+
+for each point:
+	<char*4> ?
+	<float*3> translation
+	<float*3> rotation
+	<float*3> scaling?
+
+<char*?> point names (list of NUL-terminated strings)
+
+================================================================================
+TSB (animations) - binary
+================================================================================
+
+<char*4> signature "TSB0"
+
+<int*3> zero
+
+<int> # of bones
+
+<int> # of frames
+
+<int> loop start frame
+
+<int> ?
+
+for each frame:
+        for each bone:
+                <float*16> transform matrix
+
+for each bone:
+        <float*42> ?
+
+
+================================================================================
+TCM (camera animations) - text
+================================================================================
+
+"@TCM100"
+
+"[CAMERAANIM]"
+"<loop flag> <# frames>"
+
+for each frame:
+	"<x> <y> <z> <look x> <look y> <look z> <fov>"
+
+"<___end___>"
+
+================================================================================
+TXT (scripts) - text
+================================================================================
+
+Summary of commands used in Polygon Love 2 script files.
+This list is based on the script comments and educated guesses.
+I give no guarantee that any of them is accurate or correct.
+
+Conventions:
+ * Commands are CaSe-SeNsItIvE.
+ * Commands that take one or more arguments should be closed with a semicolon,
+   even if the arguments are empty.
+ * Calculating time in "frames" assumes a framerate of 60(?)fps.
+ * A pound (#) character begins a comment which extends to the end of the line.
+ * Labels are introduced with a colon and closed with a semicolon.
+
+Format:
+command
+        "Mnemonic"
+        Description of the command and its parameters.
+
+=====
+Flow control
+=====
+
+%G<X>;
+        "Go"
+        Go to script X.
+
+%J<X>;
+        "Jump"
+        Jump to label X.
+
+%Q
+        "Quit"
+        Quit the game.
+
+=====
+Text/game control
+=====
+
+%W<X>;
+        "Window"
+        Show/hide message window.
+
+%T<X>;
+        "Title"
+        Show/hide title logo (and adjust menu position).
+
+%w<X>;
+        "Wait"
+        Wait X frames.
+
+%n<X>;
+        "Name"
+        Set displayed character name to X.
+
+%K
+        "Keep"
+        Keep text window displayed until user input.
+
+=====
+Variables
+=====
+
+%S<X>,<Y>,<Z>;
+        "Set"
+        Modify value in slot X using operator Y and operand Z.
+        E.g. %S0,=,42; <- set value #0 to 42
+             %S1,+,5;  <- add 5 to value #1
+
+%E<X>,<Y>,<Z>,<W>;
+        "Evaluate"
+        Test value in slot X using operator Y and operand Z; jump to label W if true.
+
+=====
+Menus
+=====
+
+%i<X>,<Y>;
+        "Item"
+        Add item to current menu with text X and label Y.
+
+%I
+        "Input"
+        Execute current menu and jump to label of selected item.
+
+=====
+Models and animation
+=====
+
+%ml<X>,<Y>;
+        "Model Load"
+        Load model Y in slot X.
+
+%mb<X>,<Y>;
+        "Model Background"
+        Load background (room) model Y in slot X.
+
+%mm<X>,<Y>;
+        "Model Motion"
+        Animate model in slot X with animation Y.
+
+%mn<X>,<Y>;
+        "Model motioN"
+        Animate background model in slot X with animation Y.
+
+%mp<X>,<Y>;
+        "Model Position"
+        Move model in slot X to (named) position Y.
+
+%ma<X>,<Y>,<Z>;
+        "Model Add"
+        Add contents of model Z to sub-slot Y of model in slot X.
+
+%md<X>,<Y>;
+        "Model Delete"
+        Remove model in slot Y of character X.
+
+%mh<X>,<Y>,<Z>;
+        "Model H-mode"
+        Load/unload "H-mode" (partly removed) version of model in slot Y of character X.
+
+%mv<X>,<Y>;
+        "Model Visible"
+        Set visibility of model X to Y (0 = invisible, 1 = visible).
+
+=====
+Lighting
+=====
+
+%lv<X>,<R>,<G>,<B>;
+        Unknown.
+
+%ld<X>,<R>,<G>,<B>;
+        "Light Diffuse"
+        Set diffuse color of light X to (R, G, B).
+
+%la<X>,<R>,<G>,<B>;
+        "Light Ambient"
+        Set ambient color of light X to (R, G, B).
+
+%ls<X>,<R>,<G>,<B>;
+        "Light Specular"
+        Set specular color of light X to (R, G, B).
+
+
+%le<X>,<Y>;
+        "Light Enable"
+        Enable/disable light X.
+
+=====
+Camera control
+=====
+
+%c<X>,<Y>;
+        "Camera"
+        Set camera to follow path X (and loop if Y?).
+
+%cp<X>;
+        "Camera Position"
+        Make camera look at position X.
+
+%cl<X>;
+        "Camera Lock"
+        Lock/unlock? camera. (Lock what? Disable user control?)
+
+=====
+Graphics
+=====
+
+%g<X>;
+        "Graphic"
+        Display image X.
+
+%f<X>,<Y>,<Z>;
+        Fade (layer X?) to alpha level Y over Z frames.
+        (Seems like X=0 -> 3D graphics, X=1 -> 2D graphics/overlay)
+
+=====
+Music and sound effects
+=====
+
+%M<X>,<Y>;
+        "Music"
+        Play music X (fade for Y frames?).
+
+%MA<X>,<Y>;
+        "Media Audio"
+        Play looping sound effect X (fade for Y frames?).
+
+%MS<X>,<Y>;
+        "Media Sound"
+        Play sound effect X (fade for Y frames?).
+
+%o<X>;
+        "vOice"
+        Play voice file X.
+
+
+================================================================================
+BIN (font) - binary
+================================================================================
+
+<char*4> signature "FONT"
+
+<int> # of glyphs
+
+<int> glyph size?
+
+for each glyph:
+	<short> character code
+	<char*size*size> glyph data
+

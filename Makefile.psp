@@ -1,9 +1,9 @@
 PSPSDK = $(shell psp-config --pspsdk-path)
 PSPDEV = $(shell psp-config --pspdev-path)
 
-include objects.mak
+include common.mak
 
-LIBS += -llua -lglut -lGLU -lGL -lALut -lOpenAL32
+LIBS += -llua -lglut -lGLU -lGL -lALut -lOpenAL32 -lvorbisfile -lvorbis -logg
 LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 TARGET = opl2

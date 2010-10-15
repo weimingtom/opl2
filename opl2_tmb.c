@@ -229,6 +229,55 @@ pl2Model *pl2ModelLoad(const char *name)
         READMATRIX4(model->bones[i], data);
     }
 
+    //float f = READFLOAT(data);
+    //DEBUGPRINT("%s: unknown float == %g\n", __func__, f);
+
+    model->numPoints = READUINT32(data);
+
+    DEBUGPRINT("%s: numPoints == %d\n", __func__, model->numPoints);
+
+    model->points = NEWARR(model->numPoints, pl2Point);
+
+    if(!model->points)
+    {
+        pl2PackageFileFree(file);
+        pl2ModelFree(model);
+        PL2_ERROR(PL2_ERR_MEMORY);
+    }
+
+    for(i = 0; i < model->numPoints; i++)
+    {
+        pl2Point *p = &(model->points[i]);
+        READSTRING(4, p->bones, data);
+        READVECTOR3(model->points[i].translate, data);
+        READVECTOR3(model->points[i].rotate, data);
+        READVECTOR3(model->points[i].scale, data);
+    }
+
+    char *pointName = (char*)data;
+
+    for(i = 0; i < model->numPoints; i++)
+    {
+        while(*data++);
+        model->points[i].name = strdup(pointName);
+
+        DEBUGPRINT("%s: points[%d] (\"%s\") == T<%g,%g,%g>, R<%g,%g,%g>, S<%g,%g,%g>\n",
+                   __func__, i, pointName,
+                   model->points[i].translate.x,
+                   model->points[i].translate.y,
+                   model->points[i].translate.z,
+                   model->points[i].rotate.x,
+                   model->points[i].rotate.y,
+                   model->points[i].rotate.z,
+                   model->points[i].scale.x,
+                   model->points[i].scale.y,
+                   model->points[i].scale.z);
+
+        pointName = (char*)(data);
+    }
+
+    pl2ModelAddPoints(model);
+
     pl2PackageFileFree(file);
     return model;
 }
@@ -281,6 +330,20 @@ void pl2ModelFree(pl2Model *model)
         if(model->bones)
         {
             DELETE(model->bones);
+        }
+
+        if(model->points)
+        {
+            int i;
+            for(i = 0; i < model->numPoints; i++)
+            {
+                if(model->points[i].name)
+                {
+                    DELETE(model->points[i].name);
+                }
+            }
+
+            DELETE(model->points);
         }
 
         DELETE(model);

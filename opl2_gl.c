@@ -43,7 +43,7 @@ int glutGet(GLenum what)
 
             SceUInt64 this_tick;
             sceRtcGetCurrentTick(&this_tick);
-            return (float)(this_tick - first_tick) / (float)(tick_res);
+            return 1000 * (this_tick - first_tick) / (tick_res);
         }
     }
     return -1;
@@ -76,24 +76,36 @@ void _pl2GlPrintErrors(const char *func, int line)
     }
 }
 
+static int pl2_gl_2d = 0;
+
 void pl2GlBegin2D()
 {
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(0, pl2_screen_width, pl2_screen_height, 0);
+    if(!pl2_gl_2d)
+    {
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, pl2_screen_width, pl2_screen_height, 0, -1, 1);
 
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        pl2_gl_2d = 1;
+    }
 }
 
 void pl2GlEnd2D()
 {
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
+    if(pl2_gl_2d)
+    {
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+
+        pl2_gl_2d = 0;
+    }
 }
 
 /******************************************************************************/
@@ -134,9 +146,11 @@ void pl2LayerDraw(pl2Layer *layer)
         glDisable(GL_LIGHTING);
         glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
 
-        int w = pl2_screen_width, h = pl2_screen_height;
         const struct { float x, y, z; } rect[4] = {
-            { 0, 0, 0 }, { 0, h, 0 }, { w, h, 0 }, { w, 0, 0 }
+            { 0,                0,                 0 },
+            { 0,                pl2_screen_height, 0 },
+            { pl2_screen_width, pl2_screen_height, 0 },
+            { pl2_screen_width, 0,                 0 }
         };
         glInterleavedArrays(GL_V3F, 0, rect);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -185,8 +199,8 @@ void pl2LightConfig(pl2Light *light, int id)
         if(light->enabled)
         {
             glLightfv(GL_LIGHT0 + id, GL_POSITION, (GLfloat*)&(light->position));
-            glLightfv(GL_LIGHT0 + id, GL_AMBIENT, (GLfloat*)&(light->ambient));
-            glLightfv(GL_LIGHT0 + id, GL_DIFFUSE, (GLfloat*)&(light->diffuse));
+            glLightfv(GL_LIGHT0 + id, GL_AMBIENT,  (GLfloat*)&(light->ambient ));
+            glLightfv(GL_LIGHT0 + id, GL_DIFFUSE,  (GLfloat*)&(light->diffuse ));
             glLightfv(GL_LIGHT0 + id, GL_SPECULAR, (GLfloat*)&(light->specular));
             glEnable(GL_LIGHT0 + id);
         }
@@ -211,11 +225,30 @@ void pl2CameraConfig(pl2Camera *cam)
         //DEBUGPRINT("%s: screen == %dx%d (%g:1)\n", __func__,
         //           pl2_screen_width, pl2_screen_height, pl2_screen_aspect);
 
+        fvector3_t e = cam->eye, f = cam->focus, u = cam->up;
+
+        if(cam->point)
+        {
+            //pl2VectorAdd3f(&e, &e, &(cam->point->translate));
+            //pl2VectorAdd3f(&f, &f, &(cam->point->translate));
+        }
+
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        gluLookAt(cam->eye  .x, cam->eye  .y, cam->eye  .z,
-                  cam->focus.x, cam->focus.y, cam->focus.z,
-                  cam->up   .x, cam->up   .y, cam->up   .z);
+        gluLookAt(e.x, e.y, e.z,
+                  f.x, f.y, f.z,
+                  u.x, u.y, u.z);
+
+        if(cam->point)
+        {
+            glRotatef(-DEG(cam->point->rotate.x), 1, 0, 0);
+            glRotatef(-DEG(cam->point->rotate.y), 0, 1, 0);
+            glRotatef(-DEG(cam->point->rotate.z), 0, 0, 1);
+            glTranslatef(-cam->point->translate.x,
+                         -cam->point->translate.y,
+                         -cam->point->translate.z);
+        }
+
 
         //DEBUGPRINT("%s: camera == <%g,%g,%g> <%g,%g,%g> <%g,%g,%g> %g\n", __func__,
         //           cam->eye.x, cam->eye.y, cam->eye.z,
@@ -256,9 +289,9 @@ void pl2CameraUpdate(pl2Camera *cam, float dt)
 
         //DEBUGPRINT("%s: frame %d\n", __func__, frame);
 
-        cam->eye = cam->path->frames[frame].eye;
+        cam->eye   = cam->path->frames[frame].eye;
         cam->focus = cam->path->frames[frame].focus;
-        cam->fov = cam->path->frames[frame].fov;
+        cam->fov   = cam->path->frames[frame].fov;
     }
 }
 
@@ -293,6 +326,8 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
     }
 
     int numBones = (model->numBones > anim->numBones) ? model->numBones : anim->numBones;
+
+    if(numBones <= 0) return;
 
     fmatrix4_t bones[numBones];
 
@@ -385,13 +420,16 @@ void pl2CharAnimate(pl2Character *chr, float dt)
                 frame = loop + (frame - loop) % (count - loop);
             }
 
-            int i;
-            for(i = 0; i < PL2_MAX_CHARPARTS; i++)
+            if(frame != chr->frame)
             {
-                pl2ModelAnimate(chr->models[i], chr->anim, frame);
-            }
+                int i;
+                for(i = 0; i < PL2_MAX_CHARPARTS; i++)
+                {
+                    pl2ModelAnimate(chr->models[i], chr->anim, frame);
+                }
 
-            chr->frame = frame;
+                chr->frame = frame;
+            }
         }
     }
 }
@@ -412,7 +450,7 @@ void pl2ModelRender(const pl2Model *model)
 
     //glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
-    glMatrixMode(GL_MODELVIEW);
+    //glMatrixMode(GL_MODELVIEW);
 
     int i, j;
 
@@ -422,7 +460,7 @@ void pl2ModelRender(const pl2Model *model)
 
         //DEBUGPRINT("%s: obj == %p, obj->glVertices == %p\n", __func__, obj, obj ? obj->glVertices : NULL);
 
-        glPushMatrix();
+        //glPushMatrix();
         //glMultMatrixf((GLfloat*)&(obj->transform));
 
         glInterleavedArrays(GL_T2F_N3F_V3F, 0, obj->glVertices);
@@ -453,19 +491,46 @@ void pl2ModelRender(const pl2Model *model)
             }
         }
 
-        glPopMatrix();
+        //glPopMatrix();
     }
 }
 
-void pl2CharRender(const pl2Character *chr)
+void pl2CharRender(pl2Character *chr)
 {
     if(chr && chr->visible)
     {
         int i;
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+
+        if(chr->point)
+        {
+            /*
+            DEBUGPRINT("%s: T<%g,%g,%g> R<%g,%g,%g>\n", __func__,
+                       chr->point->translate.x,
+                       chr->point->translate.y,
+                       chr->point->translate.z,
+                       chr->point->rotate.x,
+                       chr->point->rotate.y,
+                       chr->point->rotate.z);
+            */
+
+            glTranslatef(chr->point->translate.x,
+                         chr->point->translate.y,
+                         chr->point->translate.z);
+            glRotatef(DEG(chr->point->rotate.x), 1, 0, 0);
+            glRotatef(DEG(chr->point->rotate.y), 0, 1, 0);
+            glRotatef(DEG(chr->point->rotate.z), 0, 0, 1);
+        }
+
         for(i = 0; i < PL2_MAX_CHARPARTS; i++)
         {
             pl2ModelRender(chr->models[i]);
         }
+
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
     }
 }
 
@@ -478,12 +543,14 @@ static void pl2GlutIdleFunc()
 
 static void pl2GlutDisplayFunc()
 {
-    static float last_time = 0;
-    if(last_time == 0) last_time = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+    static uint32_t last_time = 0;
+    if(last_time == 0) last_time = glutGet(GLUT_ELAPSED_TIME);
 
-    const float t = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
-    const float dt = t - last_time;
-    last_time = t;
+    const uint32_t this_time = glutGet(GLUT_ELAPSED_TIME);
+
+    const float dt = (float)(this_time - last_time)*0.001f;
+
+    last_time = this_time;
 
     int i;
 
@@ -530,8 +597,8 @@ static void pl2GlutReshapeFunc(int w, int h)
     pl2_screen_width = w;
     pl2_screen_height = h;
 
-    float f1 = (float)w / 800.f;
-    float f2 = (float)h / 600.f;
+    float f1 = (float)w / (float)(PL2_NOMINAL_SCREEN_WIDTH);
+    float f2 = (float)h / (float)(PL2_NOMINAL_SCREEN_HEIGHT);
 
     pl2_screen_scale = (f1 < f2) ? f1 : f2;
 
@@ -550,9 +617,39 @@ static void pl2GlutReshapeFunc(int w, int h)
     //glLoadIdentity();
 }
 
+#include <math.h>
+
+#if _PSP_FW_VERSION
+
+#include <pspctrl.h>
+
+static void pl2GlutJoystickFunc(unsigned int buttons, int x, int y, int z)
+{
+    if((x * x + y * y) >= 10000)
+    {
+        float x_angle = 2.0f * M_PI * (float)x / 1000.0f;
+        float y_angle = 2.0f * M_PI * (float)y / 1000.0f;
+
+        if(buttons & PSP_CTRL_SQUARE)
+        {
+            pl2CameraRotate1P(&(pl2_cameras[0]), x_angle, y_angle);
+        }
+        else
+        {
+            pl2CameraRotate3P(&(pl2_cameras[0]), x_angle, y_angle);
+        }
+    }
+
+    if(buttons & PSP_CTRL_START)
+    {
+        exit(0);
+    }
+}
+
+#else
+
 static void pl2GlutKeyboardFunc(unsigned char k, int x, int y)
 {
-#if !_PSP_FW_VERSION
     if(k == 13)
     {
         //glutFullScreen();
@@ -573,65 +670,61 @@ static void pl2GlutKeyboardFunc(unsigned char k, int x, int y)
         */
     }
     if(k == 27) exit(0);
-#endif
 }
 
 static void pl2GlutSpecialFunc(int k, int x, int y)
 {
-#if _PSP_FW_VERSION
-    if(k == GLUT_KEY_HOME) exit(0);
-#endif
 }
 
 enum
 {
    MOVE_NONE  = 0,
    MOVE_3P    = 1,
-   MOVE_1P    = 2,
-   MOVE_ORTHO = 4,
+   MOVE_ORTHO = 2,
+   MOVE_1P    = 3,
 };
 
 static int move_mode = 0, mouse_x = -1, mouse_y = -1;
 
 static void pl2GlutMouseFunc(int button, int state, int x, int y)
 {
-   switch (state)
-   {
-      case GLUT_DOWN:
-         switch (button)
-         {
-            case GLUT_LEFT_BUTTON:
-               move_mode |= MOVE_3P;
-               break;
-            case GLUT_RIGHT_BUTTON:
-               move_mode |= MOVE_1P;
-               break;
-            case GLUT_MIDDLE_BUTTON:
-               move_mode |= MOVE_ORTHO;
-               break;
-         }
-         break;
+    DEBUGPRINT("%s: button %d %s\n", __func__, button, (state == GLUT_DOWN) ? "pressed" : "released");
 
-      case GLUT_UP:
-         switch (button)
-         {
-            case GLUT_LEFT_BUTTON:
-               move_mode &= ~MOVE_3P;
-               break;
-            case GLUT_RIGHT_BUTTON:
-               move_mode &= ~MOVE_1P;
-               break;
-            case GLUT_MIDDLE_BUTTON:
-               move_mode &= ~MOVE_ORTHO;
-               break;
-         }
-         break;
-   }
+    switch (state)
+    {
+        case GLUT_DOWN:
+            switch (button)
+            {
+                case GLUT_LEFT_BUTTON:
+                    move_mode |= MOVE_3P;
+                    break;
+                case GLUT_RIGHT_BUTTON:
+                    move_mode |= MOVE_ORTHO;
+                    break;
+                //case GLUT_MIDDLE_BUTTON:
+                //   move_mode |= MOVE_ORTHO;
+                //   break;
+            }
+            break;
 
-   mouse_x = x; mouse_y = y;
+        case GLUT_UP:
+            switch (button)
+            {
+                case GLUT_LEFT_BUTTON:
+                    move_mode &= ~MOVE_3P;
+                    break;
+                case GLUT_RIGHT_BUTTON:
+                    move_mode &= ~MOVE_ORTHO;
+                    break;
+                //case GLUT_MIDDLE_BUTTON:
+                //   move_mode &= ~MOVE_ORTHO;
+                //   break;
+            }
+            break;
+    }
+
+    mouse_x = x; mouse_y = y;
 }
-
-#include <math.h>
 
 static void pl2GlutMotionFunc(int x, int y)
 {
@@ -661,18 +754,17 @@ static void pl2GlutMotionFunc(int x, int y)
    mouse_x = x; mouse_y = y;
 }
 
-#if !_PSP_FW_VERSION
 static struct { int width, height, bpp; }
 pl2_displayModes[] =
 {
     {   -1,   -1,  0 }, // reserved for user-specified mode
-    { 1600, 1200, 32 }, { 1600, 1200, 16 }, //{ 1600, 1200, 8 },
-    { 1280, 1024, 32 }, { 1280, 1024, 16 }, //{ 1280, 1024, 8 },
-    { 1024,  768, 32 }, { 1024,  768, 16 }, //{ 1024,  768, 8 },
-    { 1024,  600, 32 }, { 1024,  600, 16 }, //{ 1024,  600, 8 },
-    {  800,  600, 32 }, {  800,  600, 16 }, //{  800,  600, 8 },
-    {  640,  480, 32 }, {  640,  480, 16 }, //{  640,  480, 8 },
-    {  320,  240, 32 }, {  320,  240, 16 }, //{  320,  240, 8 },
+    { 1600, 1200, 32 }, { 1600, 1200, 16 }, //{ 1600, 1200, 0 },
+    { 1280, 1024, 32 }, { 1280, 1024, 16 }, //{ 1280, 1024, 0 },
+    { 1024,  768, 32 }, { 1024,  768, 16 }, //{ 1024,  768, 0 },
+    { 1024,  600, 32 }, { 1024,  600, 16 }, //{ 1024,  600, 0 },
+    {  800,  600, 32 }, {  800,  600, 16 }, //{  800,  600, 0 },
+    {  640,  480, 32 }, {  640,  480, 16 }, //{  640,  480, 0 },
+    {  320,  240, 32 }, {  320,  240, 16 }, //{  320,  240, 0 },
     {    0,    0,  0 },
 };
 
@@ -681,6 +773,9 @@ static int pl2GlutTryGameMode()
     int i;
     for(i = 0; pl2_displayModes[i].width && pl2_displayModes[i].height; i++)
     {
+        if((pl2_displayModes[i].width < 0) || (pl2_displayModes[i].height < 0))
+            continue;
+
         char mode[32];
         snprintf(mode, sizeof(mode),
                  pl2_displayModes[i].bpp ? "%dx%d:%d" : "%dx%d",
@@ -703,11 +798,11 @@ static int pl2GlutTryGameMode()
     return 0;
 }
 
-#endif
+#endif // !_PSP_FW_VERSION
 
 int pl2GlInit(int *argc, char *argv[])
 {
-    int init_width = 800, init_height = 600;
+    int init_width = PL2_NOMINAL_SCREEN_WIDTH, init_height = PL2_NOMINAL_SCREEN_HEIGHT;
 
 #if !_PSP_FW_VERSION
     int windowed = 0;
@@ -757,7 +852,9 @@ int pl2GlInit(int *argc, char *argv[])
     //atexit(glutExit);
 #endif
 
-#if !_PSP_FW_VERSION
+#if _PSP_FW_VERSION
+    glutCreateWindow("OPL2");
+#else
     if(windowed || !pl2GlutTryGameMode())
     {
         DEBUGPRINT("%s: using windowed mode\n", __func__);
@@ -768,10 +865,14 @@ int pl2GlInit(int *argc, char *argv[])
     glutIdleFunc(pl2GlutIdleFunc);
     glutDisplayFunc(pl2GlutDisplayFunc);
     glutReshapeFunc(pl2GlutReshapeFunc);
+#if _PSP_FW_VERSION
+    glutJoystickFunc(pl2GlutJoystickFunc, 0);
+#else
     glutKeyboardFunc(pl2GlutKeyboardFunc);
     glutSpecialFunc(pl2GlutSpecialFunc);
     glutMouseFunc(pl2GlutMouseFunc);
     glutMotionFunc(pl2GlutMotionFunc);
+#endif
 
 #if FREEGLUT
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
