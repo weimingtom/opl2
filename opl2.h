@@ -341,7 +341,7 @@ typedef struct
     pl2Point *point;
     uint32_t frame;
     float time;
-    bool visible;
+    float visible;
 }
 pl2Character;
 

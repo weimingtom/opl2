@@ -337,7 +337,7 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
     for(i = 0; i < numBones; i++)
     {
-        pl2MultMatrix4f(&(bones[i]), &(seqBones[i]), &(mdlBones[i]));
+        pl2MultMatrix4f(&(bones[i]), &(mdlBones[i]), &(seqBones[i]));
     }
 
     for(i = 0; i < model->numObjects; i++)
@@ -409,7 +409,7 @@ void pl2CharAnimate(pl2Character *chr, float dt)
     {
         chr->time += dt;
 
-        if(chr->visible)
+        if(chr->visible > 0)
         {
             int frame = 30 * chr->time;
             int count = chr->anim->numFrames;
@@ -436,7 +436,7 @@ void pl2CharAnimate(pl2Character *chr, float dt)
 
 /******************************************************************************/
 
-void pl2ModelRender(const pl2Model *model)
+void pl2ModelRender(const pl2Model *model, float alpha)
 {
     if(!model) return;
 
@@ -473,10 +473,17 @@ void pl2ModelRender(const pl2Model *model)
             {
                 pl2Material *mtl = m->material;
 
-                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  (GLfloat*)&(mtl->emissive));
-                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,   (GLfloat*)&(mtl->ambient));
-                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   (GLfloat*)&(mtl->diffuse));
-                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  (GLfloat*)&(mtl->specular));
+                float diffuse[4] = {
+                    mtl->diffuse.r,
+                    mtl->diffuse.g,
+                    mtl->diffuse.b,
+                    mtl->diffuse.a * alpha
+                };
+
+                glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, (GLfloat*)&(mtl->emissive));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  (GLfloat*)&(mtl->ambient));
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  diffuse);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (GLfloat*)&(mtl->specular));
                 glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, mtl->shininess);
 
                 pl2Texture *tex = mtl->texture;
@@ -497,10 +504,11 @@ void pl2ModelRender(const pl2Model *model)
 
 void pl2CharRender(pl2Character *chr)
 {
-    if(chr && chr->visible)
+    if(chr && (chr->visible > 0))
     {
         int i;
 
+        glColor4f(1, 1, 1, chr->visible);
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
 
@@ -526,7 +534,7 @@ void pl2CharRender(pl2Character *chr)
 
         for(i = 0; i < PL2_MAX_CHARPARTS; i++)
         {
-            pl2ModelRender(chr->models[i]);
+            pl2ModelRender(chr->models[i], chr->visible);
         }
 
         glMatrixMode(GL_MODELVIEW);
@@ -747,7 +755,7 @@ static void pl2GlutMotionFunc(int x, int y)
          break;
 
       case MOVE_ORTHO:
-         pl2CameraZoom(&(pl2_cameras[0]), 10.0f * (float)dy / (float)pl2_screen_height);
+         pl2CameraZoom(&(pl2_cameras[0]), -10.0f * (float)dy / (float)pl2_screen_height);
          break;
    }
 

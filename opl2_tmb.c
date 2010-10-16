@@ -120,7 +120,8 @@ pl2Model *pl2ModelLoad(const char *name)
         READCOLOR4(m->emissive, data);
         m->shininess = READFLOAT(data);
 
-        m->ambient.a = m->diffuse.a = m->specular.a = 1.0f;
+        //m->ambient.a =
+        m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
 
         //DEBUGPRINT("%s: Material %d\n", __func__, i);
         //DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
@@ -234,7 +235,7 @@ pl2Model *pl2ModelLoad(const char *name)
 
     model->numPoints = READUINT32(data);
 
-    DEBUGPRINT("%s: numPoints == %d\n", __func__, model->numPoints);
+    //DEBUGPRINT("%s: numPoints == %d\n", __func__, model->numPoints);
 
     model->points = NEWARR(model->numPoints, pl2Point);
 
@@ -279,6 +280,10 @@ pl2Model *pl2ModelLoad(const char *name)
     pl2ModelAddPoints(model);
 
     pl2PackageFileFree(file);
+
+    DEBUGPRINT("%s: total: %d textures, %d materials, %d objects, %d bones, %d points\n", __func__,
+               model->numTextures, model->numMaterials, model->numObjects, model->numBones, model->numPoints);
+
     return model;
 }
 

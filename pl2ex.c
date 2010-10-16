@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         */
     }
 
-    DEBUGPRINT("%s: list_only == %d\n", __func__, list_only);
+    //DEBUGPRINT("%s: list_only == %d\n", __func__, list_only);
     //DEBUGPRINT("%s: package_name == \"%s\"\n", __func__, package_name);
     //DEBUGPRINT("%s: file_filters == %p (%d)\n", __func__, file_filters, argc - (file_filters - argv));
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         {
             snprintf(dir, sizeof(dir), "%s_files", argv[i]);
 
-            DEBUGPRINT("%s: creating \"%s\"\n", __func__, dir);
+            //DEBUGPRINT("%s: creating \"%s\"\n", __func__, dir);
 
             if((mkdir(dir /*, 0777*/) < 0) && (errno != EEXIST))
             {
@@ -107,18 +107,18 @@ int main(int argc, char *argv[])
                 char fn[FILENAME_MAX];
                 snprintf(fn, sizeof(fn), "%s/%s", dir, file->name);
 
-                DEBUGPRINT("%s: writing \"%s\"\n", __func__, fn);
+                //DEBUGPRINT("%s: writing \"%s\"\n", __func__, fn);
 
-                int fd = open(fn, O_WRONLY | O_CREAT | O_TRUNC);
+                FILE *f = fopen(fn, "wb");
 
-                if(fd < 0)
+                if(f == NULL)
                 {
                     perror("error opening file");
                 }
 
-                write(fd, file->data, file->length);
+                fwrite(file->data, file->length, 1, f);
 
-                close(fd);
+                fclose(f);
             }
 
             pl2PackageFileFree(file);

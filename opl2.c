@@ -64,6 +64,9 @@ int main(int argc, char *argv[])
 #if _PSP_FW_VERSION
     atexit(sceKernelExitGame);
 #endif
+    freopen("opl2.log", "wt", stdout);
+    freopen("error.log", "wt", stderr);
+
     pl2GameInit(&argc, argv);
     pl2GameRun();
     return 0;

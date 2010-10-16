@@ -1,19 +1,17 @@
-from struct import Struct
-
-from PIL import Image
+import struct, Image
 from os.path import splitext
 
 __all__ = ['pl2Object', 'pl2Model', 'pl2Sequence', 'pl2Camera', 'pl2Package']
 
-LONG     = Struct('<L')
-TOKEN    = Struct('<4s')
-TEXINFO  = Struct('<2H')
-MATRIX3  = Struct('<9f')
-MATRIX4  = Struct('<16f')
-MATERIAL = Struct('<17fl')
-OBJMTL   = Struct('<3l')
-VERTEX   = Struct('<6f4B3fL2f')
-UNKNOWN  = Struct('<7f3f')
+LONG     = struct.Struct('<L')
+TOKEN    = struct.Struct('<4s')
+TEXINFO  = struct.Struct('<2H')
+MATRIX3  = struct.Struct('<9f')
+MATRIX4  = struct.Struct('<16f')
+MATERIAL = struct.Struct('<17fl')
+OBJMTL   = struct.Struct('<3l')
+VERTEX   = struct.Struct('<6f4B3fL2f')
+POINT    = struct.Struct('<4B9f')
 
 def _open(f):
     if isinstance(f, str):
@@ -24,14 +22,17 @@ def _open(f):
 
 def _read(f, s):
     if isinstance(s, str):
-        s = Struct(s)
-    r = s.unpack(f.read(s.size))
+        s = struct.Struct(s)
+    t = f.read(s.size)
+    if len(t) != s.size:
+        raise struct.error,'unpack needs %d bytes but got only %d' % (s.size, len(t))
+    r = s.unpack(t)
     if len(r) == 1: return r[0]
     return r
 
 def _write(f, s, *args):
     if isinstance(s, str):
-        s = Struct(s)
+        s = struct.Struct(s)
     f.write(s.pack(*args))
 
 def _transpose(M):
@@ -92,7 +93,7 @@ class pl2Model:
         self.materials = []
         self.objects = []
         self.bones = []
-        self.unknown = []
+        self.points = []
 
     @staticmethod
     def load(f):
@@ -133,8 +134,8 @@ class pl2Model:
         for i in xrange(_read(f, LONG)):
             self.bones.append(_transpose(_read(f, MATRIX4)))
 
-        for i in xrange(_read(f, LONG)):
-            self.unknown.append(_read(f, UNKNOWN))
+        #for i in xrange(_read(f, LONG)):
+        #    self.points.append(_read(f, POINT))
 
         return self
 
@@ -144,7 +145,7 @@ class pl2Sequence:
     def __init__(self):
         self.frames = []
         self.special = []
-	self.loopFrame = 0
+        self.loopFrame = 0
 
     @staticmethod
     def load(f):
@@ -267,13 +268,13 @@ class pl2Package:
             return self.ifiles[key]
         else:
             raise KeyError(key)
-            
+
     def __iter__(self):
         return (k for k in self.files)
 
     def close(self):
         self.file.close()
-        
+
     def read(self, f):
         if isinstance(f, str) or isinstance(f, int):
             f = self[f]
@@ -285,13 +286,13 @@ class pl2Package:
             name, offset, lenpck, length = f
         else:
             raise ValueError, "tuple must have length 3 or 4"
-            
+
         self.file.seek(offset)
         s = self.file.read(lenpck)
-            
+
         if lenpck < length:
             s = self._decompress(s, length)
-            
+
         return s
 
     def _decompress (self, s, size):

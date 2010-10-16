@@ -54,6 +54,9 @@ pl2Anim *pl2AnimLoad(const char *name)
     anim->loopFrame  = READUINT32(data);
     anim->numUnknown = READUINT32(data);
 
+    DEBUGPRINT("%s: %d bones, %d frames, loops at %d\n", __func__,
+               anim->numBones, anim->numFrames, anim->loopFrame);
+
     anim->bones = NEWARR(anim->numFrames * anim->numBones, fmatrix4_t);
 
     if (!anim->bones)

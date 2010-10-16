@@ -202,7 +202,7 @@ pl2PackageFile *pl2PackageReadIndex(pl2Package *package, int index)
     }
     else
     {
-        uint8_t *temp = malloc(entry->length);
+        uint8_t *temp = malloc(entry->packedLength);
 
         if (!temp)
         {
@@ -266,7 +266,7 @@ pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name)
             }
             else
             {
-                uint8_t *temp = malloc(entry->length);
+                uint8_t *temp = malloc(entry->packedLength);
 
                 if (!temp)
                 {

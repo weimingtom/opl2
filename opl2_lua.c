@@ -91,9 +91,14 @@ static int l_pl2Character_setVisible(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
 
-    int vis = lua_toboolean(L, 2);
-
-    chr->visible = vis;
+    if(lua_type(L, 2) == LUA_TNUMBER)
+    {
+        chr->visible = fmax(0, fmin(1, lua_tonumber(L, 2)));
+    }
+    else
+    {
+        chr->visible = lua_toboolean(L, 2) ? 1 : 0;
+    }
 
     return 0;
 }

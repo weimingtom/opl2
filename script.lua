@@ -25,49 +25,57 @@ room:clear()
 --------------------------------------------------------------------------------
 
 local actions = {
-    'zen_a01',
+    --'zen_a01',
     zen_a01={'zen_a01_1','zen_a01_2','zen_a01_3','zen_a01_4',point='loc_pos01'},
     --'zen_a02',
     zen_a02={'zen_a02_1','zen_a02_2','zen_a02_3','zen_a02_4',point='loc_pos01'},
-    --'zen_a03',
+    'zen_a03',
     zen_a03={'zen_a03_1','zen_a03_2','zen_a03_3','zen_a03_4',point='loc_pos01'},
-    --'zen_a04',
+    'zen_a04',
     zen_a04={'zen_a04_1','zen_a04_2','zen_a04_3','zen_a04_4',point='loc_pos01'},
-    --'zen_a05',
+    'zen_a05',
     zen_a05={'zen_a05_1','zen_a05_2','zen_a05_3','zen_a05_4',point='loc_pos01'},
-    --'zen_a06',
+    'zen_a06',
     zen_a06={'zen_a06_1','zen_a06_2','zen_a06_3','zen_a06_4',point='loc_pos01'},
-    --'zen_a07',
+    'zen_a07',
     zen_a07={'zen_a07_1','zen_a07_2','zen_a07_3','zen_a07_4',point='loc_pos01'},
-    --'zen_a08',
+    'zen_a08',
     zen_a08={'zen_a08_1','zen_a08_2','zen_a08_3','zen_a08_4',point='loc_pos01'},
-    --'sex_a01',
+    'sex_a01',
     sex_a01={'sex_a01_1','sex_a01_2','sex_a01_3','sex_a01_4',point='loc_pos02'},
-    --'sex_a02',
+    'sex_a02',
     sex_a02={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    --'sex_a03',
+    'sex_a03',
     sex_a03={'sex_a03_1','sex_a03_2','sex_a03_3','sex_a03_4',point='loc_pos02'},
-    --'sex_a04',
+    'sex_a04',
     sex_a04={'sex_a04_1','sex_a04_2','sex_a04_3','sex_a04_4',point='loc_pos02'},
-    --'sex_a05',
+    'sex_a05',
     sex_a05={'sex_a05_1','sex_a05_2','sex_a05_3','sex_a05_4',point='loc_pos01'},
-    --'sex_a06',
+    'sex_a06',
     sex_a06={'sex_a06_1','sex_a06_2','sex_a06_3','sex_a06_4',point='loc_pos02'},
     --'tekoki00',
     tekoki00={'tekoki_1','tekoki_2','tekoki_3','tekoki_4',point='loc_pos01'},
+    --'asikoki00',
+    asikoki00={'ashi03_1','ashi03_2','ashi03_3','ashi03_4',point='loc_pos01'},
     --'paizuri_01',
-    paizuri_01={'sex_a04_1','sex_a04_2','sex_a04_3','sex_a04_4',point='loc_pos02'},
+    paizuri_01={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
+    --'bak_02',
+    bak_02={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
+    --'vibrator00',
+    vibrator00={'vib01_1','vib01_2','vib01_3','vib01_4',point='loc_pos01'},
     --'vibrator01',
     vibrator01={'vib01_1','vib01_2','vib01_3','vib01_4',point='loc_pos01'},
     --'vibrator02',
     vibrator02={'vib02_1','vib02_2','vib02_3','vib02_4',point='loc_pos01'},
     }
 
-math.randomseed(os.time())
-function setAnims(name)
-    name = name or actions[math.random(1,#actions)]
-    camera:setPath(actions[name][math.random(1,#actions[name])])
-    print(#actions,#actions[name])
+function setAnims(name,cam)
+    math.random()
+    local a = math.random(1,#actions)
+    name = name or actions[a]
+    local b = math.random(1,#actions[name])
+    camera:setPath(actions[name][cam] or actions[name][b])
+    print(#actions,a,#actions[name],b)
     imo1:setAnim(name..'_F')
     --imo2:setAnim(name..'_F')
     ani:setAnim(name..'_M')
@@ -89,6 +97,14 @@ end
 --------------------------------------------------------------------------------
 
 local chars = {
+    'fate_saber_nude',
+    'fate_saber_lily_nude',
+    'fate_rin_nude',
+    'fate_sakura_nude',
+    'vocaloid_miku_nude',
+    'eva_rei_nude',
+    'eva_asuka_nude',
+
     ani = {
         [1]="ani_bodyB_00",
     },
@@ -236,6 +252,18 @@ local chars = {
         [12]="imo_shoes_vocaloid_00",
         [13]="imo_hair_vocaloid_00",
     },
+    vocaloid_miku_nude = {
+        [1]="imo_bodyA_01",
+        [2]="imo_eye_vocaloid_00",
+        --[3]="imo_underA_06A",
+        --[4]="imo_underA_06B",
+        --[6]="imo_cos_vocaloid_00A",
+        --[7]="imo_cos_vocaloid_00B",
+        [8]="imo_head_vocaloid_00",
+        --[11]="imo_arm_vocaloid_00",
+        --[12]="imo_shoes_vocaloid_00",
+        [13]="imo_hair_vocaloid_00",
+    },
     eva_rei_plugsuit = {
         [1]="imo_bodyB_01",
         [2]="imo_eye_00",
@@ -306,6 +334,13 @@ local chars = {
 }
 
 local rooms = {
+    --'bedroom',
+    'gym_storage',
+    'train',
+    'classroom',
+    'beach',
+    'furo',
+
     bedroom = {
         [1]="room_01",
     },
@@ -316,6 +351,9 @@ local rooms = {
         [1]="room_03",
         [2]="room_03A",
         --anim="room_03A",
+    },
+    furo = {
+        [1]="room_huro01",
     },
     classroom = {
         [1]="class01",
@@ -339,15 +377,18 @@ end
 
 --------------------------------------------------------------------------------
 
+math.randomseed(os.time())
+math.random()
+
 setModels(ani, chars.ani_nude)
-setModels(imo, chars.fate_rin_nude)
-setModels(room, rooms.train)
+setModels(imo1, chars[chars[math.random(1,#chars)]])
+setModels(room, rooms[rooms[math.random(1,#rooms)]])
 
-setAnims('sex_a03')
+setAnims()
 
---imo:setPoint('loc_pos01')
---ani:setPoint('loc_pos01')
---camera:setPoint('loc_pos01')
+--setModels(imo1, chars.fate_saber_nude)
+--setModels(room, rooms.furo)
+--setAnims('zen_a08', 2)
 
 ani:setVisible(true)
 imo:setVisible(true)
