@@ -89,6 +89,7 @@ typedef struct
     float x, y, z, w;
 }
 //__attribute__((packed))
+__attribute__((aligned(16)))
 fvector4_t;
 
 typedef struct
@@ -103,6 +104,7 @@ typedef struct
     fvector4_t x, y, z, w;
 }
 //__attribute__((packed))
+__attribute__((aligned(16)))
 fmatrix4_t;
 
 typedef struct

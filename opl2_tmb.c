@@ -186,6 +186,8 @@ pl2Model *pl2ModelLoad(const char *name)
             m->count = READUINT32(data);
         }
 
+        fmatrix4_t m __attribute__((aligned(16))) = obj->transform;
+
         for(j = 0; j < obj->numTriangles * 3; j++)
         {
             pl2Vertex *v = &(obj->vertices[j]);
@@ -199,8 +201,9 @@ pl2Model *pl2ModelLoad(const char *name)
             v->color = READUINT32(data);
             READTEXCOORD2(v->texcoord, data);
 
-            fvector4_t t = { v->vertex.x, v->vertex.y, v->vertex.z, 1 };
-            pl2VectorTransform4f(&t, &(obj->transform), &t);
+            fvector4_t t __attribute__((aligned(16))) =
+                { v->vertex.x, v->vertex.y, v->vertex.z, 1 };
+            pl2VectorTransform4f(&t, &m, &t);
             v->vertex.x = t.x; v->vertex.y = t.y; v->vertex.z = t.z;
 
             pl2GlVertex *glv = &(obj->glVertices[j]);
@@ -262,6 +265,7 @@ pl2Model *pl2ModelLoad(const char *name)
         while(*data++);
         model->points[i].name = strdup(pointName);
 
+        /*
         DEBUGPRINT("%s: points[%d] (\"%s\") == T<%g,%g,%g>, R<%g,%g,%g>, S<%g,%g,%g>\n",
                    __func__, i, pointName,
                    model->points[i].translate.x,
@@ -273,6 +277,7 @@ pl2Model *pl2ModelLoad(const char *name)
                    model->points[i].scale.x,
                    model->points[i].scale.y,
                    model->points[i].scale.z);
+        */
 
         pointName = (char*)(data);
     }

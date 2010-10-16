@@ -29,6 +29,8 @@ nix-rebuild:
 	make PLATFORM=nix rebuild
 nix-test:
 	make PLATFORM=nix test
+nix-debug:
+	make PLATFORM=nix debug
 	
 win dos mingw:
 	make PLATFORM=win all	
@@ -38,6 +40,8 @@ win-rebuild:
 	make PLATFORM=win rebuild
 win-test:
 	make PLATFORM=win test
+win-debug:
+	make PLATFORM=win debug
 	
 psp pspsdk:
 	make PLATFORM=psp all
@@ -80,7 +84,7 @@ else
 
   WINDRES = windres.exe
   OBJS += opl2.res
-  WINAPP = -mwindows
+  #WINAPP = -mwindows
 
   LIBS += -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
   CFLAGS += -DFREEGLUT_STATIC

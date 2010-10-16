@@ -329,7 +329,9 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
     if(numBones <= 0) return;
 
-    fmatrix4_t bones[numBones];
+    fmatrix4_t bones[numBones] __attribute__((aligned(16)));
+    //fmatrix4_t bones_[numBones+1];
+    //fmatrix4_t *bones = (fmatrix4_t*)((((uint32_t)(bones_)) + 15) & ~15);
 
     int i, j;
 
@@ -443,7 +445,7 @@ void pl2ModelRender(const pl2Model *model, float alpha)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHTING);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -463,7 +465,7 @@ void pl2ModelRender(const pl2Model *model, float alpha)
         //glPushMatrix();
         //glMultMatrixf((GLfloat*)&(obj->transform));
 
-        glInterleavedArrays(GL_T2F_N3F_V3F, 0, obj->glVertices);
+        glInterleavedArrays(GL_T2F_N3F_V3F, sizeof(pl2GlVertex), obj->glVertices);
 
         for (j = 0; j < obj->numMaterials; ++j)
         {
@@ -900,7 +902,7 @@ int pl2GlInit(int *argc, char *argv[])
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
-    glEnable(GL_LIGHTING);
+    //glEnable(GL_LIGHTING);
 
     //float light_pos[] = { 0, 12, -10, 0 };
     //float light_amb[] = { 0.2f, 0.2f, 0.2f, 1 };

@@ -382,7 +382,7 @@ math.random()
 
 setModels(ani, chars.ani_nude)
 setModels(imo1, chars[chars[math.random(1,#chars)]])
-setModels(room, rooms[rooms[math.random(1,#rooms)]])
+--setModels(room, rooms[rooms[math.random(1,#rooms)]])
 
 setAnims()
 

@@ -60,7 +60,9 @@ static int l_pl2Character_setModel(lua_State *L)
 
     chr->models[idx-1] = pl2ModelLoad(name);
 
-    return 0;
+    lua_pushboolean(L, NULL != chr->models[idx-1]);
+
+    return 1;
 }
 
 static int l_pl2Character_setAnim(lua_State *L)
@@ -74,7 +76,9 @@ static int l_pl2Character_setAnim(lua_State *L)
     chr->time = 0;
     chr->frame = -1;
 
-    return 0;
+    lua_pushboolean(L, NULL != chr->anim);
+
+    return 1;
 }
 
 static int l_pl2Character_setPoint(lua_State *L)
@@ -436,7 +440,9 @@ static int l_pl2Camera_setPath(lua_State *L)
 
     //DEBUGPRINT("%s: cam == %p, cam->path == %p\n", __func__, cam, cam->path);
 
-    return 0;
+    lua_pushboolean(L, NULL != cam->path);
+
+    return 1;
 }
 
 static int l_pl2Camera_setPoint(lua_State *L)
@@ -573,7 +579,9 @@ static int l_pl2_play(lua_State *L)
 
     pl2SoundPlay(sound, chan);
 
-    return 0;
+    lua_pushboolean(L, NULL != sound);
+
+    return 1;
 }
 
 static luaL_Reg pl2_functions[] =
@@ -641,7 +649,7 @@ void luaopen_pl2(lua_State *L)
     lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
-    DEBUGPRINT("%s: sizeof(pl2_lua_init) == %d\n", __func__, sizeof(pl2_lua_init));
+    //DEBUGPRINT("%s: sizeof(pl2_lua_init) == %d\n", __func__, sizeof(pl2_lua_init));
 
     int r = luaL_loadbuffer(L, pl2_lua_init, strlen(pl2_lua_init), "@init.lua");
 

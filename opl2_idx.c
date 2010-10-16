@@ -315,7 +315,7 @@ static int pl2PointIndexInsert(pl2Point *point)
     {
         if (!pl2PointIndex[index].used || !strncmp(point->name, pl2PointIndex[index].point.name, 32))
         {
-            DEBUGPRINT("%s: added \"%s\" @ index %u\n", __func__, point->name, index);
+            //DEBUGPRINT("%s: added \"%s\" @ index %u\n", __func__, point->name, index);
             pl2PointIndex[index].point = *point;
             pl2PointIndex[index].used = 1;
             return 1;
