@@ -17,6 +17,7 @@ extern "C" {
 
 #define PL2_TMB_MAGIC ((uint32_t)(0x30424d54)) /* "TMB0" */
 #define PL2_TSB_MAGIC ((uint32_t)(0x30425354)) /* "TSB0" */
+#define PL2_FNT_MAGIC ((uint32_t)(0x544e4f46)) /* "FONT" */
 
 #define PL2_NOMINAL_SCREEN_WIDTH 800
 #define PL2_NOMINAL_SCREEN_HEIGHT 600
@@ -269,9 +270,10 @@ pl2Model;
 
 typedef struct
 {
-    uint32_t glyphSize;
+    uint32_t magic;
     uint32_t numGlyphs;
-    uint16_t *chars;
+    uint32_t glyphSize;
+    uint32_t *chars;
     uint8_t *glyphs;
 }
 pl2Font;
@@ -358,13 +360,15 @@ pl2Layer;
 
 typedef struct
 {
-    uint16_t text[64];
+    int enabled;
+    uint32_t text[63];
 }
 pl2MenuItem;
 
 typedef struct
 {
-    uint32_t selection;
+    int selection;
+    uint32_t numItems;
     pl2MenuItem items[PL2_MAX_MENUITEMS];
 }
 pl2Menu;
@@ -437,11 +441,13 @@ void pl2PackageFileFree(pl2PackageFile *file);
 /******************************************************************************/
 
 pl2Anim *pl2AnimLoad(const char *name);
+pl2Anim *pl2AnimLoadFile(const char *name);
 void pl2AnimFree(pl2Anim *anim);
 
 /******************************************************************************/
 
 pl2Model *pl2ModelLoad(const char *name);
+pl2Model *pl2ModelLoadFile(const char *name);
 void pl2ModelFree(pl2Model *model);
 int pl2ModelAddPoints(pl2Model *model);
 
@@ -449,6 +455,7 @@ int pl2ModelAddPoints(pl2Model *model);
 
 pl2Image *pl2ImageLoad(const char *name);
 void pl2ImageFree(pl2Image *image);
+void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha);
 
 /******************************************************************************/
 
@@ -459,6 +466,7 @@ void pl2SoundPlay(pl2Sound *sound, int channel);
 /******************************************************************************/
 
 pl2CameraPath *pl2CameraPathLoad(const char *name);
+pl2CameraPath *pl2CameraPathLoadFile(const char *name);
 void pl2CameraPathFree(pl2CameraPath *path);
 
 /******************************************************************************/
@@ -466,9 +474,12 @@ void pl2CameraPathFree(pl2CameraPath *path);
 pl2Font *pl2FontLoad(const char *name);
 void pl2FontFree(pl2Font *font);
 int pl2FontMeasureText(pl2Font *font, const char *text);
-void pl2FontPrint(pl2Font *font, int x, int y, uint32_t color, const char *text);
-void pl2FontPrintCenter(pl2Font *font, int x, int y, uint32_t color, const char *text);
-void pl2FontPrintRight(pl2Font *font, int x, int y, uint32_t color, const char *text);
+void pl2FontPrint(pl2Font *font, float x, float y, uint32_t color, const char *text);
+void pl2FontPrintCenter(pl2Font *font, float x, float y, uint32_t color, const char *text);
+void pl2FontPrintRight(pl2Font *font, float x, float y, uint32_t color, const char *text);
+
+size_t pl2Utf8Strlen(const char *text);
+size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length);
 
 /******************************************************************************/
 
@@ -490,14 +501,27 @@ int pl2CameraSetPoint(pl2Camera *camera, const char *name);
 /******************************************************************************/
 
 void pl2MenuClear(pl2Menu *menu);
-void pl2MenuAddItem(pl2Menu *menu, const char *item);
+int pl2MenuAddItem(pl2Menu *menu, const char *item);
 void pl2MenuDraw(pl2Menu *menu);
+int pl2MenuSelect(pl2Menu *menu, uint32_t item);
+int pl2ShowMenu();
+
+int pl2MenuSelectNext(pl2Menu *menu);
+int pl2MenuSelectPrev(pl2Menu *menu);
+int pl2MenuConfirm(pl2Menu *menu);
 
 /******************************************************************************/
 
 void pl2LayerFade(pl2Layer *layer, float target, float length);
 void pl2LayerUpdate(pl2Layer *layer, float dt);
 void pl2LayerDraw(pl2Layer *layer);
+
+/******************************************************************************/
+
+void pl2SetText(const char *text);
+void pl2ShowText();
+void pl2Wait(float sec);
+void pl2TextAdvance();
 
 /******************************************************************************/
 

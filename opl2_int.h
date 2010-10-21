@@ -29,6 +29,7 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 #define NEWVAR(t,x) ((t*)calloc(sizeof(t)+(x),1))
 #define NEW NEWOBJ
 
+#define ARRLEN(a) (sizeof(a)/sizeof((a)[0]))
 #define ARRSIZE(n,t) (sizeof(t)*(n))
 #define VARSIZE(t,x) (sizeof(t)+(x))
 
@@ -44,10 +45,16 @@ extern int pl2_error;
 extern int pl2_screen_width, pl2_screen_height;
 extern float pl2_screen_aspect, pl2_screen_scale;
 
+extern int pl2_censor;
+extern int pl2_text_showing, pl2_menu_showing;
+
+extern pl2Font *pl2_font;
 extern pl2Character pl2_chars[PL2_MAX_CHARS];
 extern pl2Light pl2_lights[PL2_MAX_LIGHTS];
 extern pl2Camera pl2_cameras[PL2_MAX_CAMERAS];
 extern pl2Layer pl2_layers[PL2_MAX_LAYERS];
+extern pl2Menu pl2_menu;
+extern uint32_t pl2_text[];
 
 /******************************************************************************/
 

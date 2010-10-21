@@ -3,9 +3,9 @@
 
 #include <math.h>
 
-static int skipWhiteSpace(char **p)
+static int skipWhiteSpace(const char **p)
 {
-    char *t = *p;
+    const char *t = *p;
 
     //DEBUGPRINT("%s: skip whitespace\n", __func__);
 
@@ -25,7 +25,7 @@ static int skipWhiteSpace(char **p)
 
     return t != *p;
 }
-static int checkString(char **p, char *s)
+static int checkString(const char **p, const char *s)
 {
     skipWhiteSpace(p);
 
@@ -46,9 +46,9 @@ static int checkString(char **p, char *s)
     //DEBUGPRINT("found\n");
     return 1;
 }
-static int parseInt(char **p, int *x)
+static int parseInt(const char **p, int *x)
 {
-    char *t = *p;
+    const char *t = *p;
 
     skipWhiteSpace(p);
 
@@ -73,9 +73,9 @@ static int parseInt(char **p, int *x)
 
     return (t != *p);
 }
-static int parseFloat(char **p, float *x)
+static int parseFloat(const char **p, float *x)
 {
-    char *t = *p;
+    const char *t = *p;
 
     skipWhiteSpace(p);
 
@@ -127,40 +127,23 @@ static int parseFloat(char **p, float *x)
     return (t != *p);
 }
 
-pl2CameraPath *pl2CameraPathLoad(const char *name)
+static pl2CameraPath *pl2CameraPathLoadInternal(const char *data)
 {
-    PL2_CLEAR_ERROR();
-
-    char temp[FILENAME_MAX];
-    snprintf(temp, sizeof(temp), "%s.tcm", name);
-
-    pl2PackageFile *file = pl2PackageGetFile(temp);
-
-    if(NULL == file)
-    {
-        PL2_ERROR(PL2_ERR_NOTFOUND);
-    }
-
-    char *data = (char*)(file->data);
-
     if(!data)
     {
-        pl2PackageFileFree(file);
-        DEBUGPRINT("%s: file->data == NULL\n", __func__);
+        DEBUGPRINT("%s: data == NULL\n", __func__);
         PL2_ERROR(PL2_ERR_INTERNAL);
     }
 
     if(!checkString(&data, "@TCM100"))
     {
         DEBUGPRINT("%s: parse error: bad file ID\n", __func__);
-        pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
 
     if(!checkString(&data, "[CAMERAANIM]"))
     {
         DEBUGPRINT("%s: parse error: bad section header\n", __func__);
-        pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
 
@@ -169,13 +152,11 @@ pl2CameraPath *pl2CameraPathLoad(const char *name)
     if(!parseInt(&data, &first))
     {
         DEBUGPRINT("%s: parse error: loop flag\n", __func__);
-        pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
     if(!parseInt(&data, &last))
     {
         DEBUGPRINT("%s: parse error: frame count\n", __func__);
-        pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
 
@@ -202,7 +183,6 @@ pl2CameraPath *pl2CameraPathLoad(const char *name)
         {
             DEBUGPRINT("%s: parse error: frame %d\n", __func__, i);
             pl2CameraPathFree(path);
-            pl2PackageFileFree(file);
             PL2_ERROR(PL2_ERR_FORMAT);
         }
 
@@ -220,13 +200,70 @@ pl2CameraPath *pl2CameraPathLoad(const char *name)
     if(!checkString(&data, "<___end___>"))
     {
         DEBUGPRINT("%s: parse error: bad trailer\n", __func__);
-        pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
 
     DEBUGPRINT("%s: loaded OK\n", __func__);
 
+    return path;
+}
+
+pl2CameraPath *pl2CameraPathLoad(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    char temp[FILENAME_MAX];
+    snprintf(temp, sizeof(temp), "%s.tcm", name);
+
+    pl2PackageFile *file = pl2PackageGetFile(temp);
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    pl2CameraPath *path = pl2CameraPathLoadInternal((const char*)(file->data));
+
     pl2PackageFileFree(file);
+    return path;
+}
+
+pl2CameraPath *pl2CameraPathLoadFile(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    FILE *file = fopen(name, "rb");
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    if(fseek(file, 0, SEEK_END) < 0)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    int32_t size = ftell(file);
+
+    uint8_t *data = NEWARR(size,uint8_t);
+
+    if(NULL == data)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_MEMORY);
+    }
+
+    if(fread(data, size, 1, file) < 1)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    pl2CameraPath *path = pl2CameraPathLoadInternal((const char*)data);
+
+    fclose(file);
     return path;
 }
 

@@ -65,6 +65,38 @@ static int l_pl2Character_setModel(lua_State *L)
     return 1;
 }
 
+static int l_pl2Character_setModels(lua_State *L)
+{
+    pl2Character *chr = *checkpl2Character(L, 1);
+    luaL_checktype(L, 2, LUA_TTABLE);
+
+    int i; int r = 0;
+
+    for(i = 1; i <= PL2_MAX_CHARPARTS; i++)
+    {
+        if(chr->models[i-1])
+        {
+            pl2ModelFree(chr->models[i-1]);
+            chr->models[i-1] = NULL;
+        }
+
+        lua_rawgeti(L, 2, i);
+
+        if(!lua_isnil(L, -1))
+        {
+            const char *name = lua_tostring(L, -1);
+            chr->models[i-1] = pl2ModelLoad(name);
+            if(NULL != chr->models[i-1]) r = 1;
+        }
+
+        lua_pop(L, 1);
+    }
+
+    lua_pushboolean(L, r);
+
+    return 1;
+}
+
 static int l_pl2Character_setAnim(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
@@ -153,6 +185,7 @@ static luaL_Reg pl2Character_methods[] =
 {
     { "setModel", l_pl2Character_setModel },
     //{ "getModel", l_pl2Character_getModel },
+    { "setModels", l_pl2Character_setModels },
     { "setAnim", l_pl2Character_setAnim },
     //{ "getAnim", l_pl2Character_getAnim },
     { "setPoint", l_pl2Character_setPoint },
@@ -584,6 +617,93 @@ static int l_pl2_play(lua_State *L)
     return 1;
 }
 
+static int l_pl2_showText(lua_State *L)
+{
+    const char *text = luaL_checkstring(L, 1);
+
+    pl2SetText(text);
+
+    pl2ShowText();
+
+    return 0;
+}
+
+static int l_pl2_showMenu(lua_State *L)
+{
+    luaL_checktype(L, 1, LUA_TTABLE);
+
+    pl2MenuClear(&pl2_menu);
+
+    int i;
+    for(i = 1; i <= PL2_MAX_MENUITEMS; i++)
+    {
+        lua_rawgeti(L, 1, i);
+
+        pl2MenuAddItem(&pl2_menu, lua_tostring(L, -1));
+
+        lua_pop(L, 1);
+    }
+
+    int r = pl2ShowMenu(&pl2_menu);
+
+    if(r >= 0)
+    {
+        lua_pushinteger(L, r + 1);
+        return 1;
+    }
+
+    return 0;
+}
+
+static int l_pl2_wait(lua_State *L)
+{
+    float time = luaL_checknumber(L, 1);
+
+    pl2Wait(time);
+
+    return 0;
+}
+
+static int l_pl2_ucs(lua_State *L)
+{
+    int i, l = lua_gettop(L);
+
+    luaL_Buffer b;
+    luaL_buffinit(L, &b);
+
+    for(i = 1; i <= l; i++)
+    {
+        int c = luaL_checkint(L, i);
+
+        if(c >= 0x10000)
+        {
+            luaL_addchar(&b, 0xF0 | ((c >> 18) & 0x07));
+            luaL_addchar(&b, 0x80 | ((c >> 12) & 0x3f));
+            luaL_addchar(&b, 0x80 | ((c >>  6) & 0x3f));
+            luaL_addchar(&b, 0x80 | ((c >>  0) & 0x3f));
+        }
+        else if(c >= 0x800)
+        {
+            luaL_addchar(&b, 0xe0 | ((c >> 12) & 0x0f));
+            luaL_addchar(&b, 0x80 | ((c >>  6) & 0x3f));
+            luaL_addchar(&b, 0x80 | ((c >>  0) & 0x3f));
+        }
+        else if(c >= 0x80)
+        {
+            luaL_addchar(&b, 0xc0 | ((c >>  6) & 0x1f));
+            luaL_addchar(&b, 0x80 | ((c >>  0) & 0x3f));
+        }
+        else
+        {
+            luaL_addchar(&b,        ((c >>  0) & 0x7f));
+        }
+    }
+
+    luaL_pushresult(&b);
+
+    return 1;
+}
+
 static luaL_Reg pl2_functions[] =
 {
     { "character", l_pl2_character },
@@ -591,6 +711,11 @@ static luaL_Reg pl2_functions[] =
     { "camera", l_pl2_camera },
     { "layer", l_pl2_layer },
     { "play", l_pl2_play },
+    { "showText", l_pl2_showText },
+    { "showMenu", l_pl2_showMenu },
+    { "wait", l_pl2_wait },
+
+    { "ucs", l_pl2_ucs },
     { NULL, NULL }
 };
 

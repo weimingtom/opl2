@@ -5,12 +5,10 @@
 
 #include <dirent.h>
 
-//#define PACKAGELOG 1
+#define PACKAGELOG 1
 
 /* Must be >= likely maximum number of packages (and should be prime) */
 #define PACKAGE_INDEX_SIZE 8191 //4093 //16381
-/* Must be >= likely maximum number of points (and should be prime) */
-#define POINT_INDEX_SIZE 127
 
 static struct
 {
@@ -19,16 +17,11 @@ static struct
 }
 pl2PackageIndex[PACKAGE_INDEX_SIZE];
 
-static struct
-{
-    int used;
-    pl2Point point;
-}
-pl2PointIndex[POINT_INDEX_SIZE] = {};
-
 static size_t index_size = 0, hash_collisions = 0;
 
-//static FILE *packagelog;
+#if PACKAGELOG
+static FILE *packagelog;
+#endif
 
 /******************************************************************************/
 
@@ -127,10 +120,10 @@ static int pl2PackageIndexInsert(const char *filename)
 
             if (!pl2PackageIndex[index].package)
             {
-//#if PACKAGELOG
-//                //printf("\t%s\n", package->entry[i].name);
-//                if (packagelog) fprintf(packagelog, "\t%s\n", entry->name);
-//#endif
+#if PACKAGELOG
+                //printf("\t%s\n", package->entry[i].name);
+                if (packagelog) fprintf(packagelog, "\t%s\n", entry->name);
+#endif
 
                 // empty slot, add to index
                 pl2PackageIndex[index].package = package;
@@ -202,29 +195,29 @@ int pl2PackageBuildIndex()
 {
     memset(pl2PackageIndex, 0, sizeof(pl2PackageIndex));
 
-//#if PACKAGELOG
-//   if (!packagelog) packagelog = fopen("package.log", "wb");
-//   if (!packagelog) { PL2_ERROR(PL2_ERR_FILEIO); }
-//#endif
+#if PACKAGELOG
+   if (!packagelog) packagelog = fopen("package.log", "wb");
+   if (!packagelog) { PL2_ERROR(PL2_ERR_FILEIO); }
+#endif
 
    DIR *dir = opendir("add-ons");
    if (NULL == dir)
    {
-//#if PACKAGELOG
-//      //printf("Error opening 'add-ons' directory\n");
-//      fprintf(packagelog, "Error opening 'add-ons' directory\n");
-//      fclose(packagelog);
-//#endif
+#if PACKAGELOG
+      //printf("Error opening 'add-ons' directory\n");
+      fprintf(packagelog, "Error opening 'add-ons' directory\n");
+      fclose(packagelog);
+#endif
 
       PL2_ERROR(PL2_ERR_NOTFOUND);
    }
 
    char filename[64] = { 0 };
 
-//#if PACKAGELOG
-//   //printf("Add-ons found:\n");
-//   fprintf(packagelog, "Add-ons found:\n");
-//#endif
+#if PACKAGELOG
+   //printf("Add-ons found:\n");
+   fprintf(packagelog, "Add-ons found:\n");
+#endif
 
     DEBUGPRINT("%s: building package index...\n", __func__);
 
@@ -237,10 +230,10 @@ int pl2PackageBuildIndex()
 
       if (0 == strcasecmp(entry->d_name + l - 4, ".pl2"))
       {
-//#if PACKAGELOG
-//         //printf("\n%s\n", entry);
-//         fprintf(packagelog, "\n%s\n", entry->d_name);
-//#endif
+#if PACKAGELOG
+         //printf("\n%s\n", entry);
+         fprintf(packagelog, "\n%s\n", entry->d_name);
+#endif
 
          snprintf(filename, sizeof(filename), "add-ons/%s", entry->d_name);
 
@@ -294,6 +287,12 @@ pl2PackageFile *pl2PackageGetFile(const char *filename)
 
 /******************************************************************************/
 
+/* Must be >= likely maximum number of points */
+#define POINT_INDEX_SIZE 32
+
+static pl2Point pl2PointIndex[POINT_INDEX_SIZE];
+static int pl2PointIndexSize = 0;
+
 __attribute__((constructor))
 static void pl2ClearPointIndex()
 {
@@ -302,31 +301,33 @@ static void pl2ClearPointIndex()
 
 static int pl2PointIndexInsert(pl2Point *point)
 {
+    PL2_CLEAR_ERROR();
+
     if(!point)
     {
         PL2_ERROR(PL2_ERR_PARAM);
     }
 
-    uint32_t hash = pl2IndexHash(point->name, 32) % POINT_INDEX_SIZE;
-
-    uint32_t index = hash;
-
-    do
+    int i;
+    for(i = 0; i < pl2PointIndexSize; i++)
     {
-        if (!pl2PointIndex[index].used || !strncmp(point->name, pl2PointIndex[index].point.name, 32))
+        if(!strncmp(point->name, pl2PointIndex[i].name, 32))
         {
-            //DEBUGPRINT("%s: added \"%s\" @ index %u\n", __func__, point->name, index);
-            pl2PointIndex[index].point = *point;
-            pl2PointIndex[index].used = 1;
+            DELETE(pl2PointIndex[i].name);
+            pl2PointIndex[i] = *point;
+            pl2PointIndex[i].name = strdup(point->name);
             return 1;
         }
-
-        if ((index += 17) >= POINT_INDEX_SIZE)
-        {
-            index -= POINT_INDEX_SIZE;
-        }
     }
-    while (pl2PointIndex[hash].used && (index != hash));
+
+    if(pl2PointIndexSize < POINT_INDEX_SIZE)
+    {
+        i = pl2PointIndexSize;
+        pl2PointIndex[i] = *point;
+        pl2PointIndex[i].name = strdup(point->name);
+        pl2PointIndexSize++;
+        return 1;
+    }
 
     PL2_ERROR(PL2_ERR_INTERNAL);
 }
@@ -340,27 +341,16 @@ static pl2Point *pl2PointIndexSearch(const char *name)
         PL2_ERROR(PL2_ERR_PARAM);
     }
 
-    uint32_t hash = pl2IndexHash(name, 32) % POINT_INDEX_SIZE;
-
-    uint32_t index = hash;
-
-    do
+    int i;
+    for(i = 0; i < pl2PointIndexSize; i++)
     {
-        //DEBUGPRINT("%s: index[%u] == \"%s\"\n", __func__, index, pl2PointIndex[index].name);
-
-        if (pl2PointIndex[index].used && !strncmp(name, pl2PointIndex[index].point.name, 32))
+        if(!strncmp(name, pl2PointIndex[i].name, 32))
         {
-            DEBUGPRINT("%s: found \"%s\" @ index %u\n", __func__, pl2PointIndex[index].point.name, index);
+            DEBUGPRINT("%s: found \"%s\" @ index %u\n", __func__, pl2PointIndex[i].name, i);
 
-            return &(pl2PointIndex[index].point);
-        }
-
-        if ((index += 17) >= POINT_INDEX_SIZE)
-        {
-            index -= POINT_INDEX_SIZE;
+            return &(pl2PointIndex[i]);
         }
     }
-    while (pl2PointIndex[index].used && (index != hash));
 
     DEBUGPRINT("%s: \"%s\" not found\n", __func__, name);
 

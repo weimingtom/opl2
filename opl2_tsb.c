@@ -1,28 +1,15 @@
 #include "opl2.h"
 #include "opl2_int.h"
 
+#include <stdio.h>
+
 /******************************************************************************/
 
-pl2Anim *pl2AnimLoad(const char *name)
+static pl2Anim *pl2AnimLoadInternal(const uint8_t *data)
 {
-    PL2_CLEAR_ERROR();
-
-    char temp[FILENAME_MAX];
-    snprintf(temp, sizeof(temp), "%s.tsb", name);
-
-    pl2PackageFile *file = pl2PackageGetFile(temp);
-
-    if(NULL == file)
-    {
-        PL2_ERROR(PL2_ERR_NOTFOUND);
-    }
-
-    uint8_t *data = file->data;
-
     if(!data)
     {
-        pl2PackageFileFree(file);
-        DEBUGPRINT("%s: file->data == NULL\n", __func__);
+        DEBUGPRINT("%s: data == NULL\n", __func__);
         PL2_ERROR(PL2_ERR_INTERNAL);
     }
 
@@ -30,7 +17,6 @@ pl2Anim *pl2AnimLoad(const char *name)
 
     if (!anim)
     {
-        pl2PackageFileFree(file);
         pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -40,7 +26,6 @@ pl2Anim *pl2AnimLoad(const char *name)
     if (anim->magic != PL2_TSB_MAGIC)
     {
         DEBUGPRINT("%s: magic != TSB_MAGIC\n", __func__);
-        pl2PackageFileFree(file);
         pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
@@ -61,7 +46,6 @@ pl2Anim *pl2AnimLoad(const char *name)
 
     if (!anim->bones)
     {
-        pl2PackageFileFree(file);
         pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -76,7 +60,65 @@ pl2Anim *pl2AnimLoad(const char *name)
         }
     }
 
+    return anim;
+}
+
+pl2Anim *pl2AnimLoad(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    char temp[FILENAME_MAX];
+    snprintf(temp, sizeof(temp), "%s.tsb", name);
+
+    pl2PackageFile *file = pl2PackageGetFile(temp);
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    pl2Anim *anim = pl2AnimLoadInternal(file->data);
+
     pl2PackageFileFree(file);
+    return anim;
+}
+
+pl2Anim *pl2AnimLoadFile(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    FILE *file = fopen(name, "rb");
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    if(fseek(file, 0, SEEK_END) < 0)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    int32_t size = ftell(file);
+
+    uint8_t *data = NEWARR(size,uint8_t);
+
+    if(NULL == data)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_MEMORY);
+    }
+
+    if(fread(data, size, 1, file) < 1)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    pl2Anim *anim = pl2AnimLoadInternal(data);
+
+    fclose(file);
     return anim;
 }
 

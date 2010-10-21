@@ -24,48 +24,49 @@ room:clear()
 
 --------------------------------------------------------------------------------
 
+IMO_BODY    =  1
+IMO_EYE     =  2
+IMO_UNDER_A =  3
+IMO_UNDER_B =  4
+IMO_SOCKS   =  5
+IMO_COS_A   =  6
+IMO_COS_B   =  7
+IMO_HEAD    =  8
+IMO_FACE    =  9
+IMO_NECK    = 10
+IMO_ARM     = 11
+IMO_SHOES   = 12
+IMO_HAIR    = 13
+
+--------------------------------------------------------------------------------
+
 local actions = {
-    --'zen_a01',
+    --'zen_a01', 'zen_a02',
+    'zen_a03', 'zen_a04', 'zen_a05', 'zen_a06', 'zen_a07', 'zen_a08',
+    'sex_a01', 'sex_a02', 'sex_a03', 'sex_a04', 'sex_a05', 'sex_a06',
+    --'tekoki00', 'asikoki00', 'paizuri_01', 'bak_02',
+    --'vibrator00', 'vibrator01', 'vibrator02',
+
     zen_a01={'zen_a01_1','zen_a01_2','zen_a01_3','zen_a01_4',point='loc_pos01'},
-    --'zen_a02',
     zen_a02={'zen_a02_1','zen_a02_2','zen_a02_3','zen_a02_4',point='loc_pos01'},
-    'zen_a03',
     zen_a03={'zen_a03_1','zen_a03_2','zen_a03_3','zen_a03_4',point='loc_pos01'},
-    'zen_a04',
     zen_a04={'zen_a04_1','zen_a04_2','zen_a04_3','zen_a04_4',point='loc_pos01'},
-    'zen_a05',
     zen_a05={'zen_a05_1','zen_a05_2','zen_a05_3','zen_a05_4',point='loc_pos01'},
-    'zen_a06',
     zen_a06={'zen_a06_1','zen_a06_2','zen_a06_3','zen_a06_4',point='loc_pos01'},
-    'zen_a07',
     zen_a07={'zen_a07_1','zen_a07_2','zen_a07_3','zen_a07_4',point='loc_pos01'},
-    'zen_a08',
     zen_a08={'zen_a08_1','zen_a08_2','zen_a08_3','zen_a08_4',point='loc_pos01'},
-    'sex_a01',
     sex_a01={'sex_a01_1','sex_a01_2','sex_a01_3','sex_a01_4',point='loc_pos02'},
-    'sex_a02',
     sex_a02={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    'sex_a03',
     sex_a03={'sex_a03_1','sex_a03_2','sex_a03_3','sex_a03_4',point='loc_pos02'},
-    'sex_a04',
     sex_a04={'sex_a04_1','sex_a04_2','sex_a04_3','sex_a04_4',point='loc_pos02'},
-    'sex_a05',
     sex_a05={'sex_a05_1','sex_a05_2','sex_a05_3','sex_a05_4',point='loc_pos01'},
-    'sex_a06',
     sex_a06={'sex_a06_1','sex_a06_2','sex_a06_3','sex_a06_4',point='loc_pos02'},
-    --'tekoki00',
     tekoki00={'tekoki_1','tekoki_2','tekoki_3','tekoki_4',point='loc_pos01'},
-    --'asikoki00',
     asikoki00={'ashi03_1','ashi03_2','ashi03_3','ashi03_4',point='loc_pos01'},
-    --'paizuri_01',
     paizuri_01={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    --'bak_02',
     bak_02={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    --'vibrator00',
     vibrator00={'vib01_1','vib01_2','vib01_3','vib01_4',point='loc_pos01'},
-    --'vibrator01',
     vibrator01={'vib01_1','vib01_2','vib01_3','vib01_4',point='loc_pos01'},
-    --'vibrator02',
     vibrator02={'vib02_1','vib02_2','vib02_3','vib02_4',point='loc_pos01'},
     }
 
@@ -76,15 +77,16 @@ function setAnims(name,cam)
     local b = math.random(1,#actions[name])
     camera:setPath(actions[name][cam] or actions[name][b])
     print(#actions,a,#actions[name],b)
-    imo1:setAnim(name..'_F')
+    local _ = imo1:setAnim(name..'_F') or error('error loading animation "'..name..'_F"')
     --imo2:setAnim(name..'_F')
-    ani:setAnim(name..'_M')
+    local _ = ani:setAnim(name..'_M') or error('error loading animation "'..name..'_M"')
 
     local point = actions[name].point
     ani:setPoint(point)
     imo:setPoint(point)
     camera:setPoint(point)
 
+--[[
     if name:sub(0,3) == 'vib' then
         imo2:clear()
         imo2:setModel(1,'vib01')
@@ -92,18 +94,19 @@ function setAnims(name,cam)
         imo2:setPoint(point)
         imo2:setVisible(true)
     end
+]]
 end
 
 --------------------------------------------------------------------------------
 
 local chars = {
-    'fate_saber_nude',
-    'fate_saber_lily_nude',
-    'fate_rin_nude',
-    'fate_sakura_nude',
-    'vocaloid_miku_nude',
-    'eva_rei_nude',
-    'eva_asuka_nude',
+    'fate_saber',
+    'fate_saber_lily',
+    'fate_rin_casual',
+    'fate_sakura',
+    'vocaloid_miku',
+    'eva_rei_plugsuit',
+    'eva_asuka_plugsuit',
 
     ani = {
         [1]="ani_bodyB_00",
@@ -331,6 +334,56 @@ local chars = {
         [13]="imo_hair_BRS_01",
     },
 --]============================================================================]
+    moon_venus = {
+        [1]='imo_bodyS-Venus_00',
+        [2]='imo_eye_04',
+        [3]='imo_underS-Venus_00A',
+        [7]='imo_cosS-Venus_00B',
+        [8]='imo_headS-Venus_00',
+        [9]='imo_faceS-Venus_00',
+        [10]='imo_neckS-Venus_00',
+        [11]='imo_armS-Venus_00',
+        [12]='imo_shoesS-Venus_00',
+        [13]='imo_hairS-Venus_00',
+    },
+    moon_venus_nude = {
+        [1]='imo_bodyS-Venus_00',
+        [2]='imo_eye_04',
+        --[3]='imo_underS-Venus_00A',
+        --[7]='imo_cosS-Venus_00B',
+        [8]='imo_headS-Venus_00',
+        --[9]='imo_faceS-Venus_00',
+        [10]='imo_neckS-Venus_00',
+        [11]='imo_armS-Venus_00',
+        [12]='imo_shoesS-Venus_00',
+        [13]='imo_hairS-Venus_00',
+    },
+    moon_pluto = {
+        [1]='imo_bodyC_00',
+        [2]='imo_eye_08',
+        [3]='imo_underS-Pluto_00A',
+        [6]='imo_cosS-Pluto_00A',
+        [7]='imo_cosS-Pluto_00B',
+        [8]='imo_headS-Pluto_00',
+        [9]='imo_faceS-Pluto_00',
+        [10]='imo_neckS-Pluto_00',
+        [11]='imo_armS-Pluto_00',
+        [12]='imo_shoesS-Pluto_00',
+        [13]='imo_hairS-Pluto_00',
+    },
+    moon_pluto2 = {
+        [1]='imo_bodyC_00',
+        [2]='imo_eye_08',
+        [3]='imo_underS-Pluto_01A',
+        [6]='imo_cosS-Pluto_00A',
+        [7]='imo_cosS-Pluto_00B',
+        [8]='imo_headS-Pluto_00',
+        [9]='imo_faceS-Pluto_00',
+        [10]='imo_neckS-Pluto_00',
+        [11]='imo_armS-Pluto_00',
+        [12]='imo_shoesS-Pluto_00',
+        [13]='imo_hairS-Pluto_00',
+    },
 }
 
 local rooms = {
@@ -367,8 +420,8 @@ local rooms = {
 
 function setModels(who,what)
     who:clear()
-    for i,v in pairs(what) do
-        if tonumber(i) then who:setModel(i,v) end
+    for i = 1, 16 do
+        who:setModel(i,what[i])
     end
     if what.anim then
         who:setAnim(what.anim)
@@ -380,18 +433,60 @@ end
 math.randomseed(os.time())
 math.random()
 
-setModels(ani, chars.ani_nude)
-setModels(imo1, chars[chars[math.random(1,#chars)]])
---setModels(room, rooms[rooms[math.random(1,#rooms)]])
+--ani:setModels(chars.ani)
+--imo:setModels(chars[chars[math.random(1,#chars)]])
+--imo:setModels(chars.moon_pluto2)
+--room:setModels(rooms[rooms[math.random(1,#rooms)]])
+room:setModels(rooms.beach)
+room:setAnim(rooms.beach.anim)
 
-setAnims()
-
---setModels(imo1, chars.fate_saber_nude)
---setModels(room, rooms.furo)
---setAnims('zen_a08', 2)
-
-ani:setVisible(true)
-imo:setVisible(true)
+--ani:setVisible(true)
+--imo:setVisible(true)
 room:setVisible(true)
 
-back:fade(1, 2)
+function doScene(name)
+    setAnims(name)
+    print'begin scene'
+    back:fade(1, 2)
+    pl2.wait(2)
+
+    local menu = {
+        pl2.ucs(0x30b9,0x30c8,0x30fc,0x30ea,0x30fc,0x30e2,0x30fc,0x30c9),
+        pl2.ucs(0x3068,0x3053,0x3068,0x3093,0xff28,0x30e2,0x30fc,0x30c9),
+        pl2.ucs(0x7d42,0x4e86),
+        "Testing 1 2 3",
+        }
+    local i = pl2.showMenu(menu)
+    print('selected',i)
+
+    pl2.showText("You selected: "..menu[i])
+
+    back:fade(0, 2)
+    pl2.wait(2)
+    print'end scene'
+end
+
+doScene('zen_a01')
+if true then return end
+doScene('zen_a03')
+imo1:setModel(IMO_COS_A, nil)
+imo1:setModel(IMO_NECK, nil)
+doScene('zen_a04')
+imo1:setModel(IMO_UNDER_A, nil)
+doScene('zen_a05')
+ani:setModels(chars.ani_shorts)
+imo1:setModel(IMO_COS_B, nil)
+doScene('zen_a06')
+imo1:setModel(IMO_UNDER_B, nil)
+doScene('zen_a07')
+ani:setModels(chars.ani_nude)
+doScene('zen_a08')
+
+while true do
+    doScene('sex_a01')
+    doScene('sex_a02')
+    doScene('sex_a03')
+    doScene('sex_a04')
+    doScene('sex_a05')
+    doScene('sex_a06')
+end

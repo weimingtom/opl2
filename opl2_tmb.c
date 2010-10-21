@@ -4,26 +4,13 @@
 
 /******************************************************************************/
 
-pl2Model *pl2ModelLoad(const char *name)
+static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 {
-    PL2_CLEAR_ERROR();
-
-    char temp[FILENAME_MAX];
-    snprintf(temp, sizeof(temp), "%s.tmb", name);
-
-    pl2PackageFile *file = pl2PackageGetFile(temp);
-
-    if(NULL == file)
-    {
-        PL2_ERROR(PL2_ERR_NOTFOUND);
-    }
-
-    uint8_t *data = file->data;
+    //const uint8_t *org = data;
 
     if(!data)
     {
-        pl2PackageFileFree(file);
-        DEBUGPRINT("%s: file->data == NULL\n", __func__);
+        DEBUGPRINT("%s: data == NULL\n", __func__);
         PL2_ERROR(PL2_ERR_INTERNAL);
     }
 
@@ -31,7 +18,6 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(!model)
     {
-        pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
 
@@ -41,10 +27,11 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(model->magic != PL2_TMB_MAGIC)
     {
-        pl2PackageFileFree(file);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_FORMAT);
     }
+
+    //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
     model->numTextures = READUINT32(data);
 
@@ -57,10 +44,11 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(!model->textures)
     {
-        pl2PackageFileFree(file);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
+
+    //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
     for(i = 0; i < model->numTextures; i++)
     {
@@ -70,17 +58,22 @@ pl2Model *pl2ModelLoad(const char *name)
         t->width = READUINT16(data);
         t->height = READUINT16(data);
 
+        //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
+
         uint32_t size = 4 * t->width * t->height;
         t->pixels = malloc(size);
 
         if(!t->pixels)
         {
-            pl2PackageFileFree(file);
             pl2ModelFree(model);
             PL2_ERROR(PL2_ERR_MEMORY);
         }
 
+        //DEBUGPRINT("%s(%d): reading %dx%d == %d bytes\n", __FILE__, __LINE__, t->width, t->height, size);
+
         READSTRING(size, t->pixels, data);
+
+        //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
         uint32_t *pixels = (uint32_t*)(t->pixels);
 
@@ -95,6 +88,8 @@ pl2Model *pl2ModelLoad(const char *name)
         }
     }
 
+    //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
+
     model->numMaterials = READUINT32(data);
 
     //DEBUGPRINT("%s: numMaterials == %d\n", __func__, model->numMaterials);
@@ -106,10 +101,11 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(!model->materials)
     {
-        pl2PackageFileFree(file);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
+
+    //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
     for(i = 0; i < model->numMaterials; i++)
     {
@@ -121,7 +117,7 @@ pl2Model *pl2ModelLoad(const char *name)
         m->shininess = READFLOAT(data);
 
         //m->ambient.a =
-        m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
+        //m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
 
         //DEBUGPRINT("%s: Material %d\n", __func__, i);
         //DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
@@ -132,6 +128,8 @@ pl2Model *pl2ModelLoad(const char *name)
 
         uint32_t texid = READUINT32(data);
         m->texture = (texid < model->numTextures) ? &(model->textures[texid]) : NULL;
+
+        //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
         //DEBUGPRINT("%s: m->texture == %p, m->texture->pixels == %p\n", __func__, m->texture, m->texture ? m->texture->pixels : NULL);
     }
@@ -144,7 +142,6 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(!model->objects)
     {
-        pl2PackageFileFree(file);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -171,7 +168,6 @@ pl2Model *pl2ModelLoad(const char *name)
 
         if(!(obj->materials && obj->vertices && obj->glVertices))
         {
-            pl2PackageFileFree(file);
             pl2ModelFree(model);
             PL2_ERROR(PL2_ERR_MEMORY);
         }
@@ -223,7 +219,6 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(!model->bones)
     {
-        pl2PackageFileFree(file);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -244,7 +239,6 @@ pl2Model *pl2ModelLoad(const char *name)
 
     if(!model->points)
     {
-        pl2PackageFileFree(file);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -284,11 +278,78 @@ pl2Model *pl2ModelLoad(const char *name)
 
     pl2ModelAddPoints(model);
 
-    pl2PackageFileFree(file);
-
     DEBUGPRINT("%s: total: %d textures, %d materials, %d objects, %d bones, %d points\n", __func__,
                model->numTextures, model->numMaterials, model->numObjects, model->numBones, model->numPoints);
 
+    return model;
+}
+
+pl2Model *pl2ModelLoad(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    char temp[FILENAME_MAX];
+    snprintf(temp, sizeof(temp), "%s.tmb", name);
+
+    pl2PackageFile *file = pl2PackageGetFile(temp);
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    pl2Model *model = pl2ModelLoadInternal(file->data);
+
+    pl2PackageFileFree(file);
+    return model;
+}
+
+pl2Model *pl2ModelLoadFile(const char *name)
+{
+    PL2_CLEAR_ERROR();
+
+    FILE *file = fopen(name, "rb");
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    if(fseek(file, 0, SEEK_END) < 0)
+    {
+        DEBUGPRINT("%s: seek error, %s\n", __func__, strerror(errno));
+        fclose(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    int32_t size = ftell(file);
+
+    DEBUGPRINT("%s: size == %d\n", __func__, size);
+
+    fseek(file, 0, SEEK_SET);
+
+    uint8_t *data = NEWARR(size,uint8_t);
+
+    if(NULL == data)
+    {
+        fclose(file);
+        PL2_ERROR(PL2_ERR_MEMORY);
+    }
+
+    int r = fread(data, 1, size, file);
+
+    DEBUGPRINT("%s: read %d bytes\n", __func__, r);
+
+    if(r < size)
+    {
+        DEBUGPRINT("%s: read error, %s\n", __func__, strerror(errno));
+        fclose(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    pl2Model *model = pl2ModelLoadInternal(data);
+
+    fclose(file);
     return model;
 }
 
