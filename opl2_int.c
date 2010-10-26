@@ -1,9 +1,5 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
-
-/******************************************************************************/
-
-int pl2_error = PL2_ERR_NONE;
 
 /******************************************************************************/
 
@@ -20,6 +16,8 @@ int pl2_strlcpy(char *dst, const char *src, int len)
 }
 
 /******************************************************************************/
+
+int pl2_error = PL2_ERR_NONE;
 
 void pl2ClearError()
 {
@@ -53,3 +51,16 @@ const char *pl2GetErrorMessage(int code)
     }
 }
 
+/******************************************************************************/
+
+int pl2_running = 1;
+
+void pl2Exit()
+{
+    pl2_running = 0;
+}
+
+int pl2Running()
+{
+    return pl2_running;
+}

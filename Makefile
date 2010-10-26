@@ -3,8 +3,10 @@ PLATFORMS = nix unix linux win dos mingw psp pspsdk
 OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o opl2_fnt.o
 OBJS += opl2_int.o opl2_idx.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
 
+WITH_GLUT=1
+
 CFLAGS += -Wall -g
-LIBS += -llua -lvorbisfile -lvorbis -lm
+LIBS += -llua -lvorbisfile -lvorbis -lSDL -lm
 
 ARGS = -window 320x240+0+0
 
@@ -85,6 +87,9 @@ else
  ifeq ($(WITH_SSE2),1)
   CFLAGS += -msse2 -DWITH_SSE2
  endif
+ ifeq ($(WITH_GLUT),1)
+  CFLAGS += -DWITH_GLUT
+ endif
 
  ifeq ($(PLATFORM),win)
 
@@ -92,7 +97,10 @@ else
   OBJS += opl2.res
   #WINAPP = -mwindows
 
-  LIBS += -lfreeglut -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+  ifeq ($(WITH_GLUT),1)
+   LIBS += -lfreeglut
+  endif
+  LIBS += -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
   CFLAGS += -DFREEGLUT_STATIC
   TARGET = opl2.exe
 
@@ -106,7 +114,10 @@ opl2.res: opl2.rc
 
  else
 
-  LIBS += -lglut -lGLU -lGL -lalut -lopenal
+  ifeq ($(WITH_GLUT),1)
+   LIBS += -lglut
+  endif
+  LIBS += -lGLU -lGL -lalut -lopenal
   TARGET = opl2
 
   PL2EX = pl2ex

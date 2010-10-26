@@ -1,11 +1,20 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alut.h>
 
-#include <vorbis/vorbisfile.h>
+#if WITH_TREMOR
+# include <tremor/ivorbiscodec.h> //libtremor
+# include <tremor/ivorbisfile.h>  //libtremor
+#else
+# include <vorbis/codec.h>
+# include <vorbis/vorbisfile.h>
+#endif
+
+//#include <unistd.h>
+//#include <pthread.h>
 
 // Reference:
 // http://www.gamedev.net/reference/articles/article2008.asp
@@ -13,6 +22,11 @@
 static ALuint pl2_al_buffers[PL2_NUM_CHANNELS] = { 0 };
 static ALuint pl2_al_sources[PL2_NUM_CHANNELS] = { 0 };
 static pl2Sound *pl2_sounds[PL2_NUM_CHANNELS] = { NULL };
+
+static int pl2AlPlayThread()
+{
+    return 0;
+}
 
 void pl2AlExit()
 {

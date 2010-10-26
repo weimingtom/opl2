@@ -1,4 +1,4 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 
 #include <lua.h>
@@ -664,6 +664,42 @@ static int l_pl2_wait(lua_State *L)
     return 0;
 }
 
+static int l_pl2_call(lua_State *L)
+{
+    const char *name = luaL_checkstring(L, 1);
+
+    pl2PackageFile *file = pl2PackageGetFile(name);
+
+    if(!file) return 0;
+
+    DEBUGPRINT("%s: loading \"%s\"\n", __func__, name);
+
+    char temp[32];
+    snprintf(temp, sizeof(temp), "@%s", name);
+
+    int r = luaL_loadbuffer(L, (char*)(file->data), file->length, temp);
+
+    pl2PackageFileFree(file);
+
+    if(r) return 0;
+
+    DEBUGPRINT("%s: calling \"%s\"\n", __func__, name);
+
+    int top = lua_gettop(L);
+
+    if(lua_pcall(L, 0, LUA_MULTRET, 0))
+    {
+        DEBUGPRINT("%s: error: %s\n", __func__, lua_tostring(L, -1));
+
+        lua_pushnil(L);
+        lua_insert(L, -2);
+        return 2;
+    }
+
+    DEBUGPRINT("%s: returned successfully\n", __func__);
+    return lua_gettop(L) - top;
+}
+
 static int l_pl2_ucs(lua_State *L)
 {
     int i, l = lua_gettop(L);
@@ -677,7 +713,7 @@ static int l_pl2_ucs(lua_State *L)
 
         if(c >= 0x10000)
         {
-            luaL_addchar(&b, 0xF0 | ((c >> 18) & 0x07));
+            luaL_addchar(&b, 0xf0 | ((c >> 18) & 0x07));
             luaL_addchar(&b, 0x80 | ((c >> 12) & 0x3f));
             luaL_addchar(&b, 0x80 | ((c >>  6) & 0x3f));
             luaL_addchar(&b, 0x80 | ((c >>  0) & 0x3f));
@@ -715,6 +751,7 @@ static luaL_Reg pl2_functions[] =
     { "showMenu", l_pl2_showMenu },
     { "wait", l_pl2_wait },
 
+    { "call", l_pl2_call },
     { "ucs", l_pl2_ucs },
     { NULL, NULL }
 };

@@ -1,4 +1,4 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 
 #include <math.h>
@@ -511,3 +511,145 @@ void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance)
    pl2VectorScaleAdd3f(obj, &t, distance / pl2VectorLength3f(&t));
 }
 
+/******************************************************************************/
+
+void pl2CameraRotate1P(pl2Camera *cam, float xr, float yr)
+{
+    fvector3_t r = { yr, -xr, 0 };
+    pl2VectorOrbit(&cam->focus, &cam->eye, &cam->up, &r);
+}
+
+void pl2CameraRotate3P(pl2Camera *cam, float xr, float yr)
+{
+    fvector3_t r = { yr, xr, 0 };
+    pl2VectorOrbit(&cam->eye, &cam->focus, &cam->up, &r);
+}
+
+void pl2CameraZoom(pl2Camera *cam, float distance)
+{
+   pl2VectorZoom(&cam->eye, &cam->focus, distance);
+}
+
+/******************************************************************************/
+
+void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
+{
+    if(!(model && anim)) return;
+
+    if(frame >= anim->numFrames)
+    {
+        frame = anim->loopFrame +
+                (frame - anim->loopFrame) %
+                (anim->numFrames - anim->loopFrame);
+    }
+
+    int numBones = (model->numBones > anim->numBones) ? model->numBones : anim->numBones;
+
+    if(numBones <= 0) return;
+
+    fmatrix4_t bones[numBones] __attribute__((aligned(16)));
+    //fmatrix4_t bones_[numBones+1];
+    //fmatrix4_t *bones = (fmatrix4_t*)((((uint32_t)(bones_)) + 15) & ~15);
+
+    int i, j;
+
+    fmatrix4_t *mdlBones = model->bones, *seqBones = anim->bones + (anim->numBones * frame);
+
+    for(i = 0; i < numBones; i++)
+    {
+        pl2MultMatrix4f(&(bones[i]), &(mdlBones[i]), &(seqBones[i]));
+    }
+
+    for(i = 0; i < model->numObjects; i++)
+    {
+        pl2Object *obj = &(model->objects[i]);
+
+        uint32_t numVertices = obj->numTriangles * 3;
+
+        for(j = 0; j < numVertices; j++)
+        {
+            pl2Vertex *vert = &(obj->vertices[j]);
+
+            if(vert->bones[0] != 255)
+            {
+                float w0 = vert->weights[0],
+                      w1 = vert->weights[1],
+                      w2 = vert->weights[2],
+                      w3 = 1.0f - w0 - w1 - w2;
+
+                fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
+                fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
+                fvector4_t t;
+                fvector3_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
+
+                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
+                pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w0);
+                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
+                pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w0);
+
+                if(vert->bones[1] != 255)
+                {
+                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
+                    pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w1);
+                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
+                    pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w1);
+
+                    if(vert->bones[2] != 255)
+                    {
+                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
+                        pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w2);
+                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
+                        pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w2);
+
+                        if(vert->bones[3] != 255)
+                        {
+                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
+                            pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w3);
+                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
+                            pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w3);
+                        }
+                    }
+                }
+
+                obj->glVertices[j].vertex = tv;
+                obj->glVertices[j].normal = tn;
+            }
+            else
+            {
+                obj->glVertices[j].vertex = vert->vertex;
+                obj->glVertices[j].normal = vert->normal;
+            }
+        }
+    }
+}
+
+void pl2CharAnimate(pl2Character *chr, float dt)
+{
+    if(chr && chr->anim)
+    {
+        chr->time += dt;
+
+        if(chr->visible > 0)
+        {
+            int frame = 30 * chr->time;
+            int count = chr->anim->numFrames;
+            int loop  = chr->anim->loopFrame;
+
+            if(frame >= count)
+            {
+                frame = loop + (frame - loop) % (count - loop);
+            }
+
+            if(frame != chr->frame)
+            {
+                int i;
+                for(i = 0; i < PL2_MAX_CHARPARTS; i++)
+                {
+                    pl2ModelAnimate(chr->models[i], chr->anim, frame);
+                }
+
+                chr->frame = frame;
+            }
+        }
+    }
+}

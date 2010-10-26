@@ -5,7 +5,14 @@
  * OPL2 Internals
  ******************************************************************************/
 
-#include "opl2.h"
+#if WITH_GLUT
+# include <GL/freeglut.h>
+# define pl2DoFrame pl2GlutDoFrame
+#else
+# include <SDL/SDL.h>
+# include <SDL/SDL_opengl.h>
+# define pl2DoFrame pl2SdlDoFrame
+#endif
 
 #ifndef NDEBUG
 # define DEBUGPRINT(x...) (fprintf(stderr,x))
@@ -37,6 +44,10 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 
 /******************************************************************************/
 
+#include "opl2.h"
+
+/******************************************************************************/
+
 extern int pl2_error;
 #define PL2_SET_ERROR(err) ({if(!pl2_error){pl2_error=(err);}})
 #define PL2_CLEAR_ERROR() (pl2_error=PL2_ERR_NONE)
@@ -45,8 +56,8 @@ extern int pl2_error;
 extern int pl2_screen_width, pl2_screen_height;
 extern float pl2_screen_aspect, pl2_screen_scale;
 
-extern int pl2_censor;
-extern int pl2_text_showing, pl2_menu_showing;
+extern int pl2_censor, pl2_running;
+extern int pl2_text_showing, pl2_menu_showing, pl2_hide_overlay;
 
 extern pl2Font *pl2_font;
 extern pl2Character pl2_chars[PL2_MAX_CHARS];

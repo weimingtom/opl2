@@ -1,20 +1,21 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 #include "opl2_vm.h"
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
+//#include <GL/glut.h>
+#include <GL/freeglut.h>
+
+/* use freeglut extensions, if available */
+//#if FREEGLUT
+//# include <GL/freeglut_ext.h>
+//#endif
 
 #include <math.h>
 
 // Reference:
 // http://www.opengl.org/sdk/docs/man/
-
-/* use freeglut extensions, if available */
-#if FREEGLUT
-# include <GL/freeglut_ext.h>
-#endif
 
 #if _PSP_FW_VERSION
 # include <pspuser.h>
@@ -93,8 +94,9 @@ void pl2GlBegin2D()
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        //glOrtho(0, pl2_screen_width, pl2_screen_height, 0, -1, 1);
-        glOrtho(0, pl2_screen_aspect * PL2_NOMINAL_SCREEN_HEIGHT, PL2_NOMINAL_SCREEN_HEIGHT, 0, -1, 1);
+        glOrtho(0, pl2_screen_width, pl2_screen_height, 0, -1, 1);
+
+        //glOrtho(0, pl2_screen_aspect * PL2_NOMINAL_SCREEN_HEIGHT, PL2_NOMINAL_SCREEN_HEIGHT, 0, -1, 1);
         //glTranslatef(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT, 0, 0);
         //glScalef(pl2_screen_scale, pl2_screen_scale, 1);
 
@@ -103,6 +105,9 @@ void pl2GlBegin2D()
         glLoadIdentity();
         //glTranslatef(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT, 0, 0);
         //glScalef(pl2_screen_scale, pl2_screen_scale, 1);
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
 
         pl2_gl_2d = 1;
     }
@@ -203,22 +208,16 @@ void pl2LayerDraw(pl2Layer *layer)
 {
     if(layer)
     {
-        pl2GlBegin2D();
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
         glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
 
         const struct { float x, y, z; } rect[4] = {
-            { 0,                        0,                         0 },
-            { 0,                        PL2_NOMINAL_SCREEN_HEIGHT, 0 },
-            { PL2_NOMINAL_SCREEN_WIDTH, PL2_NOMINAL_SCREEN_HEIGHT, 0 },
-            { PL2_NOMINAL_SCREEN_WIDTH, 0,                         0 }
+            { 0,                0,                 0 },
+            { 0,                pl2_screen_height, 0 },
+            { pl2_screen_width, pl2_screen_height, 0 },
+            { pl2_screen_width, 0,                 0 }
         };
         glInterleavedArrays(GL_V3F, 0, rect);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        pl2GlEnd2D();
     }
 }
 
@@ -228,11 +227,6 @@ void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha)
 {
     if(image)
     {
-        pl2GlBegin2D();
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-
         glColor4f(1.0f, 1.0f, 1.0f, alpha);
 
         int w = image->width, h = image->height;
@@ -248,24 +242,15 @@ void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha)
 
         glInterleavedArrays(GL_V3F, 0, rect);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-        pl2GlEnd2D();
     }
 }
 
 /******************************************************************************/
 
-static void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
+void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len)
 {
     if(font && text)
     {
-        pl2GlBegin2D();
-
-        //glScalef(pl2_screen_scale, pl2_screen_scale, 1);
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_LIGHTING);
-
         glColor4f(((color >>  0) & 255) / 255.0f,
                   ((color >>  8) & 255) / 255.0f,
                   ((color >> 16) & 255) / 255.0f,
@@ -275,28 +260,30 @@ static void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, con
 
         int left = x;
 
-        while(*text)
+        //int len = pl2Ucs4Strlen(text);
+
+        int i, j;
+
+        for(i = 0; i < len; i++)
         {
-            if(*text == '\n')
+            if(text[i] == '\n')
             {
                 y += h;
                 x = left;
             }
-            else if(*text >= 32)
+            else if(text[i] >= 32)
             {
-                int i;
-
-                for(i = 0; i < font->numGlyphs; i++)
+                for(j = 0; j < font->numGlyphs; j++)
                 {
-                    if(font->chars[i] == *text) break;
+                    if(font->chars[j] == text[i]) break;
                 }
 
-                if(i < font->numGlyphs)
+                if(j < font->numGlyphs)
                 {
-                    pl2GlClearErrors();
+                    //pl2GlClearErrors();
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA,
-                                 GL_UNSIGNED_BYTE, font->glyphs + w * h * i);
-                    pl2GlPrintErrors();
+                                 GL_UNSIGNED_BYTE, font->glyphs + w * h * j);
+                    //pl2GlPrintErrors();
 
                     const struct { float u, v, x, y, z; } rect[4] = {
                         { 0, 0, x,     y,     0 },
@@ -307,66 +294,12 @@ static void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, con
 
                     glInterleavedArrays(GL_T2F_V3F, 0, rect);
                     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
-                    x += w;
                 }
+
+                x += w;
             }
-
-            text++;
         }
-
-        pl2GlEnd2D();
     }
-}
-
-void pl2FontUcsPrintCenter(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
-{
-    if(font && text)
-    {
-        int len = 0; while(text[len++]);
-        x -= (len * font->glyphSize) >> 1;
-        pl2FontUcsPrint(font, x, y, color, text);
-    }
-}
-
-void pl2FontUcsPrintRight(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
-{
-    if(font && text)
-    {
-        int len = 0; while(text[len++]);
-        x -= (len * font->glyphSize);
-        pl2FontUcsPrint(font, x, y, color, text);
-    }
-}
-
-void pl2FontPrint(pl2Font *font, float x, float y, uint32_t color, const char *text)
-{
-    int size = pl2Utf8Strlen(text) + 1;
-
-    uint32_t ucs4[size];
-    pl2Utf8ToUcs4(ucs4, size, text, -1);
-
-    pl2FontUcsPrint(font, x, y, color, ucs4);
-}
-
-void pl2FontPrintCenter(pl2Font *font, float x, float y, uint32_t color, const char *text)
-{
-    int size = pl2Utf8Strlen(text) + 1;
-
-    uint32_t ucs4[size];
-    pl2Utf8ToUcs4(ucs4, size, text, -1);
-
-    pl2FontUcsPrintCenter(font, x, y, color, ucs4);
-}
-
-void pl2FontPrintRight(pl2Font *font, float x, float y, uint32_t color, const char *text)
-{
-    int size = pl2Utf8Strlen(text) + 1;
-
-    uint32_t ucs4[size];
-    pl2Utf8ToUcs4(ucs4, size, text, -1);
-
-    pl2FontUcsPrintRight(font, x, y, color, ucs4);
 }
 
 /******************************************************************************/
@@ -404,7 +337,7 @@ void pl2CameraConfig(pl2Camera *cam)
         //DEBUGPRINT("%s: screen == %dx%d (%g:1)\n", __func__,
         //           pl2_screen_width, pl2_screen_height, pl2_screen_aspect);
 
-        fvector3_t e = cam->eye, f = cam->focus, u = cam->up;
+        //fvector3_t e = cam->eye, f = cam->focus, u = cam->up;
 
         if(cam->point)
         {
@@ -414,9 +347,9 @@ void pl2CameraConfig(pl2Camera *cam)
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        gluLookAt(e.x, e.y, e.z,
-                  f.x, f.y, f.z,
-                  u.x, u.y, u.z);
+        gluLookAt(cam->eye.x, cam->eye.y, cam->eye.z,
+                  cam->focus.x, cam->focus.y, cam->focus.z,
+                  cam->up.x, cam->up.y, cam->up.z);
 
         if(cam->point)
         {
@@ -467,147 +400,6 @@ void pl2CameraUpdate(pl2Camera *cam, float dt)
         cam->eye   = cam->path->frames[frame].eye;
         cam->focus = cam->path->frames[frame].focus;
         cam->fov   = cam->path->frames[frame].fov;
-    }
-}
-
-void pl2CameraRotate1P(pl2Camera *cam, float xr, float yr)
-{
-    fvector3_t r = { yr, -xr, 0 };
-    pl2VectorOrbit(&cam->focus, &cam->eye, &cam->up, &r);
-}
-
-void pl2CameraRotate3P(pl2Camera *cam, float xr, float yr)
-{
-    fvector3_t r = { yr, xr, 0 };
-    pl2VectorOrbit(&cam->eye, &cam->focus, &cam->up, &r);
-}
-
-void pl2CameraZoom(pl2Camera *cam, float distance)
-{
-   pl2VectorZoom(&cam->eye, &cam->focus, distance);
-}
-
-/******************************************************************************/
-
-void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
-{
-    if(!(model && anim)) return;
-
-    if(frame >= anim->numFrames)
-    {
-        frame = anim->loopFrame +
-                (frame - anim->loopFrame) %
-                (anim->numFrames - anim->loopFrame);
-    }
-
-    int numBones = (model->numBones > anim->numBones) ? model->numBones : anim->numBones;
-
-    if(numBones <= 0) return;
-
-    fmatrix4_t bones[numBones] __attribute__((aligned(16)));
-    //fmatrix4_t bones_[numBones+1];
-    //fmatrix4_t *bones = (fmatrix4_t*)((((uint32_t)(bones_)) + 15) & ~15);
-
-    int i, j;
-
-    fmatrix4_t *mdlBones = model->bones, *seqBones = anim->bones + (anim->numBones * frame);
-
-    for(i = 0; i < numBones; i++)
-    {
-        pl2MultMatrix4f(&(bones[i]), &(mdlBones[i]), &(seqBones[i]));
-    }
-
-    for(i = 0; i < model->numObjects; i++)
-    {
-        pl2Object *obj = &(model->objects[i]);
-
-        uint32_t numVertices = obj->numTriangles * 3;
-
-        for(j = 0; j < numVertices; j++)
-        {
-            pl2Vertex *vert = &(obj->vertices[j]);
-
-            if(vert->bones[0] != 255)
-            {
-                float w0 = vert->weights[0],
-                      w1 = vert->weights[1],
-                      w2 = vert->weights[2],
-                      w3 = 1.0f - w0 - w1 - w2;
-
-                fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
-                fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
-                fvector4_t t;
-                fvector3_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
-
-                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
-                pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w0);
-                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
-                pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w0);
-
-                if(vert->bones[1] != 255)
-                {
-                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
-                    pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w1);
-                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
-                    pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w1);
-
-                    if(vert->bones[2] != 255)
-                    {
-                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
-                        pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w2);
-                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
-                        pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w2);
-
-                        if(vert->bones[3] != 255)
-                        {
-                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
-                            pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w3);
-                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
-                            pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w3);
-                        }
-                    }
-                }
-
-                obj->glVertices[j].vertex = tv;
-                obj->glVertices[j].normal = tn;
-            }
-            else
-            {
-                obj->glVertices[j].vertex = vert->vertex;
-                obj->glVertices[j].normal = vert->normal;
-            }
-        }
-    }
-}
-
-void pl2CharAnimate(pl2Character *chr, float dt)
-{
-    if(chr && chr->anim)
-    {
-        chr->time += dt;
-
-        if(chr->visible > 0)
-        {
-            int frame = 30 * chr->time;
-            int count = chr->anim->numFrames;
-            int loop  = chr->anim->loopFrame;
-
-            if(frame >= count)
-            {
-                frame = loop + (frame - loop) % (count - loop);
-            }
-
-            if(frame != chr->frame)
-            {
-                int i;
-                for(i = 0; i < PL2_MAX_CHARPARTS; i++)
-                {
-                    pl2ModelAnimate(chr->models[i], chr->anim, frame);
-                }
-
-                chr->frame = frame;
-            }
-        }
     }
 }
 
@@ -717,22 +509,8 @@ void pl2CharRender(pl2Character *chr)
 
 /******************************************************************************/
 
-static void pl2GlutIdleFunc()
+static void pl2GlRenderFrame(float dt)
 {
-    glutPostRedisplay();
-}
-
-static void pl2GlutDisplayFunc()
-{
-    static uint32_t last_time = 0;
-    if(last_time == 0) last_time = glutGet(GLUT_ELAPSED_TIME);
-
-    const uint32_t this_time = glutGet(GLUT_ELAPSED_TIME);
-
-    const float dt = (float)(this_time - last_time)*0.001f;
-
-    last_time = this_time;
-
     int i;
 
     for(i = 0; i < PL2_MAX_LAYERS; i++)
@@ -770,49 +548,119 @@ static void pl2GlutDisplayFunc()
 
     glPopMatrix();
 
+    pl2GlBegin2D();
+
     pl2LayerDraw(&(pl2_layers[0]));
+
+    glPushMatrix();
+    glScalef(pl2_screen_scale, pl2_screen_scale, 1);
 
     //DEBUGPRINT("%s: half_screen_width == %d\n", __func__, pl2_screen_width >> 1);
 
     // TODO: draw 2d overlay
-    if(pl2_menu_showing)
+    if(pl2_font && !pl2_hide_overlay)
     {
-        int x = (int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
-        int y = 0;
-
-        for(i = 0; i < pl2_menu.numItems; i++)
+        if(pl2_menu_showing)
         {
-            uint32_t color = pl2_menu.items[i].enabled ? 0xff000000ul : 0x80000000ul;
-            color |= (i == pl2_menu.selection) ? 0xfffffful : 0x808080ul;
-            pl2FontUcsPrintCenter(pl2_font, x, y, color, pl2_menu.items[i].text);
-            y += pl2_font->glyphSize;
+            int x = (int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
+            int y = (int)(0.5f * (float)(PL2_NOMINAL_SCREEN_HEIGHT - (2 * pl2_menu.numItems - 1) * pl2_font->glyphSize));
+
+            for(i = 0; i < pl2_menu.numItems; i++)
+            {
+                uint32_t color = pl2_menu.items[i].enabled ? 0xff000000ul : 0x80000000ul;
+                color |= (i == pl2_menu.selection) ? 0xfffffful : 0x000000ul;
+                pl2FontUcsPrintCenter(pl2_font, x, y, color, pl2_menu.items[i].text);
+                y += 2 * pl2_font->glyphSize;
+            }
+        }
+
+        else if(pl2_text_showing)
+        {
+            int x = 0; //(int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
+            int y = (int)(0.8f * (float)PL2_NOMINAL_SCREEN_HEIGHT);
+            pl2FontUcsPrint(pl2_font, x, y, 0xfffffffful, pl2_text);
         }
     }
 
-    else if(pl2_text_showing)
-    {
-        int x = 0; //(int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
-        int y = (int)(0.8f * (float)PL2_NOMINAL_SCREEN_HEIGHT);
-        pl2FontUcsPrint(pl2_font, x, y, 0xfffffffful, pl2_text);
-    }
+    glPopMatrix();
 
     pl2LayerDraw(&(pl2_layers[1]));
+
+    pl2GlEnd2D();
+}
+
+/******************************************************************************/
+
+void pl2GlInit()
+{
+    glClearColor(0, 0, 0, 1);
+
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+
+    glDepthFunc(GL_LESS);
+    glEnable(GL_DEPTH_TEST);
+
+    glAlphaFunc(GL_GREATER, 0);
+    glEnable(GL_ALPHA_TEST);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+
+    //glEnable(GL_LIGHTING);
+
+    //glSampleCoverage(0.5f, 0);
+
+    //float light_pos[] = { 0, 12, -10, 0 };
+    //float light_amb[] = { 0.2f, 0.2f, 0.2f, 1 };
+    //float light_dif[] = { 0.8f, 0.8f, 0.8f, 1 };
+    //float light_spc[] = { 1.0f, 1.0f, 1.0f, 1 };
+
+    //glEnable(GL_LIGHT0);
+    //glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    //glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
+    //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_dif);
+    //glLightfv(GL_LIGHT0, GL_SPECULAR, light_spc);
+}
+
+/******************************************************************************/
+
+#if WITH_GLUT
+
+static int pl2_init_screen_width  = PL2_NOMINAL_SCREEN_WIDTH;
+static int pl2_init_screen_height = PL2_NOMINAL_SCREEN_HEIGHT;
+
+static void pl2GlutIdleFunc()
+{
+    glutReshapeWindow(pl2_init_screen_width, pl2_init_screen_height);
+    glutPostRedisplay();
+}
+
+static void pl2GlutDisplayFunc()
+{
+    static uint32_t last_time = 0;
+    if(last_time == 0) last_time = glutGet(GLUT_ELAPSED_TIME);
+
+    const uint32_t this_time = glutGet(GLUT_ELAPSED_TIME);
+
+    const float dt = (float)(this_time - last_time)*0.001f;
+
+    last_time = this_time;
+
+    pl2GlRenderFrame(dt);
 
     glutSwapBuffers();
 }
 
 static void pl2GlutReshapeFunc(int w, int h)
 {
-    if((pl2_screen_width < 0) || (pl2_screen_height < 0))
-    {
-        pl2_screen_width  = w;
-        pl2_screen_height = h;
-    }
-    else if((w != pl2_screen_width) || (h != pl2_screen_height))
-    {
-        DEBUGPRINT("%s: trying to maintain original window size...\n", __func__);
-        glutReshapeWindow(pl2_screen_width, pl2_screen_height);
-    }
+    if(0 == pl2_init_screen_width)
+        pl2_init_screen_width = w;
+    if(0 == pl2_init_screen_height)
+        pl2_init_screen_height = h;
+
+    pl2_screen_width  = w;
+    pl2_screen_height = h;
 
     float f1 = (float)w / (float)(PL2_NOMINAL_SCREEN_WIDTH);
     float f2 = (float)h / (float)(PL2_NOMINAL_SCREEN_HEIGHT);
@@ -858,7 +706,7 @@ static void pl2GlutJoystickFunc(unsigned int buttons, int x, int y, int z)
     //if(buttons & PSP_CTRL_START) pl2Exit();
 }
 
-#else
+#else // !_PSP_FW_VERSION
 
 static void pl2GlutKeyboardFunc(unsigned char k, int x, int y)
 {
@@ -946,6 +794,7 @@ static void pl2GlutMouseFunc(int button, int state, int x, int y)
             break;
     }
 
+    glutSetCursor(move_mode ? GLUT_CURSOR_NONE : GLUT_CURSOR_INHERIT);
     mouse_x = x; mouse_y = y;
 }
 
@@ -989,16 +838,29 @@ static void pl2GlutMotionFunc(int x, int y)
    glutPostRedisplay();
 }
 
+static void pl2GlutPassiveMotionFunc(int x, int y)
+{
+}
+
+static void pl2GlutMouseWheelFunc(int btn, int dir, int x, int y)
+{
+}
+
 static struct { int width, height, bpp; }
 pl2_displayModes[] =
 {
     {   -1,   -1, 32 }, // reserved for user-specified mode
     { 1600, 1200, 32 }, { 1600, 1200, 16 }, //{ 1600, 1200, 0 },
+    { 1400, 1050, 32 }, { 1400, 1050, 16 }, //{ 1400, 1050, 0 },
     { 1280, 1024, 32 }, { 1280, 1024, 16 }, //{ 1280, 1024, 0 },
+    { 1280,  800, 32 }, { 1280,  800, 16 }, //{ 1280,  800, 0 },
+    { 1280,  768, 32 }, { 1280,  768, 16 }, //{ 1280,  768, 0 },
     { 1024,  768, 32 }, { 1024,  768, 16 }, //{ 1024,  768, 0 },
     { 1024,  600, 32 }, { 1024,  600, 16 }, //{ 1024,  600, 0 },
     {  800,  600, 32 }, {  800,  600, 16 }, //{  800,  600, 0 },
     {  640,  480, 32 }, {  640,  480, 16 }, //{  640,  480, 0 },
+    {  640,  360, 32 }, {  640,  360, 16 }, //{  640,  360, 0 },
+    {  480,  272, 32 }, {  480,  272, 16 }, //{  480,  272, 0 },
     {  320,  240, 32 }, {  320,  240, 16 }, //{  320,  240, 0 },
     {    0,    0,  0 },
 };
@@ -1035,11 +897,20 @@ static int pl2GlutTryGameMode()
 
 #endif // !_PSP_FW_VERSION
 
-int pl2GlInit(int *argc, char *argv[])
+/******************************************************************************/
+
+int pl2GlutDoFrame()
+{
+    glutMainLoopEvent();
+    glutPostRedisplay();
+    return pl2_running;
+}
+
+int pl2GlutInit(int *argc, char *argv[])
 {
     //int init_width = PL2_NOMINAL_SCREEN_WIDTH, init_height = PL2_NOMINAL_SCREEN_HEIGHT;
 
-//#if !_PSP_FW_VERSION
+#if !_PSP_FW_VERSION
     int windowed = 0;
 
     int i;
@@ -1083,14 +954,13 @@ int pl2GlInit(int *argc, char *argv[])
             pl2_censor = 1;
         }
     }
-//#endif
+#endif // !_PSP_FW_VERSION
 
     //DEBUGPRINT("%s: before glutInit, argc == %d\n", __func__, *argc);
     glutInitWindowSize(PL2_NOMINAL_SCREEN_WIDTH, PL2_NOMINAL_SCREEN_HEIGHT);
     glutInit(argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     //DEBUGPRINT("%s: after glutInit, argc == %d\n", __func__, *argc);
-
 #if FREEGLUT
     //atexit(glutExit);
 #endif
@@ -1115,40 +985,15 @@ int pl2GlInit(int *argc, char *argv[])
     glutSpecialFunc(pl2GlutSpecialFunc);
     glutMouseFunc(pl2GlutMouseFunc);
     glutMotionFunc(pl2GlutMotionFunc);
+    glutPassiveMotionFunc(pl2GlutPassiveMotionFunc);
+    glutMouseWheelFunc(pl2GlutMouseWheelFunc);
 #endif
 
-#if FREEGLUT
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
-#endif
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_EXIT);
 
-    glClearColor(0, 0, 0, 1);
-
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
-
-    glDepthFunc(GL_LESS);
-    glEnable(GL_DEPTH_TEST);
-
-    glAlphaFunc(GL_GREATER, 0);
-    glEnable(GL_ALPHA_TEST);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-
-    //glEnable(GL_LIGHTING);
-
-    //glSampleCoverage(0.5f, 0);
-
-    //float light_pos[] = { 0, 12, -10, 0 };
-    //float light_amb[] = { 0.2f, 0.2f, 0.2f, 1 };
-    //float light_dif[] = { 0.8f, 0.8f, 0.8f, 1 };
-    //float light_spc[] = { 1.0f, 1.0f, 1.0f, 1 };
-
-    //glEnable(GL_LIGHT0);
-    //glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-    //glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
-    //glLightfv(GL_LIGHT0, GL_DIFFUSE, light_dif);
-    //glLightfv(GL_LIGHT0, GL_SPECULAR, light_spc);
+    pl2GlInit();
 
     return 1;
 }
+
+#endif // WITH_GLUT

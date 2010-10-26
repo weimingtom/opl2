@@ -389,6 +389,9 @@ pl2Sound;
 void pl2GameInit(int *argc, char *argv[]);
 int pl2GameRun();
 
+void pl2Exit();
+int pl2Running();
+
 int pl2GetErrorCode();
 const char *pl2GetErrorMessage(int code);
 void pl2ClearError();
@@ -474,10 +477,14 @@ void pl2CameraPathFree(pl2CameraPath *path);
 pl2Font *pl2FontLoad(const char *name);
 void pl2FontFree(pl2Font *font);
 int pl2FontMeasureText(pl2Font *font, const char *text);
+void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text);
+void pl2FontUcsPrintCenter(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text);
+void pl2FontUcsPrintRight(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text);
 void pl2FontPrint(pl2Font *font, float x, float y, uint32_t color, const char *text);
 void pl2FontPrintCenter(pl2Font *font, float x, float y, uint32_t color, const char *text);
 void pl2FontPrintRight(pl2Font *font, float x, float y, uint32_t color, const char *text);
 
+size_t pl2Ucs4Strlen(const uint32_t *text);
 size_t pl2Utf8Strlen(const char *text);
 size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length);
 

@@ -1,4 +1,4 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 
 static struct { uint32_t sjis, ucs; } cctable[] = {
@@ -1914,4 +1914,66 @@ void pl2FontFree(pl2Font *font)
 
         DELETE(font);
     }
+}
+
+void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len);
+
+void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
+{
+    if(font && text)
+    {
+        int len = 0; while(text[len++]);
+        x -= (len * font->glyphSize) >> 1;
+        pl2FontPrintInternal(font, x, y, color, text, len);
+    }
+}
+
+void pl2FontUcsPrintCenter(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
+{
+    if(font && text)
+    {
+        int len = 0; while(text[len++]);
+        x -= (len * font->glyphSize) >> 1;
+        pl2FontPrintInternal(font, x, y, color, text, len);
+    }
+}
+
+void pl2FontUcsPrintRight(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
+{
+    if(font && text)
+    {
+        int len = 0; while(text[len++]);
+        x -= (len * font->glyphSize);
+        pl2FontPrintInternal(font, x, y, color, text, len);
+    }
+}
+
+void pl2FontPrint(pl2Font *font, float x, float y, uint32_t color, const char *text)
+{
+    int size = pl2Utf8Strlen(text) + 1;
+
+    uint32_t ucs4[size];
+    pl2Utf8ToUcs4(ucs4, size, text, -1);
+
+    pl2FontUcsPrint(font, x, y, color, ucs4);
+}
+
+void pl2FontPrintCenter(pl2Font *font, float x, float y, uint32_t color, const char *text)
+{
+    int size = pl2Utf8Strlen(text) + 1;
+
+    uint32_t ucs4[size];
+    pl2Utf8ToUcs4(ucs4, size, text, -1);
+
+    pl2FontUcsPrintCenter(font, x, y, color, ucs4);
+}
+
+void pl2FontPrintRight(pl2Font *font, float x, float y, uint32_t color, const char *text)
+{
+    int size = pl2Utf8Strlen(text) + 1;
+
+    uint32_t ucs4[size];
+    pl2Utf8ToUcs4(ucs4, size, text, -1);
+
+    pl2FontUcsPrintRight(font, x, y, color, ucs4);
 }

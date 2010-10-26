@@ -1,3 +1,6 @@
+--print(pl2.call('init.lua'))
+--print'continue...'
+
 --------------------------------------------------------------------------------
 
 light1:setPosition(-1, -1, -1)
@@ -433,15 +436,16 @@ end
 math.randomseed(os.time())
 math.random()
 
---ani:setModels(chars.ani)
---imo:setModels(chars[chars[math.random(1,#chars)]])
+ani:setModels(chars.ani)
+ani:setVisible(true)
+
+imo:setModels(chars[chars[math.random(1,#chars)]])
 --imo:setModels(chars.moon_pluto2)
+imo:setVisible(true)
+
 --room:setModels(rooms[rooms[math.random(1,#rooms)]])
 room:setModels(rooms.beach)
 room:setAnim(rooms.beach.anim)
-
---ani:setVisible(true)
---imo:setVisible(true)
 room:setVisible(true)
 
 function doScene(name)
@@ -451,10 +455,12 @@ function doScene(name)
     pl2.wait(2)
 
     local menu = {
-        pl2.ucs(0x30b9,0x30c8,0x30fc,0x30ea,0x30fc,0x30e2,0x30fc,0x30c9),
-        pl2.ucs(0x3068,0x3053,0x3068,0x3093,0xff28,0x30e2,0x30fc,0x30c9),
-        pl2.ucs(0x7d42,0x4e86),
-        "Testing 1 2 3",
+        --pl2.ucs(0x30b9,0x30c8,0x30fc,0x30ea,0x30fc,0x30e2,0x30fc,0x30c9),
+        --pl2.ucs(0x3068,0x3053,0x3068,0x3093,0xff28,0x30e2,0x30fc,0x30c9),
+        --pl2.ucs(0x7d42,0x4e86),
+        'ストーリーモード',
+        'とことんＨモード',
+        '終了',
         }
     local i = pl2.showMenu(menu)
     print('selected',i)

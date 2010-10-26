@@ -1,4 +1,4 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 
 /******************************************************************************/
@@ -269,6 +269,30 @@ pl2PackageFile *pl2PackageGetFile(const char *filename)
    if (!filename)
    {
       PL2_ERROR(PL2_ERR_PARAM);
+   }
+
+   FILE *fh = fopen(filename, "rb");
+
+   if(fh)
+   {
+       fseek(fh, 0, SEEK_END);
+       long int size = ftell(fh);
+       fseek(fh, 0, SEEK_SET);
+
+       pl2PackageFile *file = NEWVAR(pl2PackageFile, size);
+
+       if(file)
+       {
+           pl2_strlcpy(file->name, filename, sizeof(file->name));
+           file->length = size;
+           fread(file->data, size, 1, fh);
+
+           fclose(fh);
+
+           return file;
+       }
+
+       fclose(fh);
    }
 
    pl2Package *package = pl2PackageIndexSearch(filename);

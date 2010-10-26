@@ -1,4 +1,4 @@
-#include "opl2.h"
+//#include "opl2.h"
 #include "opl2_int.h"
 
 #include <stdio.h>
