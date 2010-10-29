@@ -7,7 +7,7 @@ int pl2_strlcpy(char *dst, const char *src, int len)
 {
    --len;
    int i;
-   for (i = 0; i < len; ++i)
+   for (i = 0; src[i] && (i < len); ++i)
    {
       dst[i] = src[i];
    }

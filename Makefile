@@ -6,7 +6,7 @@ OBJS += opl2_int.o opl2_idx.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
 WITH_GLUT=1
 
 CFLAGS += -Wall -g
-LIBS += -llua -lvorbisfile -lvorbis -lSDL -lm
+LIBS += -lvorbisfile -lvorbis -lm
 
 ARGS = -window 320x240+0+0
 
@@ -65,12 +65,12 @@ ifeq ($(PLATFORM),psp)
  PSPDEV = $(shell psp-config --pspdev-path)
  PSPSDK = $(shell psp-config --pspsdk-path)
 
- LIBS += -lglut -lGLU -lGL -lALut -lOpenAL32 -logg
+ LIBS += -llua -lglut -lGLU -lGL -lALut -lOpenAL32 -logg
  LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
  TARGET = opl2
  BUILD_PRX = 1
- CFLAGS += -G0
+ CFLAGS += -G0 -DWITH_GLUT
 
  include $(PSPSDK)/lib/build.mak
 
@@ -99,8 +99,10 @@ else
 
   ifeq ($(WITH_GLUT),1)
    LIBS += -lfreeglut
+  else
+   LIBS += -lSDL
   endif
-  LIBS += -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+  LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
   CFLAGS += -DFREEGLUT_STATIC
   TARGET = opl2.exe
 
@@ -116,8 +118,10 @@ opl2.res: opl2.rc
 
   ifeq ($(WITH_GLUT),1)
    LIBS += -lglut
+  else
+   LIBS += -lSDL
   endif
-  LIBS += -lGLU -lGL -lalut -lopenal
+  LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
   TARGET = opl2
 
   PL2EX = pl2ex

@@ -23,6 +23,7 @@
 #define STUB() DEBUGPRINT("%s(%d): %s is a stub function!\n", __FILE__, __LINE__, __func__);
 
 #include <math.h>
+#include <errno.h>
 
 #define DEG(r) ((r)*180.0f/M_PI)
 #define RAD(r) ((r)*M_PI/180.0f)
