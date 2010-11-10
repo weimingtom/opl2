@@ -6,6 +6,9 @@
 //#include <GL/glut.h>
 //#include <GL/freeglut.h>
 
-int pl2GlInit(int *argc, char *argv[]);
+int pl2GlInit();
+int pl2GlutInit(int *argc, char *argv[]);
+void pl2GlRenderFrame(float dt);
 
 #endif // __OPL2_GL_H__
+

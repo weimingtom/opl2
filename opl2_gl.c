@@ -17,7 +17,7 @@
 // Reference:
 // http://www.opengl.org/sdk/docs/man/
 
-#if _PSP_FW_VERSION
+#if 0 // _PSP_FW_VERSION
 # include <pspuser.h>
 # include <psprtc.h>
 
@@ -208,7 +208,9 @@ void pl2LayerDraw(pl2Layer *layer)
 {
     if(layer)
     {
-        glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
+        //glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
+        float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level };
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
 
         const struct { float x, y, z; } rect[4] = {
             { 0,                0,                 0 },
@@ -509,7 +511,7 @@ void pl2CharRender(pl2Character *chr)
 
 /******************************************************************************/
 
-static void pl2GlRenderFrame(float dt)
+void pl2GlRenderFrame(float dt)
 {
     int i;
 
@@ -601,8 +603,8 @@ void pl2GlInit()
     glDepthFunc(GL_LESS);
     glEnable(GL_DEPTH_TEST);
 
-    glAlphaFunc(GL_GREATER, 0);
-    glEnable(GL_ALPHA_TEST);
+    //glAlphaFunc(GL_GREATER, 0);
+    //glEnable(GL_ALPHA_TEST);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
@@ -632,7 +634,7 @@ static int pl2_init_screen_height = PL2_NOMINAL_SCREEN_HEIGHT;
 
 static void pl2GlutIdleFunc()
 {
-    glutReshapeWindow(pl2_init_screen_width, pl2_init_screen_height);
+    //glutReshapeWindow(pl2_init_screen_width, pl2_init_screen_height);
     glutPostRedisplay();
 }
 
@@ -671,7 +673,7 @@ static void pl2GlutReshapeFunc(int w, int h)
     pl2_screen_aspect = (float)w/(float)h;
 
     DEBUGPRINT("%s: window resize to %dx%d (aspect == %g, scale == %g)\n", __func__,
-               w, h, pl2_screen_aspect, pl2_screen_scale);
+               pl2_screen_width, pl2_screen_height, pl2_screen_aspect, pl2_screen_scale);
 
     //glMatrixMode(GL_PROJECTION);
     //glLoadIdentity();

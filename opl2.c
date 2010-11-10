@@ -3,6 +3,7 @@
 #include "opl2_gl.h"
 #include "opl2_al.h"
 #include "opl2_lua.h"
+#include "opl2_sdl.h"
 
 #include <ctype.h>
 
@@ -292,31 +293,8 @@ void pl2Wait(float sec)
 
 /******************************************************************************/
 
-#if !WITH_GLUT
-static SDL_TimerID pl2_timer = 0;
-
-static Uint32 pl2SdlRedraw(Uint32 interval, void *param)
-{
-    SDL_Event event;
-
-    event.type = SDL_USEREVENT;
-    event.user.code = 42;
-    event.user.data1 = 0;
-    event.user.data2 = 0;
-
-    SDL_PushEvent(&event);
-
-    return interval;
-}
-#endif
-
 void pl2GameShutdown()
 {
-#if !WITH_GLUT
-    SDL_RemoveTimer(pl2_timer);
-    SDL_Quit();
-#endif
-
     pl2PackageClearIndex();
 }
 
@@ -328,11 +306,12 @@ void pl2GameInit(int *argc, char *argv[])
 
     pl2_font = pl2FontLoad("font");
 
-    pl2GlutInit(argc, argv);
     pl2AlInit(argc, argv);
 
-#if !WITH_GLUT
-    pl2_timer = SDL_AddTimer(100, pl2SdlRedraw, NULL);
+#if WITH_GLUT
+    pl2GlutInit(argc, argv);
+#else
+    pl2SdlInit(argc, argv);
 #endif
 }
 

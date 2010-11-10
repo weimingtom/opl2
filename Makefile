@@ -1,9 +1,9 @@
 PLATFORMS = nix unix linux win dos mingw psp pspsdk
 
 OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o opl2_fnt.o
-OBJS += opl2_int.o opl2_idx.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
+OBJS += opl2_int.o opl2_idx.o opl2_sdl.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
 
-WITH_GLUT=1
+#WITH_GLUT=1
 
 CFLAGS += -Wall -g
 LIBS += -lvorbisfile -lvorbis -lm
@@ -65,7 +65,7 @@ ifeq ($(PLATFORM),psp)
  PSPDEV = $(shell psp-config --pspdev-path)
  PSPSDK = $(shell psp-config --pspsdk-path)
 
- LIBS += -llua -lglut -lGLU -lGL -lALut -lOpenAL32 -logg
+ LIBS += -llua -lglut -lGLU -lGL -lalut -lOpenAL32 -logg
  LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
  TARGET = opl2

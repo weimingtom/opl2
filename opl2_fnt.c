@@ -1923,7 +1923,6 @@ void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, const uint
     if(font && text)
     {
         int len = 0; while(text[len++]);
-        x -= (len * font->glyphSize) >> 1;
         pl2FontPrintInternal(font, x, y, color, text, len);
     }
 }
