@@ -406,7 +406,7 @@ local rooms = {
     train = {
         [1]="room_03",
         [2]="room_03A",
-        --anim="room_03A",
+        anim="room_03A",
     },
     furo = {
         [1]="room_huro01",
@@ -437,11 +437,11 @@ math.randomseed(os.time())
 math.random()
 
 ani:setModels(chars.ani)
-ani:setVisible(true)
+--ani:setVisible(true)
 
 imo:setModels(chars[chars[math.random(1,#chars)]])
 --imo:setModels(chars.moon_pluto2)
-imo:setVisible(true)
+--imo:setVisible(true)
 
 --room:setModels(rooms[rooms[math.random(1,#rooms)]])
 room:setModels(rooms.beach)

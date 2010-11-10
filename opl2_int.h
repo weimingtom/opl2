@@ -41,6 +41,10 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 #define ARRSIZE(n,t) (sizeof(t)*(n))
 #define VARSIZE(t,x) (sizeof(t)+(x))
 
+#ifdef DELETE
+# undef DELETE
+#endif
+
 #define DELETE(p) (free((p)),(p)=0)
 
 /******************************************************************************/

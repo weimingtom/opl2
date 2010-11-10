@@ -1,4 +1,4 @@
-PLATFORMS = nix unix linux win dos mingw psp pspsdk
+PLATFORMS = nix win psp
 
 OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o opl2_fnt.o
 OBJS += opl2_int.o opl2_idx.o opl2_sdl.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
@@ -7,6 +7,16 @@ OBJS += opl2_int.o opl2_idx.o opl2_sdl.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.
 
 CFLAGS += -Wall -g
 LIBS += -lvorbisfile -lvorbis -lm
+
+WIN_LIBS += -lmingw32 -lSDLmain -lSDL
+WIN_LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+
+NIX_LIBS += -lSDL
+NIX_LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
+
+PSP_LIBS += -llua -lglut -lGLU -lGL -lalut -lOpenAL32 -logg
+PSP_LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
+
 
 ARGS = -window 320x240+0+0
 
@@ -19,7 +29,20 @@ else
  endif
 endif 
 
+ifeq ($(PLATFORM),)
+
+CCINFO := $(shell gcc -dumpmachine)
+
+ifeq ($(findstring mingw,$(CCINFO)),mingw)
+ PLATFORM=win
+else
+ PLATFORM=nix
+endif
+
+ ifeq ($(CCINFO),)
+
 default:
+	@echo "Could not auto-detect platform."
 	@echo "Try 'make platform' where platform is one of:"
 	@echo "	$(PLATFORMS)"
 
@@ -59,14 +82,15 @@ psp-debug:
 	make PLATFORM=psp debug
 psp-release:
 	make PLATFORM=psp RELEASE=1 rebuild
+ endif
+endif
 
 ifeq ($(PLATFORM),psp)
 
  PSPDEV = $(shell psp-config --pspdev-path)
  PSPSDK = $(shell psp-config --pspsdk-path)
 
- LIBS += -llua -lglut -lGLU -lGL -lalut -lOpenAL32 -logg
- LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
+ LIBS += $(PSP_LIBS)
 
  TARGET = opl2
  BUILD_PRX = 1
@@ -100,7 +124,7 @@ else
   ifeq ($(WITH_GLUT),1)
    LIBS += -lfreeglut
   else
-   LIBS += -lSDL
+   LIBS += -lmingw32 -lSDLmain -lSDL 
   endif
   LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
   CFLAGS += -DFREEGLUT_STATIC
@@ -108,11 +132,6 @@ else
 
   PL2EX = pl2ex.exe
   DUMPTMB = dumptmb.exe
-
-opl2.rc:
-	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE opl2.ico > $@
-opl2.res: opl2.rc
-	$(WINDRES) --input-format=rc -o $@ $(RCINCS) $^ -O coff
 
  else
 
@@ -129,6 +148,8 @@ opl2.res: opl2.rc
 
  endif
 
+all: $(TARGET) $(PL2EX) $(DUMPTMB)
+
 $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS) $(WINAPP)
 
@@ -142,13 +163,16 @@ test: $(TARGET)
 debug: $(TARGET)
 	gdb -ex "break main" -ex run --args $(TARGET) $(ARGS)
 
+opl2.rc: opl2.ico
+	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@
+opl2.res: opl2.rc
+	$(WINDRES) --input-format=rc -o $@ $(RCINCS) $^ -O coff
+
 $(PL2EX): pl2ex.o opl2_int.o opl2_pl2.o
 	$(CC) -o $@ $^ $(LIBS)
 
 $(DUMPTMB): dumptmb.o opl2_int.o opl2_tmb.o opl2_pl2.o opl2_vm.o opl2_idx.o
 	$(CC) -o $@ $^ $(LIBS)
-
-all: $(TARGET) $(PL2EX) $(DUMPTMB)
 
 endif
 	

@@ -2,7 +2,7 @@
 #include "opl2_int.h"
 
 #include <AL/al.h>
-#include <AL/alc.h>
+//#include <AL/alc.h>
 #include <AL/alut.h>
 
 #if WITH_TREMOR

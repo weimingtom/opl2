@@ -4,6 +4,8 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+
+#if WITH_GLUT
 //#include <GL/glut.h>
 #include <GL/freeglut.h>
 
@@ -11,6 +13,7 @@
 //#if FREEGLUT
 //# include <GL/freeglut_ext.h>
 //#endif
+#endif
 
 #include <math.h>
 

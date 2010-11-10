@@ -154,10 +154,7 @@ void pl2ShowText()
 {
     pl2_text_showing = 1;
 
-    while(pl2_text_showing)
-    {
-        pl2DoFrame();
-    }
+    while(pl2_text_showing && pl2DoFrame());
 }
 
 void pl2TextAdvance()
@@ -257,10 +254,7 @@ int pl2ShowMenu(pl2Menu *menu)
 
         menu->selection = 0;
 
-        while(pl2_menu_showing)
-        {
-            pl2DoFrame();
-        }
+        while(pl2_menu_showing && pl2DoFrame());
 
         return menu->selection;
     }
@@ -269,26 +263,17 @@ int pl2ShowMenu(pl2Menu *menu)
 
 /******************************************************************************/
 
+#if WITH_GLUT
+# define GETTICKS() glutGet(GLUT_ELAPSED_TIME)
+#else
+# define GETTICKS() SDL_GetTicks()
+#endif
+
 void pl2Wait(float sec)
 {
-    int until =
-#if WITH_GLUT
-        glutGet(GLUT_ELAPSED_TIME)
-#else
-        SDL_GetTicks()
-#endif
-        + sec * 1000;
+    int until = GETTICKS() + sec * 1000;
 
-    while(
-#if WITH_GLUT
-        glutGet(GLUT_ELAPSED_TIME)
-#else
-        SDL_GetTicks()
-#endif
-        < until)
-    {
-        pl2DoFrame();
-    }
+    while((GETTICKS() < until) && pl2DoFrame());
 }
 
 /******************************************************************************/
@@ -364,9 +349,9 @@ int pl2GameRun()
 
 /******************************************************************************/
 
-#ifdef main
-#undef main
-#endif
+//#ifdef main
+//#undef main
+//#endif
 
 int main(int argc, char *argv[])
 {

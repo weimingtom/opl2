@@ -137,8 +137,8 @@ int pl2SdlDoFrame()
 
             case SDL_QUIT:
                 DEBUGPRINT("%s: exiting\n", __func__);
-                //exit(0);
-                pl2_running = 0;
+                exit(0);
+                //pl2_running = 0;
                 break;
 
             default:
