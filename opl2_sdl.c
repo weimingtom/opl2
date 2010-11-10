@@ -68,7 +68,7 @@ int pl2SdlDoFrame()
                 break;
             }
 
-            case SDL_KEYDOWN:
+            case SDL_KEYDOWN: {
                 switch(event.key.keysym.sym)
                 {
                     case SDLK_ESCAPE:
@@ -88,6 +88,7 @@ int pl2SdlDoFrame()
                         break;
                 }
                 break;
+            }
 
             case SDL_MOUSEMOTION: {
                 int dx = event.motion.xrel, dy = event.motion.yrel, buttons = event.motion.state;
@@ -184,15 +185,17 @@ int pl2SdlInit(int *argc, char *argv[])
     SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     atexit(pl2SdlShutdown);
 
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
-
     int width = 800, height = 600, bpp = 32;
     Uint32 flags = /* SDL_FULLSCREEN | */ SDL_OPENGL | SDL_HWSURFACE;
+
+    int i;
+    for(i = 1; i < *argc; i++)
+    {
+        if(!strcmp(argv[i], "-fs") || !strcmp(argv[i], "-fullscreen"))
+        {
+            flags |= SDL_FULLSCREEN;
+        }
+    }
 
     SDL_Rect **sizes = SDL_ListModes(NULL, flags);
     
@@ -208,6 +211,13 @@ int pl2SdlInit(int *argc, char *argv[])
     {
         pl2_screen_surf = SDL_SetVideoMode(width, height, bpp, flags);
         
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
+        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+
         pl2SdlReshape(width, height);
         
         pl2GlInit();
