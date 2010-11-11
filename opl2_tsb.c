@@ -42,7 +42,7 @@ static pl2Anim *pl2AnimLoadInternal(const uint8_t *data)
     DEBUGPRINT("%s: %d bones, %d frames, loops at %d\n", __func__,
                anim->numBones, anim->numFrames, anim->loopFrame);
 
-    anim->bones = NEWARR(anim->numFrames * anim->numBones, fmatrix4_t);
+    anim->bones = NEWALIGN(16, anim->numFrames * anim->numBones, fmatrix4_t);
 
     if (!anim->bones)
     {

@@ -3,7 +3,8 @@ PLATFORMS = nix win psp
 OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o opl2_fnt.o
 OBJS += opl2_int.o opl2_idx.o opl2_sdl.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
 
-#WITH_GLUT=1
+EXTRA_OBJS = pl2ex.o dumptmb.o
+EXTRA_TARGETS = $(PL2EX) $(DUMPTMB)
 
 CFLAGS += -Wall -g
 LIBS += -lvorbisfile -lvorbis -lm
@@ -14,7 +15,7 @@ WIN_LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
 NIX_LIBS += -lSDL
 NIX_LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
 
-PSP_LIBS += -llua -lglut -lGLU -lGL -lalut -lOpenAL32 -logg
+PSP_LIBS += -llua -lpspsdl -lGLU -lGL -lalut -lOpenAL32 -logg
 PSP_LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 
@@ -94,7 +95,7 @@ ifeq ($(PLATFORM),psp)
 
  TARGET = opl2
  BUILD_PRX = 1
- CFLAGS += -G0 -DWITH_GLUT
+ CFLAGS += -G0
 
  include $(PSPSDK)/lib/build.mak
 
@@ -111,9 +112,6 @@ else
  ifeq ($(WITH_SSE2),1)
   CFLAGS += -msse2 -DWITH_SSE2
  endif
- ifeq ($(WITH_GLUT),1)
-  CFLAGS += -DWITH_GLUT
- endif
 
  ifeq ($(PLATFORM),win)
 
@@ -121,13 +119,7 @@ else
   OBJS += opl2.res
   #WINAPP = -mwindows
 
-  ifeq ($(WITH_GLUT),1)
-   LIBS += -lfreeglut
-  else
-   LIBS += -lmingw32 -lSDLmain -lSDL 
-  endif
-  LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
-  CFLAGS += -DFREEGLUT_STATIC
+  LIBS += $(WIN_LIBS)
   TARGET = opl2.exe
 
   PL2EX = pl2ex.exe
@@ -135,12 +127,7 @@ else
 
  else
 
-  ifeq ($(WITH_GLUT),1)
-   LIBS += -lglut
-  else
-   LIBS += -lSDL
-  endif
-  LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
+  LIBS += $(NIX_LIBS)
   TARGET = opl2
 
   PL2EX = pl2ex
@@ -154,7 +141,7 @@ $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS) $(WINAPP)
 
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -f $(TARGET) $(PL2EX) $(DUMPTMB) $(OBJS) $(EXTRA_OBJS)
 
 rebuild: clean all
 
@@ -162,6 +149,9 @@ test: $(TARGET)
 	./$(TARGET) $(ARGS)
 debug: $(TARGET)
 	gdb -ex "break main" -ex run --args $(TARGET) $(ARGS)
+
+release:
+	make RELEASE=1 rebuild
 
 opl2.rc: opl2.ico
 	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@

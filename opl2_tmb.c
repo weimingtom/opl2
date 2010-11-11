@@ -223,7 +223,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     //DEBUGPRINT("%s: numBones == %d\n", __func__, model->numBones);
 
-    model->bones = NEWARR(model->numBones, fmatrix4_t);
+    model->bones = NEWALIGN(16, model->numBones, fmatrix4_t);
 
     if(!model->bones)
     {

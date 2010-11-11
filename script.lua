@@ -446,7 +446,10 @@ end
 
 --------------------------------------------------------------------------------
 
-if true then
+if false then
+    fore:fade(1, 0)
+    back:fade(1, 0)
+
     ani1, ani2 = ani, room
     
     room:setModels(rooms.bedroom)
@@ -462,18 +465,18 @@ if true then
     _ = ani1:setModels(chars.ani_nude) or error('failed setting ani1 model')
     _ = ani1:setAnim('sex_a01_M') or error('failed setting ani1 anim')
     _ = ani1:setPoint('loc_pos01') --or error('failed setting ani1 point')
-
+--[[
     _ = imo2:setModels(chars.moon_pluto_nude) or error('failed setting imo2 model')
     _ = imo2:setAnim('sex_a02_F') or error('failed setting imo2 anim')
     _ = imo2:setPoint('loc_pos02') --or error('failed setting imo2 point')
-   _ =  ani2:setModels(chars.ani_nude) or error('failed setting ani2 model')
+    _ =  ani2:setModels(chars.ani_nude) or error('failed setting ani2 model')
     _ = ani2:setAnim('sex_a02_M') or error('failed setting ani2 anim')
     _ = ani2:setPoint('loc_pos02') --or error('failed setting ani2 point')
-    
+]]
     imo1:setVisible(true)
-    imo2:setVisible(true)
+    --imo2:setVisible(true)
     ani1:setVisible(true)
-    ani2:setVisible(true)
+    --ani2:setVisible(true)
 
     pl2.showText('')
     return
@@ -481,14 +484,14 @@ end
 
 math.randomseed(os.time())
 math.random()
-
+--[=[
 ani:setModels(chars.ani)
 ani:setVisible(true)
 
 imo:setModels(chars[chars[math.random(1,#chars)]])
 --imo:setModels(chars.moon_pluto2)
 imo:setVisible(true)
-
+]=]
 --room:setModels(rooms[rooms[math.random(1,#rooms)]])
 room:setModels(rooms.beach)
 room:setAnim(rooms.beach.anim)
@@ -518,7 +521,7 @@ function doScene(name)
 end
 
 doScene('zen_a01')
---if true then return end
+if true then return end
 doScene('zen_a03')
 imo1:setModel(IMO_COS_A, nil)
 imo1:setModel(IMO_NECK, nil)

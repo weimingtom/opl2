@@ -34,6 +34,7 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 
 #define NEWOBJ(t)   ((t*)calloc(sizeof(t),1))
 #define NEWARR(n,t) ((t*)calloc(sizeof(t),(n)))
+#define NEWALIGN(a,n,t) ((t*)memalign((a),sizeof(t)*(n)))
 #define NEWVAR(t,x) ((t*)calloc(sizeof(t)+(x),1))
 #define NEW NEWOBJ
 

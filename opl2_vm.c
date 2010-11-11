@@ -30,19 +30,15 @@ void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
 R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
 */
     asm volatile(
-        "movups  0 %2, %%xmm4\n"
-        "movups 16 %2, %%xmm5\n"
-        "movups 32 %2, %%xmm6\n"
-        "movups 48 %2, %%xmm7\n"
+        "movaps  0 %2, %%xmm4\n"
+        "movaps 16 %2, %%xmm5\n"
+        "movaps 32 %2, %%xmm6\n"
+        "movaps 48 %2, %%xmm7\n"
 
-        "movss   0 %1, %%xmm0\n"
-        "movss   4 %1, %%xmm1\n"
-        "movss   8 %1, %%xmm2\n"
-        "movss  12 %1, %%xmm3\n"
-        "shufps $0, %%xmm0, %%xmm0\n"
-        "shufps $0, %%xmm1, %%xmm1\n"
-        "shufps $0, %%xmm2, %%xmm2\n"
-        "shufps $0, %%xmm3, %%xmm3\n"
+        "pshufd $0x00,  0 %1, %%xmm0\n"
+        "pshufd $0x55,  0 %1, %%xmm1\n"
+        "pshufd $0xaa,  0 %1, %%xmm2\n"
+        "pshufd $0xff,  0 %1, %%xmm3\n"        
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -50,16 +46,12 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movups %%xmm0,  0 %0\n"
+        "movaps %%xmm0,  0 %0\n"
 
-        "movss  16 %1, %%xmm0\n"
-        "movss  20 %1, %%xmm1\n"
-        "movss  24 %1, %%xmm2\n"
-        "movss  28 %1, %%xmm3\n"
-        "shufps $0, %%xmm0, %%xmm0\n"
-        "shufps $0, %%xmm1, %%xmm1\n"
-        "shufps $0, %%xmm2, %%xmm2\n"
-        "shufps $0, %%xmm3, %%xmm3\n"
+        "pshufd $0x00, 16 %1, %%xmm0\n"
+        "pshufd $0x55, 16 %1, %%xmm1\n"
+        "pshufd $0xaa, 16 %1, %%xmm2\n"
+        "pshufd $0xff, 16 %1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -67,16 +59,12 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movups %%xmm0, 16 %0\n"
+        "movaps %%xmm0, 16 %0\n"
 
-        "movss  32 %1, %%xmm0\n"
-        "movss  36 %1, %%xmm1\n"
-        "movss  40 %1, %%xmm2\n"
-        "movss  44 %1, %%xmm3\n"
-        "shufps $0, %%xmm0, %%xmm0\n"
-        "shufps $0, %%xmm1, %%xmm1\n"
-        "shufps $0, %%xmm2, %%xmm2\n"
-        "shufps $0, %%xmm3, %%xmm3\n"
+        "pshufd $0x00, 32 %1, %%xmm0\n"
+        "pshufd $0x55, 32 %1, %%xmm1\n"
+        "pshufd $0xaa, 32 %1, %%xmm2\n"
+        "pshufd $0xff, 32 %1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -84,16 +72,12 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movups %%xmm0, 32 %0\n"
+        "movaps %%xmm0, 32 %0\n"
 
-        "movss  48 %1, %%xmm0\n"
-        "movss  52 %1, %%xmm1\n"
-        "movss  56 %1, %%xmm2\n"
-        "movss  60 %1, %%xmm3\n"
-        "shufps $0, %%xmm0, %%xmm0\n"
-        "shufps $0, %%xmm1, %%xmm1\n"
-        "shufps $0, %%xmm2, %%xmm2\n"
-        "shufps $0, %%xmm3, %%xmm3\n"
+        "pshufd $0x00, 48 %1, %%xmm0\n"
+        "pshufd $0x55, 48 %1, %%xmm1\n"
+        "pshufd $0xaa, 48 %1, %%xmm2\n"
+        "pshufd $0xff, 48 %1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -101,7 +85,7 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movups %%xmm0, 48 %0\n"
+        "movaps %%xmm0, 48 %0\n"
 
         :"=m"(*out)
         :"m"(*a), "m"(*b)
@@ -140,14 +124,10 @@ void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t
         "movaps 32 %1, %%xmm6\n"
         "movaps 48 %1, %%xmm7\n"
 
-        "movss   0 %2, %%xmm0\n"
-        "movss   4 %2, %%xmm1\n"
-        "movss   8 %2, %%xmm2\n"
-        "movss  12 %2, %%xmm3\n"
-        "shufps $0, %%xmm0, %%xmm0\n"
-        "shufps $0, %%xmm1, %%xmm1\n"
-        "shufps $0, %%xmm2, %%xmm2\n"
-        "shufps $0, %%xmm3, %%xmm3\n"
+        "pshufd $0x00, 0 %2, %%xmm0\n"
+        "pshufd $0x55, 0 %2, %%xmm1\n"
+        "pshufd $0xaa, 0 %2, %%xmm2\n"
+        "pshufd $0xff, 0 %2, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -155,7 +135,7 @@ void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movups %%xmm0,  0 %0\n"
+        "movaps %%xmm0,  0 %0\n"
         :"=m"(*out)
         :"m"(*m), "m"(*v)
     );
@@ -213,10 +193,10 @@ void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
     );
 #elif WITH_SSE
     asm volatile(
-        "movups %1, %%xmm0\n"
-        "movups %2, %%xmm1\n"
+        "movaps %1, %%xmm0\n"
+        "movaps %2, %%xmm1\n"
         "addps  %%xmm1, %%xmm0\n"
-        "movups %%xmm0, %0\n"
+        "movaps %%xmm0, %0\n"
         :"=m"(*out)
         :"m"(*a), "m"(*b)
     );
@@ -241,10 +221,10 @@ void pl2VectorSub4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
     );
 #elif WITH_SSE
     asm volatile(
-        "movups %1, %%xmm0\n"
-        "movups %2, %%xmm1\n"
+        "movaps %1, %%xmm0\n"
+        "movaps %2, %%xmm1\n"
         "subps  %%xmm1, %%xmm0\n"
-        "movups %%xmm0, %0\n"
+        "movaps %%xmm0, %0\n"
         :"=m"(*out)
         :"m"(*a), "m"(*b)
     );
@@ -275,10 +255,11 @@ void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
 #elif WITH_SSE
     asm volatile(
         "movss  %2, %%xmm1\n"
-        "movups %1, %%xmm0\n"
+        "movaps %1, %%xmm0\n"
         "shufps $0, %%xmm1, %%xmm1\n"
+        //"pshufd $0, %2, %%xmm1\n"
         "mulps  %%xmm1, %%xmm0\n"
-        "movups %%xmm0, %0\n"
+        "movaps %%xmm0, %0\n"
         :"=m"(*out)
         :"m"(*v), "m"(s)
     );
@@ -306,12 +287,13 @@ void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
 #elif WITH_SSE
     asm volatile(
         "movss  %2, %%xmm2\n"
-        "movups %1, %%xmm1\n"
-        "movups %0, %%xmm0\n"
+        "movaps %1, %%xmm1\n"
         "shufps $0, %%xmm2, %%xmm2\n"
+        "movaps %0, %%xmm0\n"
+        //"pshufd $0, %2, %%xmm2\n"
         "mulps  %%xmm2, %%xmm1\n"
         "addps  %%xmm1, %%xmm0\n"
-        "movups %%xmm0, %0\n"
+        "movaps %%xmm0, %0\n"
         :"=m"(*out)
         :"m"(*v), "m"(s)
     );
@@ -384,6 +366,7 @@ void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
         "movss  %2, %%xmm1\n"
         "movups %1, %%xmm0\n"
         "shufps $0, %%xmm1, %%xmm1\n"
+        //"pshufd $0, %2, %%xmm1\n"
         "mulps  %%xmm1, %%xmm0\n"
         "movlps %%xmm0, 0 %0\n"
         "movhlps %%xmm0, %%xmm0\n"
@@ -417,6 +400,7 @@ void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
         "movups %1, %%xmm1\n"
         "movups %0, %%xmm0\n"
         "shufps $0, %%xmm2, %%xmm2\n"
+        //"pshufd $0, %2, %%xmm1\n"
         "mulps  %%xmm2, %%xmm1\n"
         "addps  %%xmm1, %%xmm0\n"
         "movlps %%xmm0, 0 %0\n"
@@ -458,8 +442,8 @@ void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
     );
 #elif 0 // WITH_SSE
     asm volatile(
-        "movups 0 %1, %%xmm0\n"
-        "movups 0 %2, %%xmm1\n"
+        "movups %1, %%xmm0\n"
+        "movups %2, %%xmm1\n"
         "movaps %%xmm0, %%xmm4\n"
         "movaps %%xmm0, %%xmm2\n"
         "movaps %%xmm1, %%xmm3\n"
@@ -467,6 +451,37 @@ void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
         "mulps %%xmm1, %%xmm4\n"
         :"=m"(*out)
         :"m"(*a), "m"(*b)
+/* From:
+http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2009/03/msg00019.html
+
+>  4009e0:       0f 28 f9                movaps %xmm1,%xmm7
+>  4009e3:       0f 28 f1                movaps %xmm1,%xmm6
+>  4009e6:       0f 28 d8                movaps %xmm0,%xmm3
+>  4009e9:       0f 28 e9                movaps %xmm1,%xmm5
+>  4009ec:       0f 28 d0                movaps %xmm0,%xmm2
+>  4009ef:       0f c6 f9 ff             shufps $0xff,%xmm1,%xmm7
+>  4009f3:       0f c6 f1 09             shufps $0x9,%xmm1,%xmm6
+>  4009f7:       0f c6 e9 64             shufps $0x64,%xmm1,%xmm5
+>  4009fb:       0f 28 e0                movaps %xmm0,%xmm4
+>  4009fe:       0f c6 d8 7f             shufps $0x7f,%xmm0,%xmm3
+>  400a02:       0f c6 d0 89             shufps $0x89,%xmm0,%xmm2
+>  400a06:       0f c6 c9 92             shufps $0x92,%xmm1,%xmm1
+>  400a0a:       0f c6 e0 12             shufps $0x12,%xmm0,%xmm4
+>  400a0e:       0f 59 dd                mulps  %xmm5,%xmm3
+>  400a11:       0f 59 d1                mulps  %xmm1,%xmm2
+>  400a14:       0f 28 0d 45 0f 20 00    movaps 0x200f45(%rip),%xmm1        #
+>  400a1b:       0f 59 e6                mulps  %xmm6,%xmm4
+>  400a1e:       0f 59 c7                mulps  %xmm7,%xmm0
+>  400a21:       0f 57 d1                xorps  %xmm1,%xmm2
+>  400a24:       0f 57 d9                xorps  %xmm1,%xmm3
+>  400a27:       0f 5c c4                subps  %xmm4,%xmm0
+>  400a2a:       0f 58 d3                addps  %xmm3,%xmm2
+>  400a2d:       0f 58 c2                addps  %xmm2,%xmm0
+>  400a30:       c3                              retq
+>  400a31:       66 66 66 66 66 66 2e    nopw   %cs:0x0(%rax,%rax,1)
+>  400a38:       0f 1f 84 00 00 00 00
+>  400a3f:       00
+*/
     );
 #else
     fvector4_t c;
@@ -589,39 +604,43 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
                 fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
                 fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
                 fvector4_t t;
-                fvector3_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
+                fvector4_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
 
                 pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
-                pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w0);
+                pl2VectorScaleAdd4f(&tv, &t, w0);
                 pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
-                pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w0);
+                pl2VectorScaleAdd4f(&tn, &t, w0);
 
                 if(vert->bones[1] != 255)
                 {
                     pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
-                    pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w1);
+                    pl2VectorScaleAdd4f(&tv, &t, w1);
                     pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
-                    pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w1);
+                    pl2VectorScaleAdd4f(&tn, &t, w1);
 
                     if(vert->bones[2] != 255)
                     {
                         pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
-                        pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w2);
+                        pl2VectorScaleAdd4f(&tv, &t, w2);
                         pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
-                        pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w2);
+                        pl2VectorScaleAdd4f(&tn, &t, w2);
 
                         if(vert->bones[3] != 255)
                         {
                             pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
-                            pl2VectorScaleAdd3f(&tv, (fvector3_t*)&t, w3);
+                            pl2VectorScaleAdd4f(&tv, &t, w3);
                             pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
-                            pl2VectorScaleAdd3f(&tn, (fvector3_t*)&t, w3);
+                            pl2VectorScaleAdd4f(&tn, &t, w3);
                         }
                     }
                 }
 
-                obj->glVertices[j].vertex = tv;
-                obj->glVertices[j].normal = tn;
+                obj->glVertices[j].vertex.x = tv.x;
+                obj->glVertices[j].vertex.y = tv.y;
+                obj->glVertices[j].vertex.z = tv.z;
+                obj->glVertices[j].normal.x = tn.x;
+                obj->glVertices[j].normal.y = tn.y;
+                obj->glVertices[j].normal.z = tn.z;
             }
             else
             {
