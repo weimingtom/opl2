@@ -224,9 +224,8 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
     //DEBUGPRINT("%s: numBones == %d\n", __func__, model->numBones);
 
     model->bones = NEWARR(model->numBones, fmatrix4_t);
-    model->tempBones = NEWARR(model->numBones, fmatrix4_t);
 
-    if(!(model->bones && model->tempBones))
+    if(!model->bones)
     {
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
@@ -410,11 +409,6 @@ void pl2ModelFree(pl2Model *model)
         if(model->bones)
         {
             DELETE(model->bones);
-        }
-
-        if(model->tempBones)
-        {
-            DELETE(model->tempBones);
         }
 
         if(model->points)
