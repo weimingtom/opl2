@@ -374,6 +374,19 @@ local chars = {
         [12]='imo_shoesS-Pluto_00',
         [13]='imo_hairS-Pluto_00',
     },
+    moon_pluto_nude = {
+        [1]='imo_bodyC_00',
+        [2]='imo_eye_08',
+        --[3]='imo_underS-Pluto_00A',
+        --[6]='imo_cosS-Pluto_00A',
+        --[7]='imo_cosS-Pluto_00B',
+        [8]='imo_headS-Pluto_00',
+        --[9]='imo_faceS-Pluto_00',
+        [10]='imo_neckS-Pluto_00',
+        [11]='imo_armS-Pluto_00',
+        [12]='imo_shoesS-Pluto_00',
+        [13]='imo_hairS-Pluto_00',
+    },
     moon_pluto2 = {
         [1]='imo_bodyC_00',
         [2]='imo_eye_08',
@@ -433,15 +446,48 @@ end
 
 --------------------------------------------------------------------------------
 
+if true then
+    ani1, ani2 = ani, room
+    
+    room:setModels(rooms.bedroom)
+
+    local _
+    
+    _ = camera:setPath('sex_a01_1') or error('failed setting camera path')
+    _ = camera:setPoint('loc_pos01') --or error('failed setting camera point')
+
+    _ = imo1:setModels(chars.moon_venus_nude) or error('failed setting imo1 model')
+    _ = imo1:setAnim('sex_a01_F') or error('failed setting imo1 anim')
+    _ = imo1:setPoint('loc_pos01') --or error('failed setting imo1 point')
+    _ = ani1:setModels(chars.ani_nude) or error('failed setting ani1 model')
+    _ = ani1:setAnim('sex_a01_M') or error('failed setting ani1 anim')
+    _ = ani1:setPoint('loc_pos01') --or error('failed setting ani1 point')
+
+    _ = imo2:setModels(chars.moon_pluto_nude) or error('failed setting imo2 model')
+    _ = imo2:setAnim('sex_a02_F') or error('failed setting imo2 anim')
+    _ = imo2:setPoint('loc_pos02') --or error('failed setting imo2 point')
+   _ =  ani2:setModels(chars.ani_nude) or error('failed setting ani2 model')
+    _ = ani2:setAnim('sex_a02_M') or error('failed setting ani2 anim')
+    _ = ani2:setPoint('loc_pos02') --or error('failed setting ani2 point')
+    
+    imo1:setVisible(true)
+    imo2:setVisible(true)
+    ani1:setVisible(true)
+    ani2:setVisible(true)
+
+    pl2.showText('')
+    return
+end
+
 math.randomseed(os.time())
 math.random()
 
 ani:setModels(chars.ani)
---ani:setVisible(true)
+ani:setVisible(true)
 
 imo:setModels(chars[chars[math.random(1,#chars)]])
 --imo:setModels(chars.moon_pluto2)
---imo:setVisible(true)
+imo:setVisible(true)
 
 --room:setModels(rooms[rooms[math.random(1,#rooms)]])
 room:setModels(rooms.beach)
@@ -451,29 +497,28 @@ room:setVisible(true)
 function doScene(name)
     setAnims(name)
     print'begin scene'
-    back:fade(1, 2)
-    pl2.wait(2)
-
+    back:fade(1, 1)
+    pl2.wait(1)
+--[[
     local menu = {
         --pl2.ucs(0x30b9,0x30c8,0x30fc,0x30ea,0x30fc,0x30e2,0x30fc,0x30c9),
         --pl2.ucs(0x3068,0x3053,0x3068,0x3093,0xff28,0x30e2,0x30fc,0x30c9),
         --pl2.ucs(0x7d42,0x4e86),
-        'ストーリーモード',
-        'とことんＨモード',
-        '終了',
+        'ストーリーモード', 'とことんＨモード', '終了',
         }
     local i = pl2.showMenu(menu)
     print('selected',i)
 
     pl2.showText("You selected: "..menu[i])
-
-    back:fade(0, 2)
-    pl2.wait(2)
+]]
+    pl2.showText("Scene: "..name)
+    back:fade(0, 1)
+    pl2.wait(1)
     print'end scene'
 end
 
 doScene('zen_a01')
-if true then return end
+--if true then return end
 doScene('zen_a03')
 imo1:setModel(IMO_COS_A, nil)
 imo1:setModel(IMO_NECK, nil)

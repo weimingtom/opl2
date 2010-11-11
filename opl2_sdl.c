@@ -62,17 +62,13 @@ int pl2SdlDoFrame()
     {
         switch(event.type)
         {
-            case SDL_USEREVENT:
-            {
-                DEBUGPRINT("%s: user event\n", __func__);
-                break;
-            }
-
             case SDL_KEYDOWN: {
                 switch(event.key.keysym.sym)
                 {
                     case SDLK_ESCAPE:
-                        pl2_running = 0;
+                        //pl2_running = 0;
+                        event.type = SDL_QUIT;
+                        SDL_PushEvent(&event);
                         break;
                     case SDLK_RETURN:
                         pl2TextAdvance();
@@ -90,7 +86,8 @@ int pl2SdlDoFrame()
                 break;
             }
 
-            case SDL_MOUSEMOTION: {
+            case SDL_MOUSEMOTION:
+            {
                 int dx = event.motion.xrel, dy = event.motion.yrel, buttons = event.motion.state;
                 float x_angle = 2.0f * M_PI * (float)dx / (float)pl2_screen_width;
                 float y_angle = 2.0f * M_PI * (float)dy / (float)pl2_screen_height;
@@ -111,11 +108,17 @@ int pl2SdlDoFrame()
                             pl2CameraZoom(&(pl2_cameras[0]), -10.0f * (float)dy / (float)pl2_screen_height);
                             break;
                     }
+                    
+                    if(move_mode)
+                    {
+                        //SDL_WarpMouse(pl2_screen_width >> 1, pl2_screen_height >> 1);
+                    }
                 }
                 break;
             }
 
             case SDL_MOUSEBUTTONDOWN:
+            {
                 switch(event.button.button)
                 {
                     case SDL_BUTTON_LEFT:
@@ -127,23 +130,42 @@ int pl2SdlDoFrame()
                         SDL_ShowCursor(0);
                         break;
                 }
+                SDL_ShowCursor(!move_mode);
                 break;
+            }
 
             case SDL_MOUSEBUTTONUP:
+            {
+                switch(event.button.button)
+                {
+                    case SDL_BUTTON_LEFT:
+                        move_mode &= ~MOVE_3P;
+                        //SDL_ShowCursor(0);
+                        break;
+                    case SDL_BUTTON_RIGHT:
+                        move_mode &= ~MOVE_ORTHO;
+                        //SDL_ShowCursor(0);
+                        break;
+                }
+                SDL_ShowCursor(!move_mode);
                 break;
+            }
                 
             case SDL_VIDEORESIZE:
+            {
                 pl2SdlReshape(event.resize.w, event.resize.h);
                 break;
+            }
 
             case SDL_QUIT:
+            {
                 DEBUGPRINT("%s: exiting\n", __func__);
                 exit(0);
                 //pl2_running = 0;
                 break;
+            }
 
-            default:
-                break;
+            default: break;
         }
     }
 
@@ -186,19 +208,61 @@ int pl2SdlInit(int *argc, char *argv[])
     atexit(pl2SdlShutdown);
 
     int width = 800, height = 600, bpp = 32;
-    Uint32 flags = /* SDL_FULLSCREEN | */ SDL_OPENGL | SDL_HWSURFACE;
+    Uint32 flags = SDL_OPENGL | SDL_HWSURFACE;
 
     int i;
     for(i = 1; i < *argc; i++)
     {
         if(!strcmp(argv[i], "-fs") || !strcmp(argv[i], "-fullscreen"))
         {
+            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
+            {
+                i++;
+                int tw, th, td;
+                if(3 == sscanf(argv[i], "%dx%d:%d", &tw, &th, &td))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d:%d\n", __func__, tw, th, td);
+                    width = tw; height = th; bpp = td;
+                }
+                else if(2 == sscanf(argv[i], "%dx%d", &tw, &th))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d\n", __func__, tw, th);
+                    width = tw; height = th;
+                }
+                else
+                {
+                    fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
+                }
+            }
             flags |= SDL_FULLSCREEN;
+        }
+        else if(!strcmp(argv[i], "-window"))
+        {
+            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
+            {
+                i++;
+                int tw, th, td;
+                if(3 == sscanf(argv[i], "%dx%d:%d", &tw, &th, &td))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d:%d\n", __func__, tw, th, td);
+                    width = tw; height = th; bpp = td;
+                }
+                else if(2 == sscanf(argv[i], "%dx%d", &tw, &th))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d\n", __func__, tw, th);
+                    width = tw; height = th;
+                }
+                else
+                {
+                    fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
+                }
+            }
+            flags &= ~SDL_FULLSCREEN;
         }
     }
 
     SDL_Rect **sizes = SDL_ListModes(NULL, flags);
-    
+
     if(sizes && (sizes != (SDL_Rect**)(-1)))
     {
         width  = (*sizes)[0].w;
@@ -207,25 +271,27 @@ int pl2SdlInit(int *argc, char *argv[])
 
     bpp = SDL_VideoModeOK(width, height, bpp, flags);
 
-    if(bpp)
-    {
-        pl2_screen_surf = SDL_SetVideoMode(width, height, bpp, flags);
-        
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+    if(!bpp) return 0;
 
-        pl2SdlReshape(width, height);
-        
-        pl2GlInit();
-        
-        //pl2_timer = SDL_AddTimer(100, pl2SdlRedraw, NULL);
+    DEBUGPRINT("%s: using display mode %dx%d:%d\n", __func__, width, height, bpp);
 
-        return 1;
-    }
-    return 0;
+    pl2_screen_surf = SDL_SetVideoMode(width, height, bpp, flags);
+
+    if(!pl2_screen_surf) return 0;
+
+    SDL_WM_SetCaption("OPL2", "OPL2");
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+
+    pl2SdlReshape(width, height);
+
+    pl2GlInit();
+
+    return 1;
 }
 

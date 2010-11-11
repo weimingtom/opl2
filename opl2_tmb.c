@@ -116,8 +116,16 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
         READCOLOR4(m->emissive, data);
         m->shininess = READFLOAT(data);
 
+        float t;
+        t = fmax(m->ambient.r, fmax(m->ambient.g, m->ambient.b));
+        m->ambient.r = m->ambient.g = m->ambient.b = t;
+        t = fmax(m->diffuse.r, fmax(m->diffuse.g, m->diffuse.b));
+        m->diffuse.r = m->diffuse.g = m->diffuse.b = t;
+        t = fmax(m->specular.r, fmax(m->specular.g, m->specular.b));
+        m->specular.r = m->specular.g = m->specular.b = t;
+
         //m->ambient.a =
-        //m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
+        m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
 
         //DEBUGPRINT("%s: Material %d\n", __func__, i);
         //DEBUGPRINT("%s: m->ambient  == <%.3f,%.3f,%.3f,%.3f>\n", __func__, m->ambient .r, m->ambient .g, m->ambient .b, m->ambient .a);
@@ -216,8 +224,9 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
     //DEBUGPRINT("%s: numBones == %d\n", __func__, model->numBones);
 
     model->bones = NEWARR(model->numBones, fmatrix4_t);
+    model->tempBones = NEWARR(model->numBones, fmatrix4_t);
 
-    if(!model->bones)
+    if(!(model->bones && model->tempBones))
     {
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
@@ -401,6 +410,11 @@ void pl2ModelFree(pl2Model *model)
         if(model->bones)
         {
             DELETE(model->bones);
+        }
+
+        if(model->tempBones)
+        {
+            DELETE(model->tempBones);
         }
 
         if(model->points)

@@ -5,7 +5,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#if WITH_GLUT
+#if 0 // WITH_GLUT
 //#include <GL/glut.h>
 #include <GL/freeglut.h>
 
@@ -417,7 +417,7 @@ void pl2ModelRender(const pl2Model *model, float alpha)
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
-    //glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHTING);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -612,7 +612,7 @@ void pl2GlInit()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
-    //glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHTING);
 
     //glSampleCoverage(0.5f, 0);
 
@@ -630,7 +630,7 @@ void pl2GlInit()
 
 /******************************************************************************/
 
-#if WITH_GLUT
+#if 0 // WITH_GLUT
 
 static int pl2_init_screen_width  = PL2_NOMINAL_SCREEN_WIDTH;
 static int pl2_init_screen_height = PL2_NOMINAL_SCREEN_HEIGHT;
@@ -1002,3 +1002,4 @@ int pl2GlutInit(int *argc, char *argv[])
 }
 
 #endif // WITH_GLUT
+
