@@ -146,7 +146,7 @@ TCM (camera animations) - text
 "@TCM100"
 
 "[CAMERAANIM]"
-"<loop flag> <# frames>"
+"<first frame> <last frame>"
 
 for each frame:
 	"<x> <y> <z> <look x> <look y> <look z> <fov>"
