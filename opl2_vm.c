@@ -440,20 +440,37 @@ void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
         :"=m"(*out)
         :"m"(*a), "m"(*b)
     );
-#elif 0 // WITH_SSE
-    asm volatile(
-        "movups %1, %%xmm0\n"
-        "movups %2, %%xmm1\n"
-        "movaps %%xmm0, %%xmm4\n"
-        "movaps %%xmm0, %%xmm2\n"
-        "movaps %%xmm1, %%xmm3\n"
-        "shufps $0xff, %%xmm4, %%xmm4\n"
-        "mulps %%xmm1, %%xmm4\n"
-        :"=m"(*out)
-        :"m"(*a), "m"(*b)
+#elif WITH_SSE
 /* From:
 http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2009/03/msg00019.html
-
+*/
+    static const uint32_t mask[] __attribute__((aligned(16))) =
+        { 0x00000000, 0x00000000, 0x00000000, 0x80000000 };
+    asm volatile(
+        "movaps %2, %%xmm1\n"
+        "movaps %1, %%xmm0\n"
+        "pshufd $0xff, %%xmm1, %%xmm7\n"
+        "pshufd $0x09, %%xmm1, %%xmm6\n"
+        "pshufd $0x64, %%xmm1, %%xmm5\n"
+        "pshufd $0x12, %%xmm0, %%xmm4\n"
+        "pshufd $0x7f, %%xmm0, %%xmm3\n"
+        "pshufd $0x89, %%xmm0, %%xmm2\n"
+        "pshufd $0x92, %%xmm1, %%xmm1\n"
+        "mulps  %%xmm5, %%xmm3\n"
+        "mulps  %%xmm1, %%xmm2\n"
+        "movaps %3, %%xmm1\n"
+        "mulps  %%xmm6, %%xmm4\n"
+        "mulps  %%xmm7, %%xmm0\n"
+        "xorps  %%xmm1, %%xmm2\n"
+        "xorps  %%xmm1, %%xmm3\n"
+        "subps  %%xmm4, %%xmm0\n"
+        "addps  %%xmm3, %%xmm2\n"
+        "addps  %%xmm2, %%xmm0\n"
+        "movaps %%xmm0, %0\n"
+        :"=m"(*out)
+        :"m"(*a), "m"(*b), "m"(mask[0])
+    );
+/*
 >  4009e0:       0f 28 f9                movaps %xmm1,%xmm7
 >  4009e3:       0f 28 f1                movaps %xmm1,%xmm6
 >  4009e6:       0f 28 d8                movaps %xmm0,%xmm3
@@ -482,8 +499,8 @@ http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2009/03/msg00019.html
 >  400a38:       0f 1f 84 00 00 00 00
 >  400a3f:       00
 */
-    );
 #else
+# warning using fallback quat multiply
     fvector4_t c;
     c.x = a->w * b->x + a->x * b->w + a->y * b->z - a->z * b->y;
     c.y = a->w * b->y + a->y * b->w + a->z * b->x - a->x * b->z;
@@ -569,8 +586,8 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
     if(numBones <= 0) return;
     
-    DEBUGPRINT("%s: model->numBones == %d, anim->numBones == %d, numBones == %d\n",
-               __func__, model->numBones, anim->numBones, numBones);
+    //DEBUGPRINT("%s: model->numBones == %d, anim->numBones == %d, numBones == %d\n",
+    //           __func__, model->numBones, anim->numBones, numBones);
 
     fmatrix4_t *bones = (fmatrix4_t*)alloca(numBones * sizeof(fmatrix4_t));
     //fmatrix4_t bones[numBones] __attribute__((aligned(16)));

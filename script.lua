@@ -482,16 +482,18 @@ if false then
     return
 end
 
+fore:fade(1, 0)
+
 math.randomseed(os.time())
 math.random()
---[=[
+---[=[
 ani:setModels(chars.ani)
 ani:setVisible(true)
 
 imo:setModels(chars[chars[math.random(1,#chars)]])
---imo:setModels(chars.moon_pluto2)
+--imo:setModels(chars.moon_pluto)
 imo:setVisible(true)
-]=]
+--]=]
 --room:setModels(rooms[rooms[math.random(1,#rooms)]])
 room:setModels(rooms.beach)
 room:setAnim(rooms.beach.anim)
@@ -500,8 +502,8 @@ room:setVisible(true)
 function doScene(name)
     setAnims(name)
     print'begin scene'
-    back:fade(1, 1)
-    pl2.wait(1)
+    back:fade(1, 2)
+    --pl2.wait(1)
 --[[
     local menu = {
         --pl2.ucs(0x30b9,0x30c8,0x30fc,0x30ea,0x30fc,0x30e2,0x30fc,0x30c9),
@@ -515,8 +517,8 @@ function doScene(name)
     pl2.showText("You selected: "..menu[i])
 ]]
     pl2.showText("Scene: "..name)
-    back:fade(0, 1)
-    pl2.wait(1)
+    back:fade(0, 2)
+    pl2.wait(2)
     print'end scene'
 end
 

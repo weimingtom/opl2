@@ -7,16 +7,15 @@ EXTRA_OBJS = pl2ex.o dumptmb.o
 EXTRA_TARGETS = $(PL2EX) $(DUMPTMB)
 
 CFLAGS += -Wall -g
-LIBS += -lvorbisfile -lvorbis -lm
+LIBS += -lvorbisfile -lvorbis -lm -lSDL
 
-WIN_LIBS += -lmingw32 -lSDLmain -lSDL
+WIN_LIBS += -lmingw32 -lSDLmain
 WIN_LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
 
-NIX_LIBS += -lSDL
 NIX_LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
 
-PSP_LIBS += -llua -lpspsdl -lGLU -lGL -lalut -lOpenAL32 -logg
-PSP_LIBS += -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
+PSP_LIBS += -llua -lGLU -lGL -lalut -lOpenAL32 -logg
+PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 
 ARGS = -window 320x240+0+0

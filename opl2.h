@@ -530,6 +530,7 @@ void pl2SetText(const char *text);
 void pl2ShowText();
 void pl2Wait(float sec);
 void pl2TextAdvance();
+void pl2ToggleOverlay();
 
 /******************************************************************************/
 

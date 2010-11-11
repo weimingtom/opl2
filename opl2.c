@@ -263,6 +263,13 @@ int pl2ShowMenu(pl2Menu *menu)
 
 /******************************************************************************/
 
+void pl2ToggleOverlay()
+{
+    pl2_hide_overlay = !pl2_hide_overlay;
+}
+
+/******************************************************************************/
+
 #if WITH_GLUT
 # define GETTICKS() glutGet(GLUT_ELAPSED_TIME)
 #else

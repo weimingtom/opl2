@@ -211,9 +211,10 @@ void pl2LayerDraw(pl2Layer *layer)
 {
     if(layer)
     {
-        //glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
+        glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
         float color[4] = { 0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level };
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, color);
+        glDisable(GL_TEXTURE_2D);
 
         const struct { float x, y, z; } rect[4] = {
             { 0,                0,                 0 },
@@ -233,6 +234,7 @@ void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha)
     if(image)
     {
         glColor4f(1.0f, 1.0f, 1.0f, alpha);
+        glEnable(GL_TEXTURE_2D);
 
         int w = image->width, h = image->height;
         const struct { float x, y, z; } rect[4] = {
@@ -256,6 +258,10 @@ void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const
 {
     if(font && text)
     {
+        glEnable(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
         glColor4f(((color >>  0) & 255) / 255.0f,
                   ((color >>  8) & 255) / 255.0f,
                   ((color >> 16) & 255) / 255.0f,

@@ -446,11 +446,19 @@ int pl2CharSetModel(pl2Character *chr, int idx, const char *name)
         if((idx < 0) || (idx >= PL2_MAX_CHARPARTS))
             return 0;
 
-        if(chr->models[idx]) pl2ModelFree(chr->models[idx]);
+        if(chr->models[idx])
+        {
+            pl2ModelFree(chr->models[idx]);
+            chr->models[idx] = NULL;
+        }
 
-        chr->models[idx] = pl2ModelLoad(name);
+        if(name)
+        {
+            chr->models[idx] = pl2ModelLoad(name);
+        }
 
         return name ? (NULL != chr->models[idx]) : 1;
     }
     return 0;
 }
+

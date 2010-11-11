@@ -74,6 +74,9 @@ int pl2SdlDoFrame()
                         pl2TextAdvance();
                         pl2MenuConfirm(&pl2_menu);
                         break;
+                    case SDLK_SPACE:
+                        pl2ToggleOverlay();
+                        break;
                     case SDLK_UP:
                         pl2MenuSelectPrev(&pl2_menu);
                         break;
@@ -207,36 +210,21 @@ int pl2SdlInit(int *argc, char *argv[])
     SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     atexit(pl2SdlShutdown);
 
-    int width = 800, height = 600, bpp = 32;
-    Uint32 flags = SDL_OPENGL | SDL_HWSURFACE;
+    int width = 0, height = 0, bpp = 32;
+    Uint32 flags = SDL_FULLSCREEN | SDL_OPENGL | SDL_HWSURFACE;
 
     int i;
     for(i = 1; i < *argc; i++)
     {
-        if(!strcmp(argv[i], "-fs") || !strcmp(argv[i], "-fullscreen"))
+        if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "-fullscreen"))
         {
-            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
-            {
-                i++;
-                int tw, th, td;
-                if(3 == sscanf(argv[i], "%dx%d:%d", &tw, &th, &td))
-                {
-                    DEBUGPRINT("%s: parsed display mode %dx%d:%d\n", __func__, tw, th, td);
-                    width = tw; height = th; bpp = td;
-                }
-                else if(2 == sscanf(argv[i], "%dx%d", &tw, &th))
-                {
-                    DEBUGPRINT("%s: parsed display mode %dx%d\n", __func__, tw, th);
-                    width = tw; height = th;
-                }
-                else
-                {
-                    fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
-                }
-            }
             flags |= SDL_FULLSCREEN;
         }
-        else if(!strcmp(argv[i], "-window"))
+        else if(!strcmp(argv[i], "-w") || !strcmp(argv[i], "-window"))
+        {
+            flags &= ~SDL_FULLSCREEN;
+        }
+        else if(!strcmp(argv[i], "-s") || !strcmp(argv[i], "-size"))
         {
             if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
             {
@@ -257,16 +245,27 @@ int pl2SdlInit(int *argc, char *argv[])
                     fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
                 }
             }
-            flags &= ~SDL_FULLSCREEN;
+            else
+            {
+                fprintf(stderr, "%s: --size requires an argument\n", argv[0]);
+            }
         }
     }
 
-    SDL_Rect **sizes = SDL_ListModes(NULL, flags);
-
-    if(sizes && (sizes != (SDL_Rect**)(-1)))
+    if(!(width && height))
     {
-        width  = (*sizes)[0].w;
-        height = (*sizes)[0].h;
+        SDL_Rect **sizes = SDL_ListModes(NULL, flags);
+
+        if(sizes && (sizes != (SDL_Rect**)(-1)))
+        {
+            width  = (*sizes)[0].w;
+            height = (*sizes)[0].h;
+        }
+        else
+        {
+            width  = PL2_NOMINAL_SCREEN_WIDTH;
+            height = PL2_NOMINAL_SCREEN_HEIGHT;
+        }
     }
 
     bpp = SDL_VideoModeOK(width, height, bpp, flags);
@@ -277,7 +276,12 @@ int pl2SdlInit(int *argc, char *argv[])
 
     pl2_screen_surf = SDL_SetVideoMode(width, height, bpp, flags);
 
-    if(!pl2_screen_surf) return 0;
+    if(!pl2_screen_surf)
+    {
+        fprintf(stderr, "%s: error setting display mode %dx%d:%d\n",
+                argv[0], width, height, bpp);
+        return 0;
+    }
 
     SDL_WM_SetCaption("OPL2", "OPL2");
 

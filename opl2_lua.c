@@ -71,7 +71,9 @@ static int l_pl2Character_setModels(lua_State *L)
 
         const char *name = luaL_opt(L, lua_tostring, -1, NULL);
         
-        r = r || pl2CharSetModel(chr, i-1, name);
+        DEBUGPRINT("%s: model[%d] == %#s\n", __func__, i, name);
+        
+        r |= pl2CharSetModel(chr, i - 1, name);
 
         lua_pop(L, 1);
     }

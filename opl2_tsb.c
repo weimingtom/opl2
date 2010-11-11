@@ -144,13 +144,21 @@ int pl2CharSetAnim(pl2Character *chr, const char *name)
 {
     if(chr)
     {
-        if(chr->anim) pl2AnimFree(chr->anim);
+        if(chr->anim)
+        {
+            pl2AnimFree(chr->anim);
+            chr->anim = NULL;
+        }
 
-        chr->anim = pl2AnimLoad(name);
-        chr->time = 0;
-        chr->frame = -1;
+        if(name)
+        {
+            chr->anim = pl2AnimLoad(name);
+            chr->time = 0;
+            chr->frame = -1;
+        }
 
         return name ? (NULL != chr->anim) : 1;
     }
     return 0;
 }
+
