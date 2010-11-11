@@ -39,13 +39,11 @@ static pl2Anim *pl2AnimLoadInternal(const uint8_t *data)
     anim->loopFrame  = READUINT32(data);
     anim->numUnknown = READUINT32(data);
 
-    DEBUGPRINT("%s: %d bones, %d frames, loops at %d\n", __func__,
-               anim->numBones, anim->numFrames, anim->loopFrame);
-
     anim->bones = NEWALIGN(16, anim->numFrames * anim->numBones, fmatrix4_t);
 
     if (!anim->bones)
     {
+        DEBUGPRINT("%s: error allocating anim->bones\n", __func__);
         pl2AnimFree(anim);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -59,6 +57,9 @@ static pl2Anim *pl2AnimLoadInternal(const uint8_t *data)
             k++;
         }
     }
+
+    DEBUGPRINT("%s: %d bones, %d frames, loops at %d\n", __func__,
+               anim->numBones, anim->numFrames, anim->loopFrame);
 
     return anim;
 }
@@ -137,4 +138,19 @@ void pl2AnimFree(pl2Anim *anim)
 
         DELETE(anim);
     }
+}
+
+int pl2CharSetAnim(pl2Character *chr, const char *name)
+{
+    if(chr)
+    {
+        if(chr->anim) pl2AnimFree(chr->anim);
+
+        chr->anim = pl2AnimLoad(name);
+        chr->time = 0;
+        chr->frame = -1;
+
+        return name ? (NULL != chr->anim) : 1;
+    }
+    return 0;
 }

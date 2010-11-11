@@ -565,9 +565,12 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
                 (anim->numFrames - anim->loopFrame);
     }
 
-    int numBones = (model->numBones > anim->numBones) ? model->numBones : anim->numBones;
+    int numBones = (model->numBones < anim->numBones) ? model->numBones : anim->numBones;
 
     if(numBones <= 0) return;
+    
+    DEBUGPRINT("%s: model->numBones == %d, anim->numBones == %d, numBones == %d\n",
+               __func__, model->numBones, anim->numBones, numBones);
 
     fmatrix4_t *bones = (fmatrix4_t*)alloca(numBones * sizeof(fmatrix4_t));
     //fmatrix4_t bones[numBones] __attribute__((aligned(16)));

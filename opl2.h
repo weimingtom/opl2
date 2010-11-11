@@ -492,7 +492,8 @@ size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length);
 
 void pl2CharAnimate(pl2Character *character, float dt);
 void pl2CharRender(pl2Character *character);
-int pl2CharSetAnim(pl2Character *character, pl2Anim *anim);
+int pl2CharSetModel(pl2Character *chr, int idx, const char *name);
+int pl2CharSetAnim(pl2Character *chr, const char *name);
 int pl2CharSetPoint(pl2Character *chr, const char *name);
 
 /******************************************************************************/

@@ -80,9 +80,9 @@ function setAnims(name,cam)
     local b = math.random(1,#actions[name])
     camera:setPath(actions[name][cam] or actions[name][b])
     print(#actions,a,#actions[name],b)
-    local _ = imo1:setAnim(name..'_F') or error('error loading animation "'..name..'_F"')
+    local _ = imo1:setAnim(name..'_F') --or error('error loading animation "'..name..'_F"')
     --imo2:setAnim(name..'_F')
-    local _ = ani:setAnim(name..'_M') or error('error loading animation "'..name..'_M"')
+    local _ = ani:setAnim(name..'_M') --or error('error loading animation "'..name..'_M"')
 
     local point = actions[name].point
     ani:setPoint(point)

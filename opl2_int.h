@@ -32,6 +32,11 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 
 /******************************************************************************/
 
+#ifdef __MINGW32__
+# include <mm_malloc.h>
+# define memalign(a,x) _mm_malloc(x,a)
+#endif
+
 #define NEWOBJ(t)   ((t*)calloc(sizeof(t),1))
 #define NEWARR(n,t) ((t*)calloc(sizeof(t),(n)))
 #define NEWALIGN(a,n,t) ((t*)memalign((a),sizeof(t)*(n)))

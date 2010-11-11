@@ -44,6 +44,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     if(!model->textures)
     {
+        DEBUGPRINT("%s: error allocating model->textures\n", __func__);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -65,6 +66,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
         if(!t->pixels)
         {
+            DEBUGPRINT("%s: error allocating model texture data\n", __func__);
             pl2ModelFree(model);
             PL2_ERROR(PL2_ERR_MEMORY);
         }
@@ -101,6 +103,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     if(!model->materials)
     {
+        DEBUGPRINT("%s: error allocating model->materials\n", __func__);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -150,6 +153,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     if(!model->objects)
     {
+        DEBUGPRINT("%s: error allocating model->objects\n", __func__);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -176,6 +180,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
         if(!(obj->materials && obj->vertices && obj->glVertices))
         {
+            DEBUGPRINT("%s: error allocating object materials/vertices\n", __func__);
             pl2ModelFree(model);
             PL2_ERROR(PL2_ERR_MEMORY);
         }
@@ -225,8 +230,9 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     model->bones = NEWALIGN(16, model->numBones, fmatrix4_t);
 
-    if(!model->bones)
+    if(model->numBones && !model->bones)
     {
+        DEBUGPRINT("%s: error allocating model->bones\n", __func__);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -247,6 +253,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     if(!model->points)
     {
+        DEBUGPRINT("%s: error allocating model->points\n", __func__);
         pl2ModelFree(model);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
@@ -427,4 +434,23 @@ void pl2ModelFree(pl2Model *model)
 
         DELETE(model);
     }
+}
+
+int pl2CharSetModel(pl2Character *chr, int idx, const char *name)
+{
+    DEBUGPRINT("%s: chr == %p, idx == %d, name == \"%s\"\n",
+               __func__, chr, idx, name);
+
+    if(chr)
+    {
+        if((idx < 0) || (idx >= PL2_MAX_CHARPARTS))
+            return 0;
+
+        if(chr->models[idx]) pl2ModelFree(chr->models[idx]);
+
+        chr->models[idx] = pl2ModelLoad(name);
+
+        return name ? (NULL != chr->models[idx]) : 1;
+    }
+    return 0;
 }

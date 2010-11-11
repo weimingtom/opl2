@@ -50,17 +50,10 @@ UDATA_TYPE(pl2Layer, pl2Layer*);
 static int l_pl2Character_setModel(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
-    int idx = luaL_checkint(L, 2);
+    int idx = luaL_checkint(L, 2) - 1;
     const char *name = luaL_optstring(L, 3, NULL);
 
-    if((idx < 1) || (idx > PL2_MAX_CHARPARTS))
-        return 0;
-
-    if(chr->models[idx-1]) pl2ModelFree(chr->models[idx-1]);
-
-    chr->models[idx-1] = pl2ModelLoad(name);
-
-    lua_pushboolean(L, NULL != chr->models[idx-1]);
+    lua_pushboolean(L, pl2CharSetModel(chr, idx, name));
 
     return 1;
 }
@@ -74,20 +67,11 @@ static int l_pl2Character_setModels(lua_State *L)
 
     for(i = 1; i <= PL2_MAX_CHARPARTS; i++)
     {
-        if(chr->models[i-1])
-        {
-            pl2ModelFree(chr->models[i-1]);
-            chr->models[i-1] = NULL;
-        }
-
         lua_rawgeti(L, 2, i);
 
-        if(!lua_isnil(L, -1))
-        {
-            const char *name = lua_tostring(L, -1);
-            chr->models[i-1] = pl2ModelLoad(name);
-            if(NULL != chr->models[i-1]) r = 1;
-        }
+        const char *name = luaL_opt(L, lua_tostring, -1, NULL);
+        
+        r = r || pl2CharSetModel(chr, i-1, name);
 
         lua_pop(L, 1);
     }
@@ -102,13 +86,7 @@ static int l_pl2Character_setAnim(lua_State *L)
     pl2Character *chr = *checkpl2Character(L, 1);
     const char *name = luaL_optstring(L, 2, NULL);
 
-    if(chr->anim) pl2AnimFree(chr->anim);
-
-    chr->anim = pl2AnimLoad(name);
-    chr->time = 0;
-    chr->frame = -1;
-
-    lua_pushboolean(L, NULL != chr->anim);
+    lua_pushboolean(L, pl2CharSetAnim(chr, name));
 
     return 1;
 }
@@ -118,7 +96,7 @@ static int l_pl2Character_setPoint(lua_State *L)
     pl2Character *chr = *checkpl2Character(L, 1);
     const char *name = luaL_optstring(L, 2, NULL);
 
-    pl2CharSetPoint(chr, name);
+    lua_pushboolean(L, pl2CharSetPoint(chr, name));
 
     return 0;
 }
