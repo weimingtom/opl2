@@ -426,7 +426,7 @@ void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
         :"m"(*v), "m"(s)
     );
 #else
-    if(s != s) DEBUGPRINT("%s: s is NaN!\n", __func__);
+    if(s != s) { DEBUGPRINT("%s: s is NaN!\n", __func__); }
     out->x += v->x * s;
     out->y += v->y * s;
     out->z += v->z * s;
@@ -458,6 +458,13 @@ void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
     );
 #elif 0 // WITH_SSE
     asm volatile(
+        "movups 0 %1, %%xmm0\n"
+        "movups 0 %2, %%xmm1\n"
+        "movaps %%xmm0, %%xmm4\n"
+        "movaps %%xmm0, %%xmm2\n"
+        "movaps %%xmm1, %%xmm3\n"
+        "shufps $0xff, %%xmm4, %%xmm4\n"
+        "mulps %%xmm1, %%xmm4\n"
         :"=m"(*out)
         :"m"(*a), "m"(*b)
     );
