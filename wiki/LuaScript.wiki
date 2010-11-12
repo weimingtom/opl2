@@ -14,9 +14,9 @@ The following functions in the `pl2` module control the story flow and timing.
 
 _bool_` = pl2.play(`_chan_`, `_name_`)`
 
-    Plays a named sound on the specified channel. _chan_ must be a number from
-    1 to 4, or one of the strings "voice", "sound", "bgsound", or "music".
-    Returns `true` if the sound was loaded and played successfully.
+    Plays a named sound on the specified channel. _chan_ must be a number from 1
+    to 4, or one of the strings "voice", "sound", "bgsound", or "music". Returns
+    `true` if the sound was loaded and played successfully.
 
 `pl2.showText(`_string_`)`
     
@@ -134,11 +134,12 @@ _bool_` = character:setModel(`_n_`, `_name_`)`
     
 _bool_` = character:setModels(`_table_`)`
 
-    Attaches a set of models to the character. Similar to: {{{
+    Attaches a set of models to the character. Similar to:
+{{{
         for i = 1, 16 do
             character:setModel(i, table[i])
         end
-    }}}
+}}}
     Returns `true` only if all of the given models were loaded successfully, but
     will continue trying to load the rest even if one fails.
     
