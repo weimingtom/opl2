@@ -18,7 +18,7 @@ PSP_LIBS += -llua -lGLU -lGL -lalut -lOpenAL32 -logg
 PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 
-ARGS = -window 320x240+0+0
+ARGS = -window 320x240
 
 ifeq ($(RELEASE),1)
  CFLAGS += -O2 -DNDEBUG
@@ -140,7 +140,7 @@ $(TARGET): $(OBJS)
 	$(CC) -o $@ $^ $(LIBS) $(WINAPP)
 
 clean:
-	rm -f $(TARGET) $(PL2EX) $(DUMPTMB) $(OBJS) $(EXTRA_OBJS)
+	rm -f $(TARGET) $(EXTRA_TARGETS) $(OBJS) $(EXTRA_OBJS)
 
 rebuild: clean all
 

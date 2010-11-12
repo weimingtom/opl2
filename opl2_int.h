@@ -67,8 +67,8 @@ extern int pl2_error;
 extern int pl2_screen_width, pl2_screen_height;
 extern float pl2_screen_aspect, pl2_screen_scale;
 
-extern int pl2_censor, pl2_running;
-extern int pl2_text_showing, pl2_menu_showing, pl2_hide_overlay;
+extern bool pl2_censor, pl2_running;
+extern bool pl2_text_showing, pl2_menu_showing, pl2_hide_overlay;
 
 extern pl2Font *pl2_font;
 extern pl2Character pl2_chars[PL2_MAX_CHARS];
@@ -77,6 +77,8 @@ extern pl2Camera pl2_cameras[PL2_MAX_CAMERAS];
 extern pl2Layer pl2_layers[PL2_MAX_LAYERS];
 extern pl2Menu pl2_menu;
 extern uint32_t pl2_text[];
+
+extern pl2Camera *pl2_active_camera;
 
 /******************************************************************************/
 

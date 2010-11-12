@@ -120,13 +120,13 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
         m->shininess = READFLOAT(data);
 
         float t;
+        // dirty hacks for some models that have weird lighting values
         t = fmax(m->ambient.r, fmax(m->ambient.g, m->ambient.b));
         m->ambient.r = m->ambient.g = m->ambient.b = t;
         t = fmax(m->diffuse.r, fmax(m->diffuse.g, m->diffuse.b));
         m->diffuse.r = m->diffuse.g = m->diffuse.b = t;
         t = fmax(m->specular.r, fmax(m->specular.g, m->specular.b));
         m->specular.r = m->specular.g = m->specular.b = t;
-
         //m->ambient.a =
         m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
 
@@ -438,8 +438,8 @@ void pl2ModelFree(pl2Model *model)
 
 int pl2CharSetModel(pl2Character *chr, int idx, const char *name)
 {
-    DEBUGPRINT("%s: chr == %p, idx == %d, name == \"%s\"\n",
-               __func__, chr, idx, name);
+    //DEBUGPRINT("%s: chr == %p, idx == %d, name == \"%s\"\n",
+    //           __func__, chr, idx, name);
 
     if(chr)
     {

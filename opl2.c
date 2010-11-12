@@ -17,17 +17,46 @@ PSP_HEAP_SIZE_MAX();
 int pl2_screen_width = -1, pl2_screen_height = -1;
 float pl2_screen_aspect = 1, pl2_screen_scale = 1;
 
-int pl2_censor = 0;
+bool pl2_censor = 0;
+bool pl2_text_showing = 0;
+bool pl2_menu_showing = 0;
+bool pl2_hide_overlay = 0;
 
 pl2Font *pl2_font = NULL;
-pl2Character pl2_chars[PL2_MAX_CHARS] = { {{NULL},NULL,NULL,0,0,0} };
-pl2Light pl2_lights[PL2_MAX_LIGHTS] = { {{0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},0} };
-pl2Camera pl2_cameras[PL2_MAX_CAMERAS] = { {{0,0,0},{0,0,0},{0,1,0},45,0,0,NULL,0} };
-pl2Layer pl2_layers[PL2_MAX_LAYERS] = { {0,0,0,0} };
-pl2Menu pl2_menu = { 0,0, {{0,{0}}} };
+
+pl2Character pl2_chars[PL2_MAX_CHARS] =
+{
+    { { NULL }, NULL, NULL, 0, 0, false, false },
+    { { NULL }, NULL, NULL, 0, 0, false, false },
+    { { NULL }, NULL, NULL, 0, 0, false, false },
+    { { NULL }, NULL, NULL, 0, 0, false, false },
+};
+
+pl2Light pl2_lights[PL2_MAX_LIGHTS] =
+{
+    { { 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, false },
+    { { 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, false },
+    { { 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, false },
+    { { 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, { 0, 0, 0, 0 }, false },
+};
+
+pl2Camera pl2_cameras[PL2_MAX_CAMERAS] =
+{
+    { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 1, 0 }, 45, NULL, NULL, 0, false, false },
+    { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 1, 0 }, 45, NULL, NULL, 0, false, false },
+};
+
+pl2Layer pl2_layers[PL2_MAX_LAYERS] =
+{
+    { 0, 0, 0, 0 },
+    { 0, 0, 0, 0 },
+};
+
+pl2Menu pl2_menu = { 0, 0, { { 0, { 0 } } } };
+
 uint32_t pl2_text[1024] = { 0 };
 
-int pl2_text_showing = 0, pl2_menu_showing = 0, pl2_hide_overlay = 0;
+pl2Camera *pl2_active_camera = &(pl2_cameras[0]);
 
 /******************************************************************************/
 
@@ -159,7 +188,10 @@ void pl2ShowText()
 
 void pl2TextAdvance()
 {
-    pl2_text_showing = 0;
+    if(!pl2_hide_overlay)
+    {
+        pl2_text_showing = 0;
+    }
 }
 
 /******************************************************************************/
@@ -203,7 +235,7 @@ int pl2MenuAddItem(pl2Menu *menu, const char *text)
 
 int pl2MenuSelectNext(pl2Menu *menu)
 {
-    if(menu && menu->numItems)
+    if(menu && menu->numItems && pl2_menu_showing && !pl2_hide_overlay)
     {
         return menu->selection = (menu->selection + 1) % menu->numItems;
     }
@@ -212,7 +244,7 @@ int pl2MenuSelectNext(pl2Menu *menu)
 
 int pl2MenuSelectPrev(pl2Menu *menu)
 {
-    if(menu && menu->numItems)
+    if(menu && menu->numItems && pl2_menu_showing && !pl2_hide_overlay)
     {
         return menu->selection = (menu->selection + menu->numItems - 1) % menu->numItems;
     }
@@ -221,7 +253,7 @@ int pl2MenuSelectPrev(pl2Menu *menu)
 
 int pl2MenuSelect(pl2Menu *menu, uint32_t item)
 {
-    if(menu)
+    if(menu && pl2_menu_showing && !pl2_hide_overlay)
     {
         if((item < menu->numItems) && (menu->items[item].enabled))
         {
@@ -234,9 +266,10 @@ int pl2MenuSelect(pl2Menu *menu, uint32_t item)
 
 int pl2MenuConfirm(pl2Menu *menu)
 {
-    if(menu && pl2_menu_showing)
+    if(menu && pl2_menu_showing && !pl2_hide_overlay)
     {
-        if(((unsigned)menu->selection < menu->numItems) && (menu->items[menu->selection].enabled))
+        if(((unsigned)menu->selection < menu->numItems) && 
+           (menu->items[menu->selection].enabled))
         {
             pl2MenuClear(menu);
             pl2_menu_showing = 0;

@@ -330,11 +330,11 @@ typedef struct
     fvector3_t focus;
     fvector3_t up;
     float fov;
+    pl2Point *point;
+    pl2CameraPath *path;
+    float time;
     bool loop;
     bool locked;
-    pl2CameraPath *path;
-    pl2Point *point;
-    float time;
 }
 pl2Camera;
 
@@ -345,7 +345,8 @@ typedef struct
     pl2Point *point;
     uint32_t frame;
     float time;
-    float visible;
+    bool visible;
+    bool black;
 }
 pl2Character;
 
@@ -390,7 +391,7 @@ void pl2GameInit(int *argc, char *argv[]);
 int pl2GameRun();
 
 void pl2Exit();
-int pl2Running();
+bool pl2Running();
 
 int pl2GetErrorCode();
 const char *pl2GetErrorMessage(int code);

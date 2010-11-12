@@ -53,14 +53,15 @@ const char *pl2GetErrorMessage(int code)
 
 /******************************************************************************/
 
-int pl2_running = 1;
+bool pl2_running = true;
 
 void pl2Exit()
 {
-    pl2_running = 0;
+    pl2_running = false;
 }
 
-int pl2Running()
+bool pl2Running()
 {
     return pl2_running;
 }
+

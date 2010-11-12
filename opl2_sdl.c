@@ -7,29 +7,11 @@ static SDL_Surface *pl2_screen_surf = NULL;
 
 enum
 {
-   MOVE_NONE  = 0,
-   MOVE_3P    = 1,
-   MOVE_ORTHO = 2,
-   MOVE_1P    = 3,
+   MOVE_NONE = 0,
+   MOVE_3P   = 1,
+   MOVE_1P   = 2,
+   MOVE_ZOOM = 3,
 };
-
-static int move_mode = 0, mouse_x = -1, mouse_y = -1;
-
-static SDL_TimerID pl2_timer = 0;
-
-static Uint32 pl2SdlRedraw(Uint32 interval, void *param)
-{
-    SDL_Event event;
-
-    event.type = SDL_USEREVENT;
-    event.user.code = 42;
-    event.user.data1 = 0;
-    event.user.data2 = 0;
-
-    SDL_PushEvent(&event);
-
-    return interval;
-}
 
 static void pl2SdlReshape(int w, int h)
 {
@@ -54,6 +36,8 @@ static void pl2SdlReshape(int w, int h)
 
 int pl2SdlDoFrame()
 {
+    static int move_mode = 0;
+
     SDL_Event event;
 
     //SDL_PumpEvents();
@@ -100,21 +84,16 @@ int pl2SdlDoFrame()
                     switch(move_mode)
                     {
                         case MOVE_3P:
-                            pl2CameraRotate3P(&(pl2_cameras[0]), x_angle, y_angle);
+                            pl2CameraRotate3P(pl2_active_camera, x_angle, y_angle);
                             break;
 
                         case MOVE_1P:
-                            pl2CameraRotate1P(&(pl2_cameras[0]), x_angle, y_angle);
+                            pl2CameraRotate1P(pl2_active_camera, x_angle, y_angle);
                             break;
 
-                        case MOVE_ORTHO:
-                            pl2CameraZoom(&(pl2_cameras[0]), -10.0f * (float)dy / (float)pl2_screen_height);
+                        case MOVE_ZOOM:
+                            pl2CameraZoom(pl2_active_camera, -10.0f * (float)dy / (float)pl2_screen_height);
                             break;
-                    }
-                    
-                    if(move_mode)
-                    {
-                        //SDL_WarpMouse(pl2_screen_width >> 1, pl2_screen_height >> 1);
                     }
                 }
                 break;
@@ -129,8 +108,14 @@ int pl2SdlDoFrame()
                         SDL_ShowCursor(0);
                         break;
                     case SDL_BUTTON_RIGHT:
-                        move_mode |= MOVE_ORTHO;
+                        move_mode |= MOVE_1P;
                         SDL_ShowCursor(0);
+                        break;
+                    case SDL_BUTTON_WHEELUP:
+                        pl2CameraZoom(pl2_active_camera,  2.0f);
+                        break;
+                    case SDL_BUTTON_WHEELDOWN:
+                        pl2CameraZoom(pl2_active_camera, -2.0f);
                         break;
                 }
                 SDL_ShowCursor(!move_mode);
@@ -143,11 +128,9 @@ int pl2SdlDoFrame()
                 {
                     case SDL_BUTTON_LEFT:
                         move_mode &= ~MOVE_3P;
-                        //SDL_ShowCursor(0);
                         break;
                     case SDL_BUTTON_RIGHT:
-                        move_mode &= ~MOVE_ORTHO;
-                        //SDL_ShowCursor(0);
+                        move_mode &= ~MOVE_1P;
                         break;
                 }
                 SDL_ShowCursor(!move_mode);
@@ -178,22 +161,24 @@ int pl2SdlDoFrame()
     float dt = (float)(new_ticks - ticks) * 0.001f;
     ticks = new_ticks;
     pl2GlRenderFrame(dt);
+
+#ifndef NDEBUG    
+    static int frames = 0;
+    static float sec = 0, fps = 0;
     
-        static int frames = 0;
-        static float sec = 0, fps = 0;
-        
-        frames++;
+    frames++;
 
-        if((sec += dt) >= 1)
-        {
-            fps = (float)frames / sec;
-            char temp[16];
-            snprintf(temp, sizeof(temp), "%.2ffps", fps);
-            SDL_WM_SetCaption(temp, "OPL2");
-            frames = sec = 0;
-        }
+    if((sec += dt) >= 1)
+    {
+        fps = (float)frames / sec;
+        char temp[16];
+        snprintf(temp, sizeof(temp), "%.2ffps", fps);
+        SDL_WM_SetCaption(temp, "OPL2");
+        frames = sec = 0;
+    }
+#endif // NDEBUG
 
-    SDL_Delay(10);
+    //SDL_Delay(10);
     SDL_GL_SwapBuffers();
 
     return pl2_running;

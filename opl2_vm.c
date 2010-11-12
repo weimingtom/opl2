@@ -7,7 +7,7 @@
 
 void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile (
         "ulv.q   c100,  0+%1\n"
         "ulv.q   c110, 16+%1\n"
@@ -105,7 +105,7 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
 
 void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile (
         "ulv.q   c100,  0+%1\n"
         "ulv.q   c110, 16+%1\n"
@@ -151,7 +151,7 @@ void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t
 
 void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile(
         "ulv.q  c000,  0+%1\n"
         "ulv.q  c010, 16+%1\n"
@@ -182,7 +182,7 @@ void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
 
 void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile(
         "ulv.q  c010, 0+%1\n"
         "ulv.q  c020, 0+%2\n"
@@ -210,7 +210,7 @@ void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 
 void pl2VectorSub4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile(
         "ulv.q  c010, 0+%1\n"
         "ulv.q  c020, 0+%2\n"
@@ -243,7 +243,7 @@ float pl2VectorDot4f(const fvector4_t *a, const fvector4_t *b)
 
 void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile(
         "mtv    %2, s020\n"
         "ulv.q  c010, 0+%1\n"
@@ -273,7 +273,7 @@ void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
 
 void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile(
         "mtv    %2, s020\n"
         "ulv.q  c000, 0+%0\n"
@@ -347,16 +347,16 @@ void pl2VectorSub3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 
 float pl2VectorDot3f(const fvector3_t *a, const fvector3_t *b)
 {
-   return a->x * b->x + a->y * b->y + a->z * b->z;
+    return a->x * b->x + a->y * b->y + a->z * b->z;
 }
 
 void pl2VectorCross3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 {
-   fvector3_t c;
-   c.x = a->y * b->z - a->z * b->y;
-   c.y = a->z * b->x - a->x * b->z;
-   c.z = a->x * b->y - a->y * b->x;
-   *out = c;
+    fvector3_t c;
+    c.x = a->y * b->z - a->z * b->y;
+    c.y = a->z * b->x - a->x * b->z;
+    c.z = a->x * b->y - a->y * b->x;
+    *out = c;
 }
 
 void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
@@ -375,15 +375,15 @@ void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
         :"m"(*v), "m"(s)
     );
 #else
-   out->x = v->x * s;
-   out->y = v->y * s;
-   out->z = v->z * s;
+    out->x = v->x * s;
+    out->y = v->y * s;
+    out->z = v->z * s;
 #endif
 }
 
 void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile (
         "mtv    %2, s020\n"
         "ulv.q  c010, 0+%1\n"
@@ -419,19 +419,19 @@ void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
 
 float pl2VectorLength3f(const fvector3_t *v)
 {
-   return sqrtf(pl2VectorDot3f(v, v));
+    return sqrtf(pl2VectorDot3f(v, v));
 }
 
 void pl2VectorNormalize3f(fvector3_t *out, const fvector3_t *v)
 {
-   float len = pl2VectorLength3f(v);
-   if(len) len = 1.0f / len;
-   pl2VectorScale3f(out, v, len);
+    float len = pl2VectorLength3f(v);
+    if(len) len = 1.0f / len;
+    pl2VectorScale3f(out, v, len);
 }
 
 void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
-#if 0 //_PSP_FW_VERSION
+#if _PSP_FW_VERSION
     asm volatile (
         "ulv.q  c010, 0+%1\n"
         "ulv.q  c020, 0+%2\n"
@@ -470,37 +470,7 @@ http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2009/03/msg00019.html
         :"=m"(*out)
         :"m"(*a), "m"(*b), "m"(mask[0])
     );
-/*
->  4009e0:       0f 28 f9                movaps %xmm1,%xmm7
->  4009e3:       0f 28 f1                movaps %xmm1,%xmm6
->  4009e6:       0f 28 d8                movaps %xmm0,%xmm3
->  4009e9:       0f 28 e9                movaps %xmm1,%xmm5
->  4009ec:       0f 28 d0                movaps %xmm0,%xmm2
->  4009ef:       0f c6 f9 ff             shufps $0xff,%xmm1,%xmm7
->  4009f3:       0f c6 f1 09             shufps $0x9,%xmm1,%xmm6
->  4009f7:       0f c6 e9 64             shufps $0x64,%xmm1,%xmm5
->  4009fb:       0f 28 e0                movaps %xmm0,%xmm4
->  4009fe:       0f c6 d8 7f             shufps $0x7f,%xmm0,%xmm3
->  400a02:       0f c6 d0 89             shufps $0x89,%xmm0,%xmm2
->  400a06:       0f c6 c9 92             shufps $0x92,%xmm1,%xmm1
->  400a0a:       0f c6 e0 12             shufps $0x12,%xmm0,%xmm4
->  400a0e:       0f 59 dd                mulps  %xmm5,%xmm3
->  400a11:       0f 59 d1                mulps  %xmm1,%xmm2
->  400a14:       0f 28 0d 45 0f 20 00    movaps 0x200f45(%rip),%xmm1        #
->  400a1b:       0f 59 e6                mulps  %xmm6,%xmm4
->  400a1e:       0f 59 c7                mulps  %xmm7,%xmm0
->  400a21:       0f 57 d1                xorps  %xmm1,%xmm2
->  400a24:       0f 57 d9                xorps  %xmm1,%xmm3
->  400a27:       0f 5c c4                subps  %xmm4,%xmm0
->  400a2a:       0f 58 d3                addps  %xmm3,%xmm2
->  400a2d:       0f 58 c2                addps  %xmm2,%xmm0
->  400a30:       c3                              retq
->  400a31:       66 66 66 66 66 66 2e    nopw   %cs:0x0(%rax,%rax,1)
->  400a38:       0f 1f 84 00 00 00 00
->  400a3f:       00
-*/
 #else
-# warning using fallback quat multiply
     fvector4_t c;
     c.x = a->w * b->x + a->x * b->w + a->y * b->z - a->z * b->y;
     c.y = a->w * b->y + a->y * b->w + a->z * b->x - a->x * b->z;
@@ -512,42 +482,42 @@ http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2009/03/msg00019.html
 
 void pl2QuatRotate(fvector3_t *out, const fvector3_t *v, const fvector3_t *axis, float angle)
 {
-   float s = sinf(0.5f * angle) / pl2VectorLength3f(axis);
-   float c = cosf(0.5f * angle);
+    float s = sinf(0.5f * angle) / pl2VectorLength3f(axis);
+    float c = cosf(0.5f * angle);
 
-   fvector4_t q = { s * axis->x, s * axis->y, s * axis->z, c };
-   fvector4_t t = { v->x, v->y, v->z, 0.0f };
-   fvector4_t r;
+    fvector4_t q = { s * axis->x, s * axis->y, s * axis->z, c };
+    fvector4_t t = { v->x, v->y, v->z, 0.0f };
+    fvector4_t r;
 
-   pl2QuatMultiply(&r, &q, &t);
-   q.x = -q.x; q.y = -q.y; q.z = -q.z;
-   pl2QuatMultiply(&t, &r, &q);
+    pl2QuatMultiply(&r, &q, &t);
+    q.x = -q.x; q.y = -q.y; q.z = -q.z;
+    pl2QuatMultiply(&t, &r, &q);
 
-   out->x = t.x; out->y = t.y; out->z = t.z;
+    out->x = t.x; out->y = t.y; out->z = t.z;
 }
 
 void pl2VectorOrbit(fvector3_t *planet, const fvector3_t *sun, const fvector3_t *up, const fvector3_t *rotate)
 {
-   //DEBUGPRINT("glmOrbit(<%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>)",
-   //   planet->x, planet->y, planet->z, sun->x, sun->y, sun->z, up->x, up->y, up->z, rotate->x, rotate->y, rotate->z);
-   fvector3_t fwd, right;
-   pl2VectorSub3f(&fwd, planet, sun);
-   pl2VectorCross3f(&right, up, &fwd);
+    //DEBUGPRINT("glmOrbit(<%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>)",
+    //   planet->x, planet->y, planet->z, sun->x, sun->y, sun->z, up->x, up->y, up->z, rotate->x, rotate->y, rotate->z);
+    fvector3_t fwd, right;
+    pl2VectorSub3f(&fwd, planet, sun);
+    pl2VectorCross3f(&right, up, &fwd);
 
-   fvector3_t r = fwd;
-   pl2QuatRotate(&r, &r, &right, rotate->x);
-   pl2QuatRotate(&r, &r, up,     rotate->y);
-   pl2QuatRotate(&r, &r, &fwd,   rotate->z);
-   pl2VectorAdd3f(planet, &r, sun);
+    fvector3_t r = fwd;
+    pl2QuatRotate(&r, &r, &right, rotate->x);
+    pl2QuatRotate(&r, &r, up,     rotate->y);
+    pl2QuatRotate(&r, &r, &fwd,   rotate->z);
+    pl2VectorAdd3f(planet, &r, sun);
 
-   //DEBUGPRINT(" == <%6.3f %6.3f %6.3f>\n", planet->x, planet->y, planet->z);
+    //DEBUGPRINT(" == <%6.3f %6.3f %6.3f>\n", planet->x, planet->y, planet->z);
 }
 
 void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance)
 {
-   fvector3_t t;
-   pl2VectorSub3f(&t, targ, obj);
-   pl2VectorScaleAdd3f(obj, &t, distance / pl2VectorLength3f(&t));
+    fvector3_t t;
+    pl2VectorSub3f(&t, targ, obj);
+    pl2VectorScaleAdd3f(obj, &t, distance / pl2VectorLength3f(&t));
 }
 
 /******************************************************************************/
@@ -566,7 +536,7 @@ void pl2CameraRotate3P(pl2Camera *cam, float xr, float yr)
 
 void pl2CameraZoom(pl2Camera *cam, float distance)
 {
-   pl2VectorZoom(&cam->eye, &cam->focus, distance);
+    pl2VectorZoom(&cam->eye, &cam->focus, distance);
 }
 
 /******************************************************************************/
@@ -701,3 +671,4 @@ void pl2CharAnimate(pl2Character *chr, float dt)
         }
     }
 }
+

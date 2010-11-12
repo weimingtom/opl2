@@ -4,9 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 //#include <glob.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#ifndef __MINGW32__
+# define mkdir(p) mkdir((p),0777)
+#endif
 
 static int showUsage()
 {
@@ -80,7 +85,7 @@ int main(int argc, char *argv[])
 
             //DEBUGPRINT("%s: creating \"%s\"\n", __func__, dir);
 
-            if((mkdir(dir /*, 0777*/) < 0) && (errno != EEXIST))
+            if((mkdir(dir) < 0) && (errno != EEXIST))
             {
                 perror("error creating directory");
             }

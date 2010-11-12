@@ -1,5 +1,5 @@
---print(pl2.call('init.lua'))
---print'continue...'
+pl2.dofile('init.lua')
+print'continue...'
 
 --------------------------------------------------------------------------------
 
@@ -73,20 +73,22 @@ local actions = {
     vibrator02={'vib02_1','vib02_2','vib02_3','vib02_4',point='loc_pos01'},
     }
 
-function setAnims(name,cam)
+function setAnims(name,cam,_ani,_imo)
+    _ani, _imo = _ani or ani, _imo or imo
+
     math.random()
     local a = math.random(1,#actions)
     name = name or actions[a]
     local b = math.random(1,#actions[name])
     camera:setPath(actions[name][cam] or actions[name][b])
-    print(#actions,a,#actions[name],b)
-    local _ = imo1:setAnim(name..'_F') --or error('error loading animation "'..name..'_F"')
+    --print(#actions,a,#actions[name],b)
+    local _ = _imo:setAnim(name..'_F') --or error('error loading animation "'..name..'_F"')
     --imo2:setAnim(name..'_F')
-    local _ = ani:setAnim(name..'_M') --or error('error loading animation "'..name..'_M"')
+    local _ = _ani:setAnim(name..'_M') --or error('error loading animation "'..name..'_M"')
 
     local point = actions[name].point
-    ani:setPoint(point)
-    imo:setPoint(point)
+    _ani:setPoint(point)
+    _imo:setPoint(point)
     camera:setPoint(point)
 
 --[[
@@ -103,13 +105,16 @@ end
 --------------------------------------------------------------------------------
 
 local chars = {
-    'fate_saber',
-    'fate_saber_lily',
-    'fate_rin_casual',
-    'fate_sakura',
-    'vocaloid_miku',
-    'eva_rei_plugsuit',
-    'eva_asuka_plugsuit',
+--    'fate_saber',
+--    'fate_saber_lily',
+--    'fate_rin_casual',
+--    'fate_sakura',
+--    'vocaloid_miku',
+--    'eva_rei_plugsuit',
+--    'eva_asuka_plugsuit',
+    'moon_venus',
+    'moon_pluto',
+--    'brs_00',
 
     ani = {
         [1]="ani_bodyB_00",
@@ -306,7 +311,7 @@ local chars = {
         --[11]="imo_arm_eva_01",
         [13]="imo_hair_eva_01",
     },
---[============================================================================[
+---[============================================================================[
     brs_00 = {
         [1]="imo_bodyA_01",
         [2]="imo_eye_BRS_00",
@@ -457,26 +462,26 @@ if false then
     local _
     
     _ = camera:setPath('sex_a01_1') or error('failed setting camera path')
-    _ = camera:setPoint('loc_pos01') --or error('failed setting camera point')
+    _ = camera:setPoint('loc_pos01') or error('failed setting camera point')
 
     _ = imo1:setModels(chars.moon_venus_nude) or error('failed setting imo1 model')
     _ = imo1:setAnim('sex_a01_F') or error('failed setting imo1 anim')
-    _ = imo1:setPoint('loc_pos01') --or error('failed setting imo1 point')
+    _ = imo1:setPoint('loc_pos01') or error('failed setting imo1 point')
     _ = ani1:setModels(chars.ani_nude) or error('failed setting ani1 model')
     _ = ani1:setAnim('sex_a01_M') or error('failed setting ani1 anim')
-    _ = ani1:setPoint('loc_pos01') --or error('failed setting ani1 point')
---[[
+    _ = ani1:setPoint('loc_pos01') or error('failed setting ani1 point')
+---[[
     _ = imo2:setModels(chars.moon_pluto_nude) or error('failed setting imo2 model')
     _ = imo2:setAnim('sex_a02_F') or error('failed setting imo2 anim')
-    _ = imo2:setPoint('loc_pos02') --or error('failed setting imo2 point')
+    _ = imo2:setPoint('loc_pos02') or error('failed setting imo2 point')
     _ =  ani2:setModels(chars.ani_nude) or error('failed setting ani2 model')
     _ = ani2:setAnim('sex_a02_M') or error('failed setting ani2 anim')
-    _ = ani2:setPoint('loc_pos02') --or error('failed setting ani2 point')
-]]
+    _ = ani2:setPoint('loc_pos02') or error('failed setting ani2 point')
+--]]
     imo1:setVisible(true)
-    --imo2:setVisible(true)
+    imo2:setVisible(true)
     ani1:setVisible(true)
-    --ani2:setVisible(true)
+    ani2:setVisible(true)
 
     pl2.showText('')
     return
@@ -488,15 +493,16 @@ math.randomseed(os.time())
 math.random()
 ---[=[
 ani:setModels(chars.ani)
-ani:setVisible(true)
+--ani:setVisible(true)
+--ani:setBlack(true)
 
 imo:setModels(chars[chars[math.random(1,#chars)]])
 --imo:setModels(chars.moon_pluto)
-imo:setVisible(true)
+--imo:setVisible(true)
 --]=]
 --room:setModels(rooms[rooms[math.random(1,#rooms)]])
-room:setModels(rooms.beach)
-room:setAnim(rooms.beach.anim)
+room:setModels(rooms.train)
+room:setAnim(rooms.train.anim)
 room:setVisible(true)
 
 function doScene(name)
@@ -504,19 +510,14 @@ function doScene(name)
     print'begin scene'
     back:fade(1, 2)
     --pl2.wait(1)
---[[
-    local menu = {
-        --pl2.ucs(0x30b9,0x30c8,0x30fc,0x30ea,0x30fc,0x30e2,0x30fc,0x30c9),
-        --pl2.ucs(0x3068,0x3053,0x3068,0x3093,0xff28,0x30e2,0x30fc,0x30c9),
-        --pl2.ucs(0x7d42,0x4e86),
-        'ストーリーモード', 'とことんＨモード', '終了',
-        }
+---[=[
+    local menu = { 'ストーリーモード', 'とことんＨモード', '終了', }
     local i = pl2.showMenu(menu)
     print('selected',i)
 
     pl2.showText("You selected: "..menu[i])
-]]
-    pl2.showText("Scene: "..name)
+--]=]
+--    pl2.showText("Scene: "..name)
     back:fade(0, 2)
     pl2.wait(2)
     print'end scene'
