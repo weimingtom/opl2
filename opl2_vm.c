@@ -648,34 +648,3 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
     }
 }
 
-void pl2CharAnimate(pl2Character *chr, float dt)
-{
-    if(chr && chr->anim)
-    {
-        chr->time += dt;
-
-        if(chr->visible > 0)
-        {
-            int frame = 30 * chr->time;
-            int count = chr->anim->numFrames;
-            int loop  = chr->anim->loopFrame;
-
-            if(frame >= count)
-            {
-                frame = loop + (frame - loop) % (count - loop);
-            }
-
-            if(frame != chr->frame)
-            {
-                int i;
-                for(i = 0; i < PL2_MAX_CHARPARTS; i++)
-                {
-                    pl2ModelAnimate(chr->models[i], chr->anim, frame);
-                }
-
-                chr->frame = frame;
-            }
-        }
-    }
-}
-

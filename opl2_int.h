@@ -26,7 +26,13 @@
 #include <errno.h>
 
 #define DEG(r) ((r)*180.0f/M_PI)
-#define RAD(r) ((r)*M_PI/180.0f)
+#define RAD(d) ((d)*M_PI/180.0f)
+
+#define RGBAf(r,g,b,a) ((uint32_t)( \
+    ((uint8_t)(255.0f*(r)) <<  0) | \
+    ((uint8_t)(255.0f*(g)) <<  8) | \
+    ((uint8_t)(255.0f*(b)) << 16) | \
+    ((uint8_t)(255.0f*(a)) << 24)))
 
 int pl2_strlcpy(char *dst, const char *src, int len);
 
@@ -67,7 +73,8 @@ extern int pl2_error;
 extern int pl2_screen_width, pl2_screen_height;
 extern float pl2_screen_aspect, pl2_screen_scale;
 
-extern bool pl2_censor, pl2_running;
+extern bool pl2_censor, pl2_running, pl2_can_quit;
+extern bool pl2_show_window, pl2_show_title;
 extern bool pl2_text_showing, pl2_menu_showing, pl2_hide_overlay;
 
 extern pl2Font *pl2_font;
@@ -77,8 +84,11 @@ extern pl2Camera pl2_cameras[PL2_MAX_CAMERAS];
 extern pl2Layer pl2_layers[PL2_MAX_LAYERS];
 extern pl2Menu pl2_menu;
 extern uint32_t pl2_text[];
+extern uint32_t pl2_name_text[];
+extern uint32_t pl2_name_color;
 
 extern pl2Camera *pl2_active_camera;
+extern pl2Image *pl2_current_image;
 
 /******************************************************************************/
 

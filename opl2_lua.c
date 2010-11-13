@@ -61,7 +61,8 @@ static int l_pl2Character_setModel(lua_State *L)
 static int l_pl2Character_setModels(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
-    luaL_checktype(L, 2, LUA_TTABLE);
+    luaL_checktype(L, 2, LUA_TTABLE);    
+    int keep = lua_toboolean(L, 3);
 
     int i; int r = 1;
 
@@ -69,15 +70,18 @@ static int l_pl2Character_setModels(lua_State *L)
     {
         lua_rawgeti(L, 2, i);
 
-        const char *name = luaL_opt(L, lua_tostring, -1, NULL);
+        const char *name = luaL_optstring(L, -1, NULL);
         
         //DEBUGPRINT("%s: model[%d] == %#s\n", __func__, i, name);
         
-        if(!pl2CharSetModel(chr, i - 1, name))
+        if(name || !keep)
         {
-            r = 0;
+            if(!pl2CharSetModel(chr, i - 1, name))
+            {
+                r = 0;
+            }
         }
-
+        
         lua_pop(L, 1);
     }
 
@@ -126,19 +130,39 @@ static int l_pl2Character_getVisible(lua_State *L)
 
 static int l_pl2Character_setName(lua_State *L)
 {
-    return 0;
+    pl2Character *chr = *checkpl2Character(L, 1);
+    const char *name = luaL_optstring(L, 2, NULL);
+    
+    if(lua_gettop(L) > 2)
+    {
+        float r, g, b, a;
+        r = luaL_checknumber(L, 3);
+        g = luaL_checknumber(L, 4);
+        b = luaL_checknumber(L, 5);
+        a = luaL_optnumber(L, 6, 1);
+        
+        chr->nameColor = RGBAf(r, g, b, a);
+    }
+
+    lua_pushboolean(L, pl2CharSetName(chr, name));
+    
+    return 1;
 }
 
 static int l_pl2Character_getName(lua_State *L)
 {
-    return 0;
+    pl2Character *chr = *checkpl2Character(L, 1);
+    
+    lua_pushstring(L, chr->name);
+
+    return 1;
 }
 
 static int l_pl2Character_setBlack(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
 
-    chr->black = lua_toboolean(L, 2) ? 1 : 0;
+    chr->black = lua_toboolean(L, 2);
 
     return 0;
 }
@@ -155,22 +179,22 @@ static int l_pl2Character_getBlack(lua_State *L)
 static int l_pl2Character_clear(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
+    
+    pl2CharClear(chr);
 
-    int idx;
-    for(idx = 0; idx < PL2_MAX_CHARPARTS; idx++)
-    {
-        if(chr->models[idx])
-        {
-            pl2ModelFree(chr->models[idx]);
-            chr->models[idx] = NULL;
-        }
-    }
-    if(chr->anim)
-    {
-        pl2AnimFree(chr->anim);
-        chr->anim = NULL;
-    }
-    chr->visible = 0;
+    return 0;
+}
+
+static int l_pl2Character_say(lua_State *L)
+{
+    pl2Character *chr = *checkpl2Character(L, 1);
+    const char *text = luaL_checkstring(L, 2);
+
+    pl2SetName(chr->name, chr->nameColor);
+
+    pl2SetText(text);
+
+    pl2ShowText();
 
     return 0;
 }
@@ -195,6 +219,7 @@ static luaL_Reg pl2Character_methods[] =
 };
 static luaL_Reg pl2Character_meta[] =
 {
+    { "__call", l_pl2Character_say },
     { NULL, NULL }
 };
 
@@ -612,6 +637,8 @@ static int l_pl2_play(lua_State *L)
     }
 
     const char *name = luaL_optstring(L, 2, NULL);
+    
+    //float fade = luaL_optnumber(L, 3, 0);
 
     pl2Sound *sound = pl2SoundLoad(name);
 
@@ -626,6 +653,8 @@ static int l_pl2_showText(lua_State *L)
 {
     const char *text = luaL_checkstring(L, 1);
 
+    pl2SetName(NULL, 0);
+
     pl2SetText(text);
 
     pl2ShowText();
@@ -639,12 +668,12 @@ static int l_pl2_showMenu(lua_State *L)
 
     pl2MenuClear(&pl2_menu);
 
-    int i;
-    for(i = 1; i <= PL2_MAX_MENUITEMS; i++)
+    int i, n = MIN(PL2_MAX_MENUITEMS, lua_objlen(L, 1));
+    for(i = 1; i <= n; i++)
     {
         lua_rawgeti(L, 1, i);
 
-        pl2MenuAddItem(&pl2_menu, lua_tostring(L, -1));
+        pl2MenuAddItem(&pl2_menu, luaL_checkstring(L, -1));
 
         lua_pop(L, 1);
     }
@@ -667,6 +696,64 @@ static int l_pl2_wait(lua_State *L)
     pl2Wait(time);
 
     return 0;
+}
+
+static int l_pl2_quit(lua_State *L)
+{
+    pl2Quit();
+
+    return 0;
+}
+
+static int l_pl2_setImage(lua_State *L)
+{
+    const char *name = luaL_checkstring(L, 1);
+    
+    pl2SetImage(name);
+
+    return 0;
+}
+
+static int l_pl2_setQuit(lua_State *L)
+{
+    pl2_can_quit = lua_toboolean(L, 1);
+
+    return 0;
+}
+
+static int l_pl2_getQuit(lua_State *L)
+{
+    lua_pushboolean(L, pl2_can_quit);
+
+    return 1;
+}
+
+static int l_pl2_setTitle(lua_State *L)
+{
+    pl2_show_title = lua_toboolean(L, 1);
+
+    return 0;
+}
+
+static int l_pl2_getTitle(lua_State *L)
+{
+    lua_pushboolean(L, pl2_show_title);
+
+    return 1;
+}
+
+static int l_pl2_setWindow(lua_State *L)
+{
+    pl2_show_window = lua_toboolean(L, 1);
+
+    return 0;
+}
+
+static int l_pl2_getWindow(lua_State *L)
+{
+    lua_pushboolean(L, pl2_show_window);
+
+    return 1;
 }
 
 static int l_pl2_dofile(lua_State *L)
@@ -751,10 +838,20 @@ static luaL_Reg pl2_functions[] =
     { "character", l_pl2_character },
     { "layer", l_pl2_layer },
     { "light", l_pl2_light },
+
     { "play", l_pl2_play },
     { "showText", l_pl2_showText },
     { "showMenu", l_pl2_showMenu },
     { "wait", l_pl2_wait },
+    { "quit", l_pl2_quit },
+
+    { "setImage", l_pl2_setImage },
+    { "setQuit", l_pl2_setQuit },
+    { "getQuit", l_pl2_getQuit },
+    { "setTitle", l_pl2_setTitle },
+    { "getTitle", l_pl2_getTitle },
+    { "setWindow", l_pl2_setWindow },
+    { "getWindow", l_pl2_getWindow },
 
     { "dofile", l_pl2_dofile },
     { "ucs", l_pl2_ucs },
@@ -775,7 +872,7 @@ static char pl2_lua_init[] =
 "fore=pl2.layer(2)"
 "imo=imo1";
 
-void luaopen_pl2(lua_State *L)
+int luaopen_pl2(lua_State *L)
 {
     luaL_register(L, "pl2", pl2_functions);
     lua_pop(L, 1);
@@ -784,36 +881,28 @@ void luaopen_pl2(lua_State *L)
     lua_newtable(L);
     luaL_register(L, NULL, pl2Character_methods);
     lua_setfield(L, -2, "__index");
-    lua_newtable(L);
     luaL_register(L, NULL, pl2Character_meta);
-    lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
     luaL_newmetatable(L, "pl2Light");
     lua_newtable(L);
     luaL_register(L, NULL, pl2Light_methods);
     lua_setfield(L, -2, "__index");
-    lua_newtable(L);
     luaL_register(L, NULL, pl2Light_meta);
-    lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
     luaL_newmetatable(L, "pl2Camera");
     lua_newtable(L);
     luaL_register(L, NULL, pl2Camera_methods);
     lua_setfield(L, -2, "__index");
-    lua_newtable(L);
     luaL_register(L, NULL, pl2Camera_meta);
-    lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
     luaL_newmetatable(L, "pl2Layer");
     lua_newtable(L);
     luaL_register(L, NULL, pl2Layer_methods);
     lua_setfield(L, -2, "__index");
-    lua_newtable(L);
     luaL_register(L, NULL, pl2Layer_meta);
-    lua_setfield(L, -2, "__metatable");
     lua_pop(L, 1);
 
     int err = luaL_loadbuffer(L, pl2_lua_init, strlen(pl2_lua_init), "@init.lua");
@@ -827,5 +916,7 @@ void luaopen_pl2(lua_State *L)
     {
         DEBUGPRINT("%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
     }
+    
+    return 1;
 }
 

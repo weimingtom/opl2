@@ -1,7 +1,7 @@
 PLATFORMS = nix win psp
 
 OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o opl2_fnt.o
-OBJS += opl2_int.o opl2_idx.o opl2_sdl.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
+OBJS += opl2_int.o opl2_chr.o opl2_idx.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
 
 EXTRA_OBJS = pl2ex.o dumptmb.o
 EXTRA_TARGETS = $(PL2EX) $(DUMPTMB)
@@ -18,7 +18,7 @@ PSP_LIBS += -llua -lGLU -lGL -lalut -lOpenAL32 -logg
 PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 
-ARGS = -window 320x240
+ARGS = -window -size 320x240
 
 ifeq ($(RELEASE),1)
  CFLAGS += -O2 -DNDEBUG

@@ -1918,6 +1918,14 @@ void pl2FontFree(pl2Font *font)
 
 void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len);
 
+void pl2FontUcsPrintEx(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len)
+{
+    if(font && text)
+    {
+        pl2FontPrintInternal(font, x, y, color, text, len);
+    }
+}
+
 void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text)
 {
     if(font && text)

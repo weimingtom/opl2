@@ -3,7 +3,6 @@
 #include "opl2_gl.h"
 #include "opl2_al.h"
 #include "opl2_lua.h"
-#include "opl2_sdl.h"
 
 #include <ctype.h>
 
@@ -21,15 +20,18 @@ bool pl2_censor = 0;
 bool pl2_text_showing = 0;
 bool pl2_menu_showing = 0;
 bool pl2_hide_overlay = 0;
+bool pl2_can_quit = 0;
+bool pl2_show_window = 0;
+bool pl2_show_title = 0;
 
 pl2Font *pl2_font = NULL;
 
 pl2Character pl2_chars[PL2_MAX_CHARS] =
 {
-    { { NULL }, NULL, NULL, 0, 0, false, false },
-    { { NULL }, NULL, NULL, 0, 0, false, false },
-    { { NULL }, NULL, NULL, 0, 0, false, false },
-    { { NULL }, NULL, NULL, 0, 0, false, false },
+    { { NULL }, NULL, NULL, 0, 0, false, false, NULL, 0 },
+    { { NULL }, NULL, NULL, 0, 0, false, false, NULL, 0 },
+    { { NULL }, NULL, NULL, 0, 0, false, false, NULL, 0 },
+    { { NULL }, NULL, NULL, 0, 0, false, false, NULL, 0 },
 };
 
 pl2Light pl2_lights[PL2_MAX_LIGHTS] =
@@ -55,8 +57,12 @@ pl2Layer pl2_layers[PL2_MAX_LAYERS] =
 pl2Menu pl2_menu = { 0, 0, { { 0, { 0 } } } };
 
 uint32_t pl2_text[1024] = { 0 };
+uint32_t pl2_name_text[32] = { 0 };
+uint32_t pl2_name_color = 0;
 
 pl2Camera *pl2_active_camera = &(pl2_cameras[0]);
+
+pl2Image *pl2_current_image = NULL;
 
 /******************************************************************************/
 
@@ -129,7 +135,7 @@ size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length)
 
     int i = 0, j = 0;
 
-    if(length < 0) length = strlen(text);
+    if(length < 0) length = text ? strlen(text) : 0;
 
     size--;
 
@@ -167,9 +173,224 @@ size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length)
         ucs[j++] = c;
     }
 
-    ucs[j] = 0;
+    if(j < size) ucs[j] = 0;
 
     return j;
+}
+
+/******************************************************************************/
+
+float pl2Tick()
+{
+    static Uint32 old_ticks = 0;
+    if(!old_ticks) old_ticks = SDL_GetTicks();
+    Uint32 new_ticks = SDL_GetTicks();
+    float dt = (float)(new_ticks - old_ticks) * 0.001f;
+    old_ticks = new_ticks;
+    return dt;
+}
+
+enum
+{
+   MOVE_NONE = 0,
+   MOVE_3P   = 1,
+   MOVE_1P   = 2,
+   MOVE_ZOOM = 3,
+};
+
+void pl2Reshape(int w, int h)
+{
+    pl2_screen_width  = w;
+    pl2_screen_height = h;
+
+    float f1 = (float)w / (float)(PL2_NOMINAL_SCREEN_WIDTH);
+    float f2 = (float)h / (float)(PL2_NOMINAL_SCREEN_HEIGHT);
+
+    pl2_screen_scale = (f1 < f2) ? f1 : f2;
+
+    if(!h) h++;
+    pl2_screen_aspect = (float)w/(float)h;
+
+    DEBUGPRINT("%s: window resize to %dx%d (aspect == %g, scale == %g)\n", __func__,
+               pl2_screen_width, pl2_screen_height, pl2_screen_aspect, pl2_screen_scale);
+
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    glViewport(0, 0, w, h);
+}
+
+int pl2DoFrame()
+{
+    static int move_mode = 0;
+
+    SDL_Event event;
+
+    //SDL_PumpEvents();
+
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_KEYDOWN:
+            {
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_ESCAPE:
+                        event.type = SDL_QUIT;
+                        SDL_PushEvent(&event);
+                        break;
+
+                    case SDLK_RETURN:
+                        pl2TextAdvance();
+                        pl2MenuConfirm(&pl2_menu);
+                        break;
+
+                    case SDLK_SPACE:
+                        pl2ToggleOverlay();
+                        break;
+
+                    case SDLK_UP:
+                        pl2MenuSelectPrev(&pl2_menu);
+                        break;
+
+                    case SDLK_DOWN:
+                        pl2MenuSelectNext(&pl2_menu);
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+            }
+
+            case SDL_MOUSEMOTION:
+            {
+                int dx = event.motion.xrel, dy = event.motion.yrel;
+
+                float x_angle = 2.0f * M_PI * (float)dx / (float)pl2_screen_width;
+                float y_angle = 2.0f * M_PI * (float)dy / (float)pl2_screen_height;
+
+                switch(move_mode)
+                {
+                    case MOVE_3P:
+                        if(!(pl2_active_camera->locked || pl2_active_camera->path))
+                        {
+                            pl2CameraRotate3P(pl2_active_camera, x_angle, y_angle);
+                        }
+                        break;
+
+                    case MOVE_1P:
+                        if(!(pl2_active_camera->locked || pl2_active_camera->path))
+                        {
+                            pl2CameraRotate1P(pl2_active_camera, x_angle, y_angle);
+                        }
+                        break;
+
+                    case MOVE_ZOOM:
+                        if(!(pl2_active_camera->locked || pl2_active_camera->path))
+                        {
+                            pl2CameraZoom(pl2_active_camera, -10.0f * (float)dy / (float)pl2_screen_height);
+                        }
+                        break;
+                }
+                break;
+            }
+
+            case SDL_MOUSEBUTTONDOWN:
+            {
+                switch(event.button.button)
+                {
+                    case SDL_BUTTON_LEFT:
+                        if(!(pl2_active_camera->locked || pl2_active_camera->path))
+                        {
+                            move_mode |= MOVE_3P;
+                        }
+                        break;
+
+                    case SDL_BUTTON_RIGHT:
+                        if(!(pl2_active_camera->locked || pl2_active_camera->path))
+                        {
+                            move_mode |= MOVE_1P;
+                        }
+                        break;
+
+                    case SDL_BUTTON_WHEELUP:
+                        if(pl2_menu_showing && (pl2_active_camera->locked || pl2_active_camera->path))
+                            pl2MenuSelectPrev(&pl2_menu);
+                        else
+                            pl2CameraZoom(pl2_active_camera,  2.0f);
+                        break;
+
+                    case SDL_BUTTON_WHEELDOWN:
+                        if(pl2_menu_showing && (pl2_active_camera->locked || pl2_active_camera->path))
+                            pl2MenuSelectNext(&pl2_menu);
+                        else
+                            pl2CameraZoom(pl2_active_camera, -2.0f);
+                        break;
+                }
+
+                SDL_ShowCursor(!move_mode);
+                break;
+            }
+
+            case SDL_MOUSEBUTTONUP:
+            {
+                switch(event.button.button)
+                {
+                    case SDL_BUTTON_LEFT:
+                        move_mode &= ~MOVE_3P;
+                        break;
+
+                    case SDL_BUTTON_RIGHT:
+                        move_mode &= ~MOVE_1P;
+                        break;
+                }
+
+                SDL_ShowCursor(!move_mode);
+                break;
+            }
+                
+            case SDL_VIDEORESIZE:
+            {
+                pl2Reshape(event.resize.w, event.resize.h);
+                break;
+            }
+
+            case SDL_QUIT:
+            {
+                if(pl2_can_quit)
+                    pl2Quit();
+                break;
+            }
+
+            default: break;
+        }
+    }
+
+    float dt = pl2Tick();
+
+    pl2GlRenderFrame(dt);
+
+#ifndef NDEBUG    
+    static int frames = 0;
+    static float sec = 0, fps = 0;
+    
+    frames++;
+
+    if((sec += dt) >= 1)
+    {
+        fps = (float)frames / sec;
+        char temp[16];
+        snprintf(temp, sizeof(temp), "%.2ffps", fps);
+        SDL_WM_SetCaption(temp, "OPL2");
+        frames = sec = 0;
+    }
+#endif // NDEBUG
+
+    //SDL_Delay(10);
+    SDL_GL_SwapBuffers();
+
+    return pl2_running;
 }
 
 /******************************************************************************/
@@ -179,8 +400,16 @@ void pl2SetText(const char *text)
     pl2Utf8ToUcs4(pl2_text, ARRLEN(pl2_text), text, -1);
 }
 
+void pl2SetName(const char *name, uint32_t color)
+{
+    pl2Utf8ToUcs4(pl2_name_text, ARRLEN(pl2_name_text), name, -1);
+    pl2_name_color = color;
+}
+
 void pl2ShowText()
 {
+    pl2Tick();
+
     pl2_text_showing = 1;
 
     while(pl2_text_showing && pl2DoFrame());
@@ -264,6 +493,23 @@ int pl2MenuSelect(pl2Menu *menu, uint32_t item)
     return -1;
 }
 
+int pl2ShowMenu(pl2Menu *menu)
+{
+    if(menu && menu->numItems)
+    {
+        pl2Tick();
+
+        pl2_menu_showing = 1;
+
+        menu->selection = 0;
+
+        while(pl2_menu_showing && pl2DoFrame());
+
+        return menu->selection;
+    }
+    return -1;
+}
+
 int pl2MenuConfirm(pl2Menu *menu)
 {
     if(menu && pl2_menu_showing && !pl2_hide_overlay)
@@ -279,21 +525,6 @@ int pl2MenuConfirm(pl2Menu *menu)
     return -1;
 }
 
-int pl2ShowMenu(pl2Menu *menu)
-{
-    if(menu && menu->numItems)
-    {
-        pl2_menu_showing = 1;
-
-        menu->selection = 0;
-
-        while(pl2_menu_showing && pl2DoFrame());
-
-        return menu->selection;
-    }
-    return -1;
-}
-
 /******************************************************************************/
 
 void pl2ToggleOverlay()
@@ -301,29 +532,47 @@ void pl2ToggleOverlay()
     pl2_hide_overlay = !pl2_hide_overlay;
 }
 
-/******************************************************************************/
-
-#if WITH_GLUT
-# define GETTICKS() glutGet(GLUT_ELAPSED_TIME)
-#else
-# define GETTICKS() SDL_GetTicks()
-#endif
-
-void pl2Wait(float sec)
+int pl2SetImage(const char *name)
 {
-    int until = GETTICKS() + sec * 1000;
-
-    while((GETTICKS() < until) && pl2DoFrame());
+    if(pl2_current_image)
+    {
+        pl2ImageFree(pl2_current_image);
+        pl2_current_image = NULL;
+    }
+    
+    pl2_current_image = pl2ImageLoad(name);
+    
+    return name ? (NULL != pl2_current_image) : 1;
 }
 
 /******************************************************************************/
+
+void pl2Wait(float sec)
+{
+    pl2Tick();
+
+    int until = SDL_GetTicks() + sec * 1000;
+
+    while((SDL_GetTicks() < until) && pl2DoFrame());
+}
+
+void pl2Quit()
+{
+    exit(0);
+}
+
+/******************************************************************************/
+
+static SDL_Surface *pl2_screen_surf = NULL;
+
+static const char *pl2_script_name = NULL;
 
 void pl2GameShutdown()
 {
     pl2PackageClearIndex();
 }
 
-void pl2GameInit(int *argc, char *argv[])
+int pl2GameInit(int *argc, char *argv[])
 {
     atexit(pl2GameShutdown);
 
@@ -333,11 +582,108 @@ void pl2GameInit(int *argc, char *argv[])
 
     pl2AlInit(argc, argv);
 
-#if WITH_GLUT
-    pl2GlutInit(argc, argv);
-#else
-    pl2SdlInit(argc, argv);
-#endif
+    SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+    atexit(SDL_Quit);
+
+    int width = 0, height = 0, bpp = 32;
+    Uint32 flags = SDL_FULLSCREEN | SDL_OPENGL | SDL_HWSURFACE;
+
+    int i;
+    for(i = 1; i < *argc; i++)
+    {
+        if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "-fullscreen"))
+        {
+            flags |= SDL_FULLSCREEN;
+        }
+        else if(!strcmp(argv[i], "-w") || !strcmp(argv[i], "-window"))
+        {
+            flags &= ~SDL_FULLSCREEN;
+        }
+        else if(!strcmp(argv[i], "-s") || !strcmp(argv[i], "-size"))
+        {
+            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
+            {
+                i++;
+                int tw, th, td;
+                if(3 == sscanf(argv[i], "%dx%d:%d", &tw, &th, &td))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d:%d\n", __func__, tw, th, td);
+                    width = tw; height = th; bpp = td;
+                }
+                else if(2 == sscanf(argv[i], "%dx%d", &tw, &th))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d\n", __func__, tw, th);
+                    width = tw; height = th;
+                }
+                else
+                {
+                    fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
+                }
+            }
+            else
+            {
+                fprintf(stderr, "%s: --size requires an argument\n", argv[0]);
+            }
+        }
+        else if(argv[i][0] == '-')
+        {
+            fprintf(stderr, "%s: unrecognized option \"%s\"\n", argv[0], argv[i]);
+        }
+        else if(!pl2_script_name)
+        {
+            pl2_script_name = argv[i];
+        }
+        else
+        {
+            fprintf(stderr, "%s: extra arguments on command line\n", argv[0]);
+        }
+    }
+
+    if(!(width && height))
+    {
+        SDL_Rect **sizes = SDL_ListModes(NULL, flags);
+
+        if(sizes && (sizes != (SDL_Rect**)(-1)))
+        {
+            width  = (*sizes)[0].w;
+            height = (*sizes)[0].h;
+        }
+        else
+        {
+            width  = PL2_NOMINAL_SCREEN_WIDTH;
+            height = PL2_NOMINAL_SCREEN_HEIGHT;
+        }
+    }
+
+    bpp = SDL_VideoModeOK(width, height, bpp, flags);
+
+    if(!bpp) return 0;
+
+    DEBUGPRINT("%s: using display mode %dx%d:%d\n", __func__, width, height, bpp);
+
+    pl2_screen_surf = SDL_SetVideoMode(width, height, bpp, flags);
+
+    if(!pl2_screen_surf)
+    {
+        fprintf(stderr, "%s: error setting display mode %dx%d:%d\n",
+                argv[0], width, height, bpp);
+        return 0;
+    }
+
+    SDL_WM_SetCaption("OPL2", "OPL2");
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,     8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,    8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,   8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+
+    pl2Reshape(width, height);
+
+    pl2GlInit();
+    
+    return 1;
 }
 
 static lua_State *pl2_L = NULL;
@@ -346,12 +692,17 @@ static lua_State *pl2LuaGetState()
 {
     if(!pl2_L)
     {
-        pl2_L = luaL_newstate();
-        luaL_openlibs(pl2_L);
-        luaopen_pl2(pl2_L);
+        lua_State *L = pl2_L = luaL_newstate();
+        //luaL_openlibs(pl2_L);
+        luaopen_base(L);
+        luaopen_table(L);
+        luaopen_string(L);
+        luaopen_math(L);
+        luaopen_pl2(L);
     }
     return pl2_L;
 }
+
 static void pl2LuaCloseState()
 {
     if(pl2_L)
@@ -366,7 +717,9 @@ int pl2GameRun()
     lua_State *L = pl2LuaGetState();
     atexit(pl2LuaCloseState);
 
-    int err = luaL_loadfile(L, "script.lua");
+    if(!pl2_script_name) pl2_script_name = "script.lua";
+
+    int err = luaL_loadfile(L, pl2_script_name);
 
     if(!err)
     {
@@ -397,12 +750,11 @@ int main(int argc, char *argv[])
 {
 #if _PSP_FW_VERSION
     atexit(sceKernelExitGame);
-#else
-    //freopen("opl2.log", "wt", stdout);
-    //freopen("error.log", "wt", stderr);
 #endif
 
-    pl2GameInit(&argc, argv);
+    if(!pl2GameInit(&argc, argv))
+        return 1;
+
     pl2GameRun();
     return 0;
 }

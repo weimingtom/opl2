@@ -577,6 +577,17 @@ void pl2GlRenderFrame(float dt)
         {
             int x = (int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
             int y = (int)(0.5f * (float)(PL2_NOMINAL_SCREEN_HEIGHT - (2 * pl2_menu.numItems - 1) * pl2_font->glyphSize));
+            
+            int h = 2 * pl2_font->glyphSize;
+
+            glBegin(GL_QUADS);
+            for(i = 0; i < pl2_menu.numItems; i++)
+            {
+                int y1 = y + i*h, y2 = y1 + (i+1)*h;
+                glVertex2i(0, y1); glVertex2i(2*x, y1);
+                glVertex2i(2*x, y2); glVertex2i(0, y2);
+            }
+            glEnd();
 
             for(i = 0; i < pl2_menu.numItems; i++)
             {
@@ -587,10 +598,17 @@ void pl2GlRenderFrame(float dt)
             }
         }
 
-        else if(pl2_text_showing)
+        else if(pl2_show_window)
         {
             int x = 0; //(int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
             int y = (int)(0.8f * (float)PL2_NOMINAL_SCREEN_HEIGHT);
+
+            if(pl2_name_color)
+            {
+                pl2FontUcsPrint(pl2_font, x, y, pl2_name_color, pl2_name_text);
+                y += pl2_font->glyphSize;
+            }
+
             pl2FontUcsPrint(pl2_font, x, y, 0xfffffffful, pl2_text);
         }
     }

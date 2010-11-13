@@ -33,8 +33,18 @@ pl2Image *pl2ImageLoad(const char *name)
         pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
+    
+    // TODO: load image
 
     pl2PackageFileFree(file);
     return image;
+}
+
+void pl2ImageFree(pl2Image *image)
+{
+    if(image)
+    {
+        DELETE(image);
+    }
 }
 

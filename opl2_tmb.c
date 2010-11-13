@@ -436,29 +436,3 @@ void pl2ModelFree(pl2Model *model)
     }
 }
 
-int pl2CharSetModel(pl2Character *chr, int idx, const char *name)
-{
-    //DEBUGPRINT("%s: chr == %p, idx == %d, name == \"%s\"\n",
-    //           __func__, chr, idx, name);
-
-    if(chr)
-    {
-        if((idx < 0) || (idx >= PL2_MAX_CHARPARTS))
-            return 0;
-
-        if(chr->models[idx])
-        {
-            pl2ModelFree(chr->models[idx]);
-            chr->models[idx] = NULL;
-        }
-
-        if(name)
-        {
-            chr->models[idx] = pl2ModelLoad(name);
-        }
-
-        return name ? (NULL != chr->models[idx]) : 1;
-    }
-    return 0;
-}
-

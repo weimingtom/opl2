@@ -347,6 +347,8 @@ typedef struct
     float time;
     bool visible;
     bool black;
+    const char *name;
+    uint32_t nameColor;
 }
 pl2Character;
 
@@ -387,7 +389,7 @@ pl2Sound;
 
 /******************************************************************************/
 
-void pl2GameInit(int *argc, char *argv[]);
+int pl2GameInit(int *argc, char *argv[]);
 int pl2GameRun();
 
 void pl2Exit();
@@ -454,6 +456,7 @@ pl2Model *pl2ModelLoad(const char *name);
 pl2Model *pl2ModelLoadFile(const char *name);
 void pl2ModelFree(pl2Model *model);
 int pl2ModelAddPoints(pl2Model *model);
+void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame);
 
 /******************************************************************************/
 
@@ -479,6 +482,7 @@ pl2Font *pl2FontLoad(const char *name);
 void pl2FontFree(pl2Font *font);
 int pl2FontMeasureText(pl2Font *font, const char *text);
 void pl2FontUcsPrint(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text);
+void pl2FontUcsPrintEx(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len);
 void pl2FontUcsPrintCenter(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text);
 void pl2FontUcsPrintRight(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text);
 void pl2FontPrint(pl2Font *font, float x, float y, uint32_t color, const char *text);
@@ -493,9 +497,11 @@ size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length);
 
 void pl2CharAnimate(pl2Character *character, float dt);
 void pl2CharRender(pl2Character *character);
+int pl2CharSetName(pl2Character *chr, const char *name);
 int pl2CharSetModel(pl2Character *chr, int idx, const char *name);
 int pl2CharSetAnim(pl2Character *chr, const char *name);
 int pl2CharSetPoint(pl2Character *chr, const char *name);
+void pl2CharClear(pl2Character *chr);
 
 /******************************************************************************/
 
@@ -528,10 +534,17 @@ void pl2LayerDraw(pl2Layer *layer);
 /******************************************************************************/
 
 void pl2SetText(const char *text);
+void pl2SetName(const char *name, uint32_t color);
 void pl2ShowText();
-void pl2Wait(float sec);
 void pl2TextAdvance();
 void pl2ToggleOverlay();
+
+void pl2Wait(float sec);
+void pl2Quit();
+
+/******************************************************************************/
+
+int pl2SetImage(const char *name);
 
 /******************************************************************************/
 

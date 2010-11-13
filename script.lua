@@ -1,7 +1,7 @@
-pl2.dofile('init.lua')
-print'continue...'
-
 --------------------------------------------------------------------------------
+
+fore:fade(0, 0)
+back:fade(0, 0)
 
 light1:setPosition(-1, -1, -1)
 light1:setDiffuse(0.6, 0.6, 0.6)
@@ -15,405 +15,50 @@ light2:setAmbient(0.2, 0.2, 0.2)
 light2:setSpecular(0.8, 0.8, 0.8)
 light2:setEnabled(true)
 
-camera:setEye(0, 10, -20)
-camera:setFocus(0, 5, 0)
 camera:setUp(0, 1, 0)
 camera:setFov(35)
 
-imo1:clear()
-imo2:clear()
+imo:clear()
 ani:clear()
 room:clear()
 
---------------------------------------------------------------------------------
-
-IMO_BODY    =  1
-IMO_EYE     =  2
-IMO_UNDER_A =  3
-IMO_UNDER_B =  4
-IMO_SOCKS   =  5
-IMO_COS_A   =  6
-IMO_COS_B   =  7
-IMO_HEAD    =  8
-IMO_FACE    =  9
-IMO_NECK    = 10
-IMO_ARM     = 11
-IMO_SHOES   = 12
-IMO_HAIR    = 13
+imo2:setName('？？？', 1.0, 1.0, 1.0)
+imo:setName('早苗', 1.0, 0.6, 0.6)
+ani:setName('おにいちゃん', 0.6, 0.6, 1.0)
 
 --------------------------------------------------------------------------------
 
-local actions = {
-    --'zen_a01', 'zen_a02',
-    'zen_a03', 'zen_a04', 'zen_a05', 'zen_a06', 'zen_a07', 'zen_a08',
-    'sex_a01', 'sex_a02', 'sex_a03', 'sex_a04', 'sex_a05', 'sex_a06',
-    --'tekoki00', 'asikoki00', 'paizuri_01', 'bak_02',
-    --'vibrator00', 'vibrator01', 'vibrator02',
+local IMO = {
+    BODY    =  1,
+    EYE     =  2,
+    UNDER_A =  3,
+    UNDER_B =  4,
+    SOCKS   =  5,
+    COS_A   =  6,
+    COS_B   =  7,
+    HEAD    =  8,
+    FACE    =  9,
+    NECK    = 10,
+    ARM     = 11,
+    SHOES   = 12,
+    HAIR    = 13,
+}
 
-    zen_a01={'zen_a01_1','zen_a01_2','zen_a01_3','zen_a01_4',point='loc_pos01'},
-    zen_a02={'zen_a02_1','zen_a02_2','zen_a02_3','zen_a02_4',point='loc_pos01'},
-    zen_a03={'zen_a03_1','zen_a03_2','zen_a03_3','zen_a03_4',point='loc_pos01'},
-    zen_a04={'zen_a04_1','zen_a04_2','zen_a04_3','zen_a04_4',point='loc_pos01'},
-    zen_a05={'zen_a05_1','zen_a05_2','zen_a05_3','zen_a05_4',point='loc_pos01'},
-    zen_a06={'zen_a06_1','zen_a06_2','zen_a06_3','zen_a06_4',point='loc_pos01'},
-    zen_a07={'zen_a07_1','zen_a07_2','zen_a07_3','zen_a07_4',point='loc_pos01'},
-    zen_a08={'zen_a08_1','zen_a08_2','zen_a08_3','zen_a08_4',point='loc_pos01'},
-    sex_a01={'sex_a01_1','sex_a01_2','sex_a01_3','sex_a01_4',point='loc_pos02'},
-    sex_a02={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    sex_a03={'sex_a03_1','sex_a03_2','sex_a03_3','sex_a03_4',point='loc_pos02'},
-    sex_a04={'sex_a04_1','sex_a04_2','sex_a04_3','sex_a04_4',point='loc_pos02'},
-    sex_a05={'sex_a05_1','sex_a05_2','sex_a05_3','sex_a05_4',point='loc_pos01'},
-    sex_a06={'sex_a06_1','sex_a06_2','sex_a06_3','sex_a06_4',point='loc_pos02'},
-    tekoki00={'tekoki_1','tekoki_2','tekoki_3','tekoki_4',point='loc_pos01'},
-    asikoki00={'ashi03_1','ashi03_2','ashi03_3','ashi03_4',point='loc_pos01'},
-    paizuri_01={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    bak_02={'sex_a02_1','sex_a02_2','sex_a02_3','sex_a02_4',point='loc_pos02'},
-    vibrator00={'vib01_1','vib01_2','vib01_3','vib01_4',point='loc_pos01'},
-    vibrator01={'vib01_1','vib01_2','vib01_3','vib01_4',point='loc_pos01'},
-    vibrator02={'vib02_1','vib02_2','vib02_3','vib02_4',point='loc_pos01'},
-    }
+--------------------------------------------------------------------------------
 
-function setAnims(name,cam,_ani,_imo)
-    _ani, _imo = _ani or ani, _imo or imo
-
-    math.random()
-    local a = math.random(1,#actions)
-    name = name or actions[a]
-    local b = math.random(1,#actions[name])
-    camera:setPath(actions[name][cam] or actions[name][b])
-    --print(#actions,a,#actions[name],b)
-    local _ = _imo:setAnim(name..'_F') --or error('error loading animation "'..name..'_F"')
-    --imo2:setAnim(name..'_F')
-    local _ = _ani:setAnim(name..'_M') --or error('error loading animation "'..name..'_M"')
-
-    local point = actions[name].point
-    _ani:setPoint(point)
-    _imo:setPoint(point)
-    camera:setPoint(point)
-
---[[
-    if name:sub(0,3) == 'vib' then
-        imo2:clear()
-        imo2:setModel(1,'vib01')
-        imo2:setAnim(name..'_I')
-        imo2:setPoint(point)
-        imo2:setVisible(true)
-    end
-]]
+local function randomItem(tbl)
+    return tbl[math.random(1, #tbl)]
 end
 
 --------------------------------------------------------------------------------
 
-local chars = {
---    'fate_saber',
---    'fate_saber_lily',
---    'fate_rin_casual',
---    'fate_sakura',
---    'vocaloid_miku',
---    'eva_rei_plugsuit',
---    'eva_asuka_plugsuit',
-    'moon_venus',
-    'moon_pluto',
---    'brs_00',
-
-    ani = {
-        [1]="ani_bodyB_00",
-    },
-    ani_shorts = {
-        [1]="ani_bodyC_00",
-    },
-    ani_nude = {
-        [1]="ani_bodyA_00",
-    },
-    fate_saber_armor = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_00",
-        [3]="imo_underA_01A",
-        [4]="imo_underA_01B",
-        [5]="imo_socksC_00",
-        [6]="imo_cos_saver_00A",
-        [7]="imo_cos_saver_00B",
-        [11]="imo_arm_saver_00",
-        [12]="imo_shoes_saver_00",
-        [13]="imo_hair_saver_00",
-    },
-    fate_saber = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_00",
-        [3]="imo_under_item_10A",
-        [4]="imo_under_item_10B",
-        [5]="imo_socksC_00",
-        [6]="imo_cos_saver_10A",
-        [7]="imo_cos_saver_10B",
-        [12]="imo_shoes_saver_10",
-        [13]="imo_hair_saver_00",
-    },
-    fate_saber_casual = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_00",
-        [3]="imo_underA_01A",
-        [4]="imo_underA_01B",
-        [5]="imo_socksC_00",
-        [6]="imo_cos_saver_20A",
-        [7]="imo_cos_saver_20B",
-        [12]="imo_shoes_saver_20",
-        [13]="imo_hair_saver_00",
-    },
-    fate_saber_nude = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_00",
-        --[3]="imo_under_item_10A",
-        --[4]="imo_under_item_10B",
-        --[5]="imo_socksC_00",
-        --[6]="imo_cos_saver_10A",
-        --[7]="imo_cos_saver_10B",
-        --[12]="imo_shoes_saver_10",
-        [13]="imo_hair_saver_00",
-    },
-    fate_rin_casual = {
-        [1]="imo_bodyB_00",
-        [2]="imo_eye_saver_30",
-        [3]="imo_underA_01A",
-        [4]="imo_underA_01B",
-        [5]="imo_socksC_00",
-        [6]="imo_cos_saver_30A",
-        [7]="imo_cos_saver_30B",
-        [12]="imo_shoes_saver_30",
-        [13]="imo_hair_saver_30",
-    },
-    fate_rin_fuku = {
-        [1]="imo_bodyB_00",
-        [2]="imo_eye_saver_30",
-        [3]="imo_underA_01A",
-        [4]="imo_underA_01B",
-        [5]="imo_socksC_00",
-        [6]="imo_cos_saver_40A",
-        [7]="imo_cos_saver_40B",
-        [12]="imo_shoes_saver_30",
-        [13]="imo_hair_saver_30",
-    },
-    fate_rin_nude = {
-        [1]="imo_bodyB_00",
-        [2]="imo_eye_saver_30",
-        --[3]="imo_underA_01A",
-        --[4]="imo_underA_01B",
-        --[5]="imo_socksC_00",
-        --[6]="imo_cos_saver_30A",
-        --[7]="imo_cos_saver_30B",
-        --[12]="imo_shoes_saver_30",
-        [13]="imo_hair_saver_30",
-    },
-    fate_sakura = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_50",
-        [3]="imo_underA_01A",
-        [4]="imo_underA_01B",
-        [5]="imo_socks_item_00",
-        [6]="imo_cos_saver_40A",
-        [7]="imo_cos_saver_40B",
-        [12]="imo_shoes_saver_30",
-        [13]="imo_hair_saver_50",
-    },
-    fate_sakura_nude = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_50",
-        --[3]="imo_underA_01A",
-        --[4]="imo_underA_01B",
-        --[5]="imo_socks_item_00",
-        --[6]="imo_cos_saver_40A",
-        --[7]="imo_cos_saver_40B",
-        --[12]="imo_shoes_saver_30",
-        [13]="imo_hair_saver_50",
-    },
-    fate_saber_lily = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_00",
-        [3]="imo_under_item_10A",
-        [4]="imo_under_item_10B",
-        [5]="imo_socks_saver_60",
-        [6]="imo_cos_saver_60A",
-        [7]="imo_cos_saver_60B",
-        [10]="imo_neck_saver_60",
-        [11]="imo_arm_saver_60",
-        [12]="imo_shoes_saver_60",
-        [13]="imo_hair_saver_60",
-    },
-    fate_saber_lily_nude = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_saver_00",
-        --[3]="imo_under_item_10A",
-        --[4]="imo_under_item_10B",
-        --[5]="imo_socks_saver_60",
-        --[6]="imo_cos_saver_60A",
-        --[7]="imo_cos_saver_60B",
-        --[10]="imo_neck_saver_60",
-        --[11]="imo_arm_saver_60",
-        --[12]="imo_shoes_saver_60",
-        [13]="imo_hair_saver_60",
-    },
-    vocaloid_miku = {
-        [1]="imo_bodyA_01",
-        [2]="imo_eye_vocaloid_00",
-        [3]="imo_underA_06A",
-        [4]="imo_underA_06B",
-        [6]="imo_cos_vocaloid_00A",
-        [7]="imo_cos_vocaloid_00B",
-        [8]="imo_head_vocaloid_00",
-        [11]="imo_arm_vocaloid_00",
-        [12]="imo_shoes_vocaloid_00",
-        [13]="imo_hair_vocaloid_00",
-    },
-    vocaloid_miku_nude = {
-        [1]="imo_bodyA_01",
-        [2]="imo_eye_vocaloid_00",
-        --[3]="imo_underA_06A",
-        --[4]="imo_underA_06B",
-        --[6]="imo_cos_vocaloid_00A",
-        --[7]="imo_cos_vocaloid_00B",
-        [8]="imo_head_vocaloid_00",
-        --[11]="imo_arm_vocaloid_00",
-        --[12]="imo_shoes_vocaloid_00",
-        [13]="imo_hair_vocaloid_00",
-    },
-    eva_rei_plugsuit = {
-        [1]="imo_bodyB_01",
-        [2]="imo_eye_00",
-        [3]="imo_under_eva_00A",
-        [5]="imo_socks_eva_00",
-        [8]="imo_head_eva_00",
-        [11]="imo_arm_eva_00",
-        [13]="imo_hair_eva_00",
-    },
-    eva_rei_nude = {
-        [1]="imo_bodyB_01",
-        [2]="imo_eye_00",
-        --[3]="imo_under_eva_00A",
-        --[5]="imo_socks_eva_00",
-        [8]="imo_head_eva_00",
-        --[11]="imo_arm_eva_00",
-        [13]="imo_hair_eva_00",
-    },
-    eva_asuka_plugsuit = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_eva_01",
-        [3]="imo_under_eva_01A",
-        [5]="imo_socks_eva_01",
-        [8]="imo_head_eva_01",
-        [11]="imo_arm_eva_01",
-        [13]="imo_hair_eva_01",
-    },
-    eva_asuka_nude = {
-        [1]="imo_bodyA_00",
-        [2]="imo_eye_eva_01",
-        --[3]="imo_under_eva_01A",
-        --[5]="imo_socks_eva_01",
-        [8]="imo_head_eva_01",
-        --[11]="imo_arm_eva_01",
-        [13]="imo_hair_eva_01",
-    },
----[============================================================================[
-    brs_00 = {
-        [1]="imo_bodyA_01",
-        [2]="imo_eye_BRS_00",
-        [3]="imo_under_BRS_00A",
-        [4]="imo_under_BRS_00B",
-        [10]="imo_neck_BRS_00",
-        [11]="imo_arm_BRS_00",
-        [12]="imo_shoes_BRS_00",
-        [13]="imo_hair_BRS_00",
-    },
-    brs_01 = {
-        [1]="imo_bodyA_01",
-        [2]="imo_eye_BRS_00",
-        [3]="imo_under_BRS_00A",
-        [4]="imo_under_BRS_00B",
-        [10]="imo_neck_BRS_01",
-        [11]="imo_arm_BRS_00",
-        [12]="imo_shoes_BRS_00",
-        [13]="imo_hair_BRS_01",
-    },
-    brs_02 = {
-        [1]="imo_bodyA_01",
-        [2]="imo_eye_BRS_00",
-        [3]="imo_under_BRS_00A",
-        [4]="imo_under_BRS_00B",
-        [11]="imo_arm_BRS_00",
-        [12]="imo_shoes_BRS_00",
-        [13]="imo_hair_BRS_01",
-    },
---]============================================================================]
-    moon_venus = {
-        [1]='imo_bodyS-Venus_00',
-        [2]='imo_eye_04',
-        [3]='imo_underS-Venus_00A',
-        [7]='imo_cosS-Venus_00B',
-        [8]='imo_headS-Venus_00',
-        [9]='imo_faceS-Venus_00',
-        [10]='imo_neckS-Venus_00',
-        [11]='imo_armS-Venus_00',
-        [12]='imo_shoesS-Venus_00',
-        [13]='imo_hairS-Venus_00',
-    },
-    moon_venus_nude = {
-        [1]='imo_bodyS-Venus_00',
-        [2]='imo_eye_04',
-        --[3]='imo_underS-Venus_00A',
-        --[7]='imo_cosS-Venus_00B',
-        [8]='imo_headS-Venus_00',
-        --[9]='imo_faceS-Venus_00',
-        [10]='imo_neckS-Venus_00',
-        [11]='imo_armS-Venus_00',
-        [12]='imo_shoesS-Venus_00',
-        [13]='imo_hairS-Venus_00',
-    },
-    moon_pluto = {
-        [1]='imo_bodyC_00',
-        [2]='imo_eye_08',
-        [3]='imo_underS-Pluto_00A',
-        [6]='imo_cosS-Pluto_00A',
-        [7]='imo_cosS-Pluto_00B',
-        [8]='imo_headS-Pluto_00',
-        [9]='imo_faceS-Pluto_00',
-        [10]='imo_neckS-Pluto_00',
-        [11]='imo_armS-Pluto_00',
-        [12]='imo_shoesS-Pluto_00',
-        [13]='imo_hairS-Pluto_00',
-    },
-    moon_pluto_nude = {
-        [1]='imo_bodyC_00',
-        [2]='imo_eye_08',
-        --[3]='imo_underS-Pluto_00A',
-        --[6]='imo_cosS-Pluto_00A',
-        --[7]='imo_cosS-Pluto_00B',
-        [8]='imo_headS-Pluto_00',
-        --[9]='imo_faceS-Pluto_00',
-        [10]='imo_neckS-Pluto_00',
-        [11]='imo_armS-Pluto_00',
-        [12]='imo_shoesS-Pluto_00',
-        [13]='imo_hairS-Pluto_00',
-    },
-    moon_pluto2 = {
-        [1]='imo_bodyC_00',
-        [2]='imo_eye_08',
-        [3]='imo_underS-Pluto_01A',
-        [6]='imo_cosS-Pluto_00A',
-        [7]='imo_cosS-Pluto_00B',
-        [8]='imo_headS-Pluto_00',
-        [9]='imo_faceS-Pluto_00',
-        [10]='imo_neckS-Pluto_00',
-        [11]='imo_armS-Pluto_00',
-        [12]='imo_shoesS-Pluto_00',
-        [13]='imo_hairS-Pluto_00',
-    },
-}
-
 local rooms = {
-    --'bedroom',
+    'bedroom',
     'gym_storage',
     'train',
-    'classroom',
-    'beach',
-    'furo',
+    --'classroom',
+    --'beach',
+    --'furo',
 
     bedroom = {
         [1]="room_01",
@@ -439,122 +84,449 @@ local rooms = {
     },
 }
 
-function setModels(who,what)
-    who:clear()
-    for i = 1, 16 do
-        who:setModel(i,what[i])
-    end
-    if what.anim then
-        who:setAnim(what.anim)
-    end
-end
-
 --------------------------------------------------------------------------------
 
-if false then
-    fore:fade(1, 0)
-    back:fade(1, 0)
+local init, title, h_mode, storyA, storyB, storyC, storyD, storyE, storyF
 
-    ani1, ani2 = ani, room
+local skip = false
+
+function script()
+    pl2.setQuit(false)
     
-    room:setModels(rooms.bedroom)
-
-    local _
+    fore:fade(0, 0)
+    back:fade(0, 0)
     
-    _ = camera:setPath('sex_a01_1') or error('failed setting camera path')
-    _ = camera:setPoint('loc_pos01') or error('failed setting camera point')
+    pl2.play('music', nil, 0)
+    pl2.play('bgsound', nil, 0)
+    pl2.play('voice', nil, 0)
+    
+    camera:setPath(nil, false)
+    camera:setPoint(nil)
+    
+    pl2.setWindow(false)
+--[[    
+    if not skip then
+        skip = true
 
-    _ = imo1:setModels(chars.moon_venus_nude) or error('failed setting imo1 model')
-    _ = imo1:setAnim('sex_a01_F') or error('failed setting imo1 anim')
-    _ = imo1:setPoint('loc_pos01') or error('failed setting imo1 point')
-    _ = ani1:setModels(chars.ani_nude) or error('failed setting ani1 model')
-    _ = ani1:setAnim('sex_a01_M') or error('failed setting ani1 anim')
-    _ = ani1:setPoint('loc_pos01') or error('failed setting ani1 point')
----[[
-    _ = imo2:setModels(chars.moon_pluto_nude) or error('failed setting imo2 model')
-    _ = imo2:setAnim('sex_a02_F') or error('failed setting imo2 anim')
-    _ = imo2:setPoint('loc_pos02') or error('failed setting imo2 point')
-    _ =  ani2:setModels(chars.ani_nude) or error('failed setting ani2 model')
-    _ = ani2:setAnim('sex_a02_M') or error('failed setting ani2 anim')
-    _ = ani2:setPoint('loc_pos02') or error('failed setting ani2 point')
+        pl2.setImage('op1')
+        fore:fade(1, 2)
+        pl2.wait(6)
+        fore:fade(0, 2)
+        pl2.wait(2)
+        pl2.setImage('op2')
+        fore:fade(1, 2)
+        pl2.play('voice', '0002')
+        pl2.wait(2)
+    end
 --]]
-    imo1:setVisible(true)
-    imo2:setVisible(true)
-    ani1:setVisible(true)
-    ani2:setVisible(true)
-
-    pl2.showText('')
-    return
+    return title()
 end
 
-back:fade(1, 0)
-fore:fade(0, 0)
+function title()
+    local r = rooms[randomItem(rooms)]
 
-math.randomseed(os.time())
-math.random()
----[=[
-ani:setModels(chars.ani)
-ani:setVisible(true)
---ani:setBlack(true)
+    back:fade(0, 0)
+    fore:fade(0, 0)
+    pl2.wait(0)
 
-imo:setModels(chars[chars[math.random(1,#chars)]])
---imo:setModels(chars.moon_pluto)
-imo:setVisible(true)
---]=]
+    room:setModels(r)
+    room:setAnim(r.anim)
+    room:setVisible(true)
 
-local r = rooms[rooms[math.random(1,#rooms)]]
-room:setModels(r)
-room:setAnim(r.anim)
---room:setModels(rooms.gym_storage)
---room:setAnim(rooms.gym_storage.anim)
-room:setVisible(true)
+    camera:setPath('A1cam1', true)
 
-camera:setPath('A1cam1', true)
+    fore:fade(1, 1)
+    back:fade(1, 1)
+    pl2.wait(1)
 
-setAnims('zen_a01')
+    local i = pl2.showMenu{ 'ストーリーモード', 'とことんＨモード', '終了' }
+    print('selected',i)
 
-fore:fade(1, 2)
-pl2.wait(2)
+    back:fade(0, 1)
+    pl2.wait(1)
+    
+    return ({ storyA, title, pl2.quit })[i]()
+end
 
-local i = pl2.showMenu{ 'ストーリーモード', 'とことんＨモード', '終了' }
-print('selected',i)
+function h_mode()
+end
 
-back:fade(0, 2)
-pl2.wait(2)
+function storyA()
+    print'storyA'
 
-function doScene(name)
-    setAnims(name)
-    print'begin scene'
-    back:fade(1, 2)
+    pl2.play('voice', '0007')
+    pl2.play('music', nil, 4)
+    
+    fore:fade(0, 2)
     pl2.wait(2)
 
-    pl2.showText("Scene: "..name)
-    back:fade(0, 2)
-    pl2.wait(2)
-    print'end scene'
+    back:fade(0, 0)
+    pl2.setTitle(false)
+    pl2.setQuit(true)
+    
+    ani:setModels{ 'ani_bodyB_00' }
+    ani:setPoint('loc_pos00')
+    
+    imo:setVisible(false)
+    ani:setVisible(false)
+    room:setVisible(false)
+    
+    room:setModels{ 'room_01' }
+    camera:setPoint('loc_pos00')
+    camera:setPath('A1cam1', true)
+
+    fore:fade(1, 0)
+    pl2.play('bgsound', 'se09')
+    pl2.setWindow(true)
+    back:fade(1, 1)
+    pl2.wait(1)
+
+    pl2.showText '‥‥‥‥‥勝った！'
+    pl2.showText '俺は自由だ！！'
+    pl2.showText '英語で言うとフリーダム。'
+    pl2.showText 'まあー、何に勝ったかと言えば受験戦争だ。'
+    pl2.showText 'つまりは大学に受かったのである。'
+    pl2.showText '大学が始まって数ヶ月経った今も、俺は毎日この喜びを満喫している。'
+    pl2.showText '一昨年までは勉強なんて、なーんもする気の無かった\n俺だが今年は一味違っていた。'
+    pl2.showText '魔女っ娘が主人公の「たんもえ」と言うナイスな参考書が俺のやる気を刺激、嘘のように勉強がはかどったのだ。'
+    pl2.showText 'いい世の中になった物である。'
+    pl2.showText 'ありがとう「たんもえ」、ありがとうゆとり教育。'
+    pl2.showText '日本の将来が心配です。'
+    pl2.showText '‥‥‥‥‥さておき。'
+    pl2.showText '自由も手に入れたことだし、これで心置きなく積みゲーになっていた「Ｈａｔｅ／ｓｔａｙ　ｔｉｇｈｔ」\n（初回版）が遊べるってもんだ。'
+    pl2.showText '迫り来る６人の魔法使いに酷く嫌われながら‥‥\n（ここが　Ｈａｔｅ）'
+    pl2.showText '命がけの試練に耐え抜き‥‥\n（ここが　ｓｔａｙ　ｔｉｇｈｔ）'
+    pl2.showText '愛を勝ち取ると言う壮絶なエロゲーである。'
+    pl2.showText '総プレイ時間は６０時間とも言われる大作ゲームだが\n今の俺は腐るほど時間がある。'
+    pl2.showText 'コーラとカップ麺は三日分用意してある。\nもはや徹夜もじさない覚悟だ。'
+    pl2.showText 'クリアするまでこの部屋を一歩も外に出ないぞっ\n後はぶっ倒れるまでやるだけだ！（何を？）'
+    pl2.showText 'レッツゴー！！目眩く官能の世界へ！！'
+    pl2.showText '誰にも俺の邪魔をさせないゼェ〜〜！！'
+    
+    pl2.play('sound', 'se25')
+    
+    pl2.showText 'っと、思った所で早速邪魔が入った。'
+    
+    pl2.play('voice', '0037')
+    imo2 '「おにいちゃ〜ん、居るの〜？」'
+
+    pl2.showText 'ドアの向こうから俺を呼ぶ声がする。'
+    pl2.showText 'ちぃ〜こんな時に来なくてもいいだろう、\nタイミング悪すぎるぞあいつ。'
+    pl2.showText 'ここは一つ‥‥‥‥‥\n大学に受かったこの俺の冴えた頭脳であいつをやり過ごすとするか。'
+
+    pl2.play('voice', '0038')
+    imo2 '「‥‥‥‥‥あれ？居ないの？」'
+    
+    ani '「‥‥‥‥‥‥‥‥‥‥‥」'
+    ani '「‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥いないよ〜」'
+
+    pl2.play('voice', '0039')
+    imo2 '「あ、そっか‥‥‥‥じゃーまた後で来るね〜」'
+
+    pl2.play('sound', 'se17')
+
+    pl2.showText 'ドアの前から足音が遠ざかる。'
+    pl2.showText '‥‥ふう、危ない。\nとっさの機転で俺のプライベートタイムが守られたようだ。'
+    pl2.showText 'では気を取り直して、レッツゴー！！\n目眩く官能の‥‥‥'
+    
+    pl2.play('sound', 'se18')
+
+    pl2.play('voice', '0040')
+    imo2 '「‥‥‥って、居るじゃない！！」'
+    
+    ani '「ふふおっ！！」'
+
+    pl2.showText '驚きのあまり不思議な言葉を発してしまった。'
+    pl2.showText '完璧にやり過ごせたと思ったのだが、居ることを気づかれてしまったようだ。'
+    pl2.showText 'やるな、流石は俺の妹だ。'
+    
+    pl2.play('voice', '0041')
+    imo '「ねぇ〜おにいちゃん〜〜居るんでしょ〜〜？\n‥‥‥‥返事してよ〜〜」'
+
+    pl2.play('bgsound', nil)
+    back:fade(0, 1)
+    camera:setLocked(true)
+
+    pl2.showText('そう、この可愛い声の主は俺の妹「' .. imo:getName() .. '」だ。')
+
+    pl2.play('music', nil, 2)
+
+    pl2.showText '‥‥‥‥‥‥‥‥‥‥‥‥‥'
+    pl2.showText '‥‥‥‥‥‥あれ？'
+    pl2.showText 'あいつどんな容姿してたっけ？'
+    pl2.showText 'アルツを疑いながらも、とりあえず妹を思い出して見る。'
+    pl2.showText 'まずは髪型は茶色の長いツィンテールだ。'
+    pl2.showText 'うん、それは間違いない。'
+    pl2.showText 'それから‥‥‥‥'
+    
+    local face, eyes, body
+    
+    face = ({ 'A', 'B', 'C' })[pl2.showMenu{
+        '普通に綺麗な顔つき', '意思の強そうな顔つき', '優しくて落ち着く顔つき' }]
+
+    pl2.showText 'そして瞳の色は‥'
+
+    
+    while not eyes do
+        eyes = ({ 0, 1, 2, 3, 4, 6 })[pl2.showMenu{
+            '燃える赤色だ', '大自然の緑色だ', 'おいしそうなオレンジ色だ', '目立つ黄色だ',
+            '深いコバルトブルーだ', '自然な茶色だ', 'いや、他の色だ‥' }] or
+               ({ 7, 8, 9, 10, 11 })[pl2.showMenu{
+            '馴染みのある黒だ', '怪しい紫色だ', 'カッコいい銀色だ', '珍しい黄金色だ',
+            '綺麗な水色だ', 'いや、他の色だ‥' }]
+    end
+
+    pl2.showText '顔はそんな感じだったと思う。'
+    pl2.showText 'ちなみに身体は‥‥'
+
+    body = ({ 0, 1, 2, 3, 4 })[pl2.showMenu{
+        '普通の肌色だ', '病弱な肌色だ', '健康的な小麦色だ', '魅惑のビキニ焼けだ',
+        'マニア推奨のスク水焼けだ' }]
+
+    imo:setModels{
+        ('imo_body%s_%02d'):format(face, body),
+        ('imo_eye_%02d'):format(eyes),
+        [13] = 'imo_hairB_06' }
+    imo:setPoint('loc_pos00')
+    imo:setAnim('event_01')
+    
+    imo:setVisible(true)
+    camera:setPath('camA', false)
+    
+    back:fade(1, 1)
+
+    pl2.showText '‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥'
+    
+    back:fade(0, 1)
+    pl2.wait(1)
+    
+    imo:setVisible(false)
+
+    pl2.play('music', nil, 2)
+
+    camera:setPath('A1cam1', true)
+    imo:setAnim('event_06')
+    imo:setAnim('event_02')
+    
+    pl2.play('bgsound', 'se09')
+    back:fade(1, 1)
+    camera:setLocked(false)
+    pl2.wait(1)
+
+    pl2.showText 'そうそう〜こんな感じだ。（何故か裸）'
+    pl2.showText '‥‥‥‥で、そんな&3だが、おにいちゃんの俺が言うのもなんだがそこら辺にいる女の子よりも可愛いと思う。'
+    pl2.showText 'ただ、いつも何かと理由を見つけては俺の部屋にやってくるのが困りものだ。'
+    pl2.showText 'それはもう自分の部屋よりも俺の部屋で過ごす時間の方が多いんじゃないか？って思えるぐらい長く居座る。'
+    pl2.showText '普段なら適当に相手するし、どこに居ようと別に構わないのだが‥‥‥‥'
+    pl2.showText '俺はエロゲーを遊ばなくてはいけないと言う崇高な使命があり義務があり責任がある。'
+    pl2.showText 'つまり、今は邪魔だ。'
+
+    pl2.play('voice', '0042')
+    imo '「もしも〜し？おにいちゃん居るんでしょ？\n‥‥‥‥入るよ〜？」'    
+
+    ani '「あっ、おい、ちょっと待て！！」'
+    
+    back:fade(0, 0.2)
+    
+    pl2.play('sound', 'se07')
+
+    pl2.showText '制止の声も空しく妹はドアを開けて部屋に入って来た。'
+    
+    pl2.play('bgsound', nil)
+
+    local outfits = {
+        {   [ 3] = 'imo_underA_01A',
+            [ 4] = 'imo_underA_01B',
+            [ 5] = 'imo_socksB_01',
+	        [ 6] = 'imo_cosA_01A',
+	        [ 7] = 'imo_cosK_03B',
+	        [12] = 'imo_shoesB_03' },
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosK_05A',
+	        [7] = 'imo_cosA_05B',
+	        [13] = 'imo_shoesB_04' },
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosK_06A',
+	        [7] = 'imo_cosK_03B',
+	        [13] = 'imo_shoesB_04' },
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [6] = 'imo_cosA_06A',
+	        [7] = 'imo_cosA_01B',
+	        [13] = 'imo_shoesB_01', },
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosK_01A',
+	        [7] = 'imo_cosA_04B',
+	        [13] = 'imo_shoesB_04' },
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_00',
+	        [6] = 'imo_cosK_06A',
+	        [7] = 'imo_cosK_00B',
+	        [12] = 'imo_shoesD_00',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksA_05',
+	        [6] = 'imo_cosA_07A',
+	        [7] = 'imo_cosA_07B',
+	        [12] = 'imo_shoesB_01',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosA_03A',
+	        [7] = 'imo_cosK_05B',
+	        [12] = 'imo_shoesB_03',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksC_01',
+	        [6] = 'imo_cosK_07A',
+	        [7] = 'imo_cosA_03B',
+	        [12] = 'imo_shoesB_03',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [6] = 'imo_cosK_05A',
+	        [7] = 'imo_cosK_06B',
+	        [12] = 'imo_shoesB_01',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosA_04A',
+	        [7] = 'imo_cosA_04B',
+	        [12] = 'imo_shoesD_05',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosK_00A',
+	        [7] = 'imo_cosA_06B',
+	        [12] = 'imo_shoesB_00',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosA_00A',
+	        [7] = 'imo_cosK_07B',
+	        [12] = 'imo_shoesB_00',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosA_05A',
+	        [7] = 'imo_cosK_07B',
+	        [12] = 'imo_shoesB_04',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [6] = 'imo_cosA_06A',
+	        [7] = 'imo_cosK_06B',
+	        [12] = 'imo_shoesB_01',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosK_04A',
+	        [7] = 'imo_cosK_04B',
+	        [12] = 'imo_shoesB_04',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosK_07A',
+	        [7] = 'imo_cosK_01B',
+	        [12] = 'imo_shoesB_04',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosA_01A',
+	        [7] = 'imo_cosA_07B',
+	        [12] = 'imo_shoesB_04',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [5] = 'imo_socksB_01',
+	        [6] = 'imo_cosA_04A',
+	        [7] = 'imo_cosK_04B',
+	        [12] = 'imo_shoesB_04',	},
+        {	[3] = 'imo_underA_01A',
+	        [4] = 'imo_underA_01B',
+	        [6] = 'imo_cosA_03A',
+	        [7] = 'imo_cosA_03B',
+	        [12] = 'imo_shoesD_00',	},
+        }
+
+    imo:setModels(randomItem(outfits), true)
+
+    imo:setVisible(true)
+    
+    camera:setPath('B1cam1', false)
+    
+    pl2.play('music', 'BGM04')
+    back:fade(1, 1)
+    pl2.wait(1)
+
+    imo '「‥‥‥‥‥‥‥‥‥‥‥‥‥」'
+    
+    imo:setAnim('event_06')
+    camera:setPath('cam01', false)
+    
+    pl2.play('voice', '0043')
+    imo '「‥‥‥‥‥‥‥‥‥‥‥あっ‥‥‥」'
+
+    return storyB()
 end
 
-doScene('zen_a01')
-if true then return end
-doScene('zen_a03')
-imo1:setModel(IMO_COS_A, nil)
-imo1:setModel(IMO_NECK, nil)
-doScene('zen_a04')
-imo1:setModel(IMO_UNDER_A, nil)
-doScene('zen_a05')
-ani:setModels(chars.ani_shorts)
-imo1:setModel(IMO_COS_B, nil)
-doScene('zen_a06')
-imo1:setModel(IMO_UNDER_B, nil)
-doScene('zen_a07')
-ani:setModels(chars.ani_nude)
-doScene('zen_a08')
+function storyB()
+    print'storyB'
 
-while true do
-    doScene('sex_a01')
-    doScene('sex_a02')
-    doScene('sex_a03')
-    doScene('sex_a04')
-    doScene('sex_a05')
-    doScene('sex_a06')
+	room:setVisible(true)
+	imo:setVisible(true)
+    pl2.setWindow(true)
+
+	room:setModels{ 'eventBG_01' }
+	camera:setLocked(true)
+	imo:setPoint('loc_pos00')
+	ani:setPoint('loc_pos00')
+	camera:setPoint('loc_pos00')
+	camera:setPath('cam05', false)
+	back:fade(1, 2)
+	pl2.wait(2)
+
+    pl2.play('voice', '0085')
+    
+    imo '「おにいちゃん‥‥‥‥ここって‥‥‥‥」'
+
+	ani '「そう！！ここは乙女の園、レディスインナーウェア専門店「ボディースクラッチ」だ！！」'
+
+	pl2.showText '最近はこういった下着の専門店が増えて来てる。'
+
+	pl2.showText '流石の俺も一人では入れないこのお店も、今日は妹と言うカモフラージュがあるから大丈夫だ。'
+
+    --camera:setPath('cam03', false)
+
+    return storyC()
 end
+
+function storyC()
+    print'storyC'
+
+    return storyD()
+end
+
+function storyD()
+    print'storyD'
+
+    return storyE()
+end
+
+function storyE()
+    print'storyE'
+
+    return storyF()
+end
+
+function storyF()
+    print'storyF'
+
+    return script()
+end
+
+return script()

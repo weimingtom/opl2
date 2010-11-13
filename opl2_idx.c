@@ -5,7 +5,9 @@
 
 #include <dirent.h>
 
-#define PACKAGELOG 1
+#ifndef NDEBUG
+# define PACKAGELOG 1
+#endif
 
 /* Must be >= likely maximum number of packages (and should be prime) */
 #define PACKAGE_INDEX_SIZE 8191 //4093 //16381
