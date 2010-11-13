@@ -123,11 +123,18 @@ void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t
         "movaps 16 %1, %%xmm5\n"
         "movaps 32 %1, %%xmm6\n"
         "movaps 48 %1, %%xmm7\n"
-
+#if 0
         "pshufd $0x00, 0 %2, %%xmm0\n"
         "pshufd $0x55, 0 %2, %%xmm1\n"
         "pshufd $0xaa, 0 %2, %%xmm2\n"
         "pshufd $0xff, 0 %2, %%xmm3\n"
+#else
+        "movaps 0 %2, %%xmm3\n"
+        "pshufd $0x00, %%xmm3, %%xmm0\n"
+        "pshufd $0x55, %%xmm3, %%xmm1\n"
+        "pshufd $0xaa, %%xmm3, %%xmm2\n"
+        "pshufd $0xff, %%xmm3, %%xmm3\n"
+#endif
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"

@@ -296,3 +296,4 @@ void pl2PackageFileFree(pl2PackageFile *file)
       free(file);
    }
 }
+

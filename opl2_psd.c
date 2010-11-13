@@ -37,3 +37,4 @@ pl2Image *pl2ImageLoad(const char *name)
     pl2PackageFileFree(file);
     return image;
 }
+

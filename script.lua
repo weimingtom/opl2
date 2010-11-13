@@ -487,37 +487,48 @@ if false then
     return
 end
 
-fore:fade(1, 0)
+back:fade(1, 0)
+fore:fade(0, 0)
 
 math.randomseed(os.time())
 math.random()
 ---[=[
 ani:setModels(chars.ani)
---ani:setVisible(true)
+ani:setVisible(true)
 --ani:setBlack(true)
 
 imo:setModels(chars[chars[math.random(1,#chars)]])
 --imo:setModels(chars.moon_pluto)
---imo:setVisible(true)
+imo:setVisible(true)
 --]=]
---room:setModels(rooms[rooms[math.random(1,#rooms)]])
-room:setModels(rooms.train)
-room:setAnim(rooms.train.anim)
+
+local r = rooms[rooms[math.random(1,#rooms)]]
+room:setModels(r)
+room:setAnim(r.anim)
+--room:setModels(rooms.gym_storage)
+--room:setAnim(rooms.gym_storage.anim)
 room:setVisible(true)
+
+camera:setPath('A1cam1', true)
+
+setAnims('zen_a01')
+
+fore:fade(1, 2)
+pl2.wait(2)
+
+local i = pl2.showMenu{ 'ストーリーモード', 'とことんＨモード', '終了' }
+print('selected',i)
+
+back:fade(0, 2)
+pl2.wait(2)
 
 function doScene(name)
     setAnims(name)
     print'begin scene'
     back:fade(1, 2)
-    --pl2.wait(1)
----[=[
-    local menu = { 'ストーリーモード', 'とことんＨモード', '終了', }
-    local i = pl2.showMenu(menu)
-    print('selected',i)
+    pl2.wait(2)
 
-    pl2.showText("You selected: "..menu[i])
---]=]
---    pl2.showText("Scene: "..name)
+    pl2.showText("Scene: "..name)
     back:fade(0, 2)
     pl2.wait(2)
     print'end scene'

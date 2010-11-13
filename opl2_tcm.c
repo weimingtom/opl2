@@ -274,3 +274,4 @@ void pl2CameraPathFree(pl2CameraPath *path)
         DELETE(path);
     }
 }
+

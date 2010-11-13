@@ -8,3 +8,4 @@
 void luaopen_pl2(lua_State *L);
 
 #endif // __OPL2_LUA_H__
+

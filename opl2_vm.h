@@ -27,3 +27,4 @@ void pl2VectorOrbit(fvector3_t *planet, const fvector3_t *sun, const fvector3_t 
 void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance);
 
 #endif // __OPL2_VM_H__
+

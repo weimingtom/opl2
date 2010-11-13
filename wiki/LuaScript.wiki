@@ -64,17 +64,17 @@ _light_` = pl2.light(`_n_`)`
     
 The following global objects are defined by default:
 {{{
-    camera = pl2.camera(1)
+camera = pl2.camera(1)
 
-    imo = pl2.char(1)       -- little sister
-    ani = pl2.char(3)       -- big brother
-    room = pl2.char(4)      -- background/scenery
-    
-    back = pl2.layer(1)     -- 3D fader
-    fore = pl2.layer(2)     -- 2D fader
-    
-    light1 = pl2.light(1)
-    light2 = pl2.light(2)
+imo = pl2.char(1)       -- little sister
+ani = pl2.char(3)       -- big brother
+room = pl2.char(4)      -- background/scenery
+
+back = pl2.layer(1)     -- 3D fader
+fore = pl2.layer(2)     -- 2D fader
+
+light1 = pl2.light(1)
+light2 = pl2.light(2)
 }}}
 
 When the script starts, all characters are empty (no attached models,
@@ -115,10 +115,10 @@ _x_`, `_y_`, `_z_` = camera:getUp()`
 
     Returns the current field-of-view of the camera, in degrees.
     
-_bool_` = camera:setPath(`_name_`)`
+_bool_` = camera:setPath(`_name_`, `_loop_`)`
 
-    Makes the camera follow a named path. Returns `true` if the path was loaded
-    successfully.
+    Makes the camera follow a named path, looping if _loop_ is true. Returns
+    `true` if the path was loaded successfully.
     
 _bool_` = camera:setPoint(`_name_`)`
 
@@ -136,9 +136,9 @@ _bool_` = character:setModels(`_table_`)`
 
     Attaches a set of models to the character. Similar to:
 {{{
-        for i = 1, 16 do
-            character:setModel(i, table[i])
-        end
+for i = 1, 16 do
+    character:setModel(i, table[i])
+end
 }}}
     Returns `true` only if all of the given models were loaded successfully, but
     will continue trying to load the rest even if one fails.

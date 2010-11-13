@@ -1976,3 +1976,4 @@ void pl2FontPrintRight(pl2Font *font, float x, float y, uint32_t color, const ch
 
     pl2FontUcsPrintRight(font, x, y, color, ucs4);
 }
+

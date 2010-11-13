@@ -10,3 +10,4 @@ void pl2AlSetSourcePosition(int channel, float x, float y, float z);
 void pl2AlPlaySound(int channel, pl2Sound *sound);
 
 #endif // __OPL2_AL_H__
+

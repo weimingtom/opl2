@@ -15,7 +15,7 @@
 
 static int showUsage()
 {
-    fprintf(stderr, "Usage: pl2ex [-l] <package> [<files>...]\n");
+    fprintf(stderr, "Usage: pl2ex [-l] <package> [<package>...]\n");
     fprintf(stderr, "\t-l\tList only (do not extract)\n");
     return 1;
 }
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                fprintf(stderr, "%s: unrecognized switch \"%s\"\n", argv[0], argv[i]);
+                fprintf(stderr, "%s: unrecognized option \"%s\"\n", argv[0], argv[i]);
             }
 
             for(j = i + 1; j < argc; j++)
@@ -136,3 +136,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
