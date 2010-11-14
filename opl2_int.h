@@ -5,22 +5,14 @@
  * OPL2 Internals
  ******************************************************************************/
 
-#if WITH_GLUT
-# include <GL/freeglut.h>
-# define pl2DoFrame pl2GlutDoFrame
-#else
-# include <SDL/SDL.h>
-# include <SDL/SDL_opengl.h>
-# define pl2DoFrame pl2SdlDoFrame
-#endif
+#include <SDL/SDL.h>
+#include <SDL/SDL_opengl.h>
 
 #ifndef NDEBUG
 # define DEBUGPRINT(x...) (fprintf(stderr,x))
 #else
 # define DEBUGPRINT(x...)
 #endif
-
-#define STUB() DEBUGPRINT("%s(%d): %s is a stub function!\n", __FILE__, __LINE__, __func__);
 
 #include <math.h>
 #include <errno.h>
@@ -38,9 +30,10 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 
 /******************************************************************************/
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(__WIN32__)
 # include <mm_malloc.h>
 # define memalign(a,x) _mm_malloc(x,a)
+# undef DELETE
 #endif
 
 #define NEWOBJ(t)   ((t*)calloc(sizeof(t),1))
@@ -53,15 +46,26 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 #define ARRSIZE(n,t) (sizeof(t)*(n))
 #define VARSIZE(t,x) (sizeof(t)+(x))
 
-#ifdef DELETE
-# undef DELETE
-#endif
-
 #define DELETE(p) (free((p)),(p)=0)
 
 /******************************************************************************/
 
 #include "opl2.h"
+
+/******************************************************************************/
+
+#if _PSP_FW_VERSION
+
+uint32_t pl2GetFreeRam();
+
+# define PRINTFREERAM() DEBUGPRINT("%s(%d): %s: %u kB free\n", \
+                        __FILE__, __LINE__, __func__, pl2GetFreeRam()>>10)
+#else
+# define PRINTFREERAM()
+#endif
+
+#define STUB() DEBUGPRINT("%s(%d): %s is a stub function!\n", \
+               __FILE__, __LINE__, __func__)
 
 /******************************************************************************/
 

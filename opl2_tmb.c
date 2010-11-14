@@ -7,6 +7,8 @@
 static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 {
     //const uint8_t *org = data;
+    
+    PRINTFREERAM();
 
     if(!data)
     {
@@ -212,7 +214,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
             fvector4_t t __attribute__((aligned(16))) =
                 { v->vertex.x, v->vertex.y, v->vertex.z, 1 };
-            pl2VectorTransform4f(&t, &m, &t);
+            pl2VectorTransform4f(&t, &(obj->transform), &t);
             v->vertex.x = t.x; v->vertex.y = t.y; v->vertex.z = t.z;
 
             pl2GlVertex *glv = &(obj->glVertices[j]);
@@ -296,6 +298,8 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
     DEBUGPRINT("%s: total: %d textures, %d materials, %d objects, %d bones, %d points\n", __func__,
                model->numTextures, model->numMaterials, model->numObjects, model->numBones, model->numPoints);
 
+    PRINTFREERAM();
+
     return model;
 }
 
@@ -372,6 +376,8 @@ void pl2ModelFree(pl2Model *model)
 {
     if(model)
     {
+        PRINTFREERAM();
+
         if(model->textures)
         {
             int i;
@@ -433,6 +439,8 @@ void pl2ModelFree(pl2Model *model)
         }
 
         DELETE(model);
+
+        PRINTFREERAM();
     }
 }
 

@@ -1,11 +1,11 @@
 //#include "opl2.h"
 #include "opl2_int.h"
 
+#include <SDL/SDL_thread.h>
+
 #include <AL/al.h>
 //#include <AL/alc.h>
 #include <AL/alut.h>
-
-#include <pthread.h>
 
 #if WITH_TREMOR
 # include <tremor/ivorbiscodec.h> //libtremor
@@ -15,9 +15,6 @@
 # include <vorbis/vorbisfile.h>
 #endif
 
-//#include <unistd.h>
-//#include <pthread.h>
-
 // Reference:
 // http://www.gamedev.net/reference/articles/article2008.asp
 
@@ -25,15 +22,17 @@ static ALuint pl2_al_buffers[PL2_NUM_CHANNELS] = { 0 };
 static ALuint pl2_al_sources[PL2_NUM_CHANNELS] = { 0 };
 static pl2Sound *pl2_sounds[PL2_NUM_CHANNELS] = { NULL };
 
-static pthread_t pl2_play_thread_id = -1;
+static SDL_Thread *pl2_play_thread = NULL;
 
-static void *pl2AlPlayThread(void *ud)
+static int pl2AlPlayThread(void *ud)
 {
     return 0;
 }
 
 void pl2AlExit()
 {
+    SDL_KillThread(pl2_play_thread);
+    
     alDeleteBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);
     alDeleteSources(PL2_NUM_CHANNELS, pl2_al_sources);
     alutExit();
@@ -69,9 +68,15 @@ int pl2AlInit(int *argc, char *argv[])
 
     alGenBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);
     alGenSources(PL2_NUM_CHANNELS, pl2_al_sources);
-    
-    if(pthread_create(&pl2_play_thread_id, NULL, pl2AlPlayThread, NULL))
+
+    pl2_play_thread = SDL_CreateThread(pl2AlPlayThread, NULL);
+
+    if(!pl2_play_thread)
+    {
         return 0;
+    }
+
+    atexit(pl2AlExit);
 
     return 1;
 }

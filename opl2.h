@@ -234,6 +234,7 @@ typedef struct
     pl2ObjMtl *materials;
     pl2Vertex *vertices;
     pl2GlVertex *glVertices;
+    uint32_t padding[2];
 }
 //__attribute__((packed))
 pl2Object;

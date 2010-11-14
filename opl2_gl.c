@@ -455,11 +455,13 @@ void pl2ModelRender(const pl2Model *model, bool black)
 
                 pl2Texture *tex = mtl->texture;
 
+#if !_PSP_FW_VERSION
                 if(tex && !black)
                 {
                     glTexImage2D(GL_TEXTURE_2D, 0, 4, tex->width, tex->height,
                                  0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
                 }
+#endif
 
                 glDrawArrays(GL_TRIANGLES, m->start, m->count * 3);
             }
@@ -570,7 +572,6 @@ void pl2GlRenderFrame(float dt)
 
     //DEBUGPRINT("%s: half_screen_width == %d\n", __func__, pl2_screen_width >> 1);
 
-    // TODO: draw 2d overlay
     if(pl2_font && !pl2_hide_overlay)
     {
         if(pl2_menu_showing)

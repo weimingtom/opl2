@@ -25,6 +25,7 @@ static int skipWhiteSpace(const char **p)
 
     return t != *p;
 }
+
 static int checkString(const char **p, const char *s)
 {
     skipWhiteSpace(p);
@@ -46,6 +47,7 @@ static int checkString(const char **p, const char *s)
     //DEBUGPRINT("found\n");
     return 1;
 }
+
 static int parseInt(const char **p, int *x)
 {
     const char *t = *p;
@@ -73,6 +75,7 @@ static int parseInt(const char **p, int *x)
 
     return (t != *p);
 }
+
 static int parseFloat(const char **p, float *x)
 {
     const char *t = *p;
@@ -129,6 +132,8 @@ static int parseFloat(const char **p, float *x)
 
 static pl2CameraPath *pl2CameraPathLoadInternal(const char *data)
 {
+    PRINTFREERAM();
+
     if(!data)
     {
         DEBUGPRINT("%s: data == NULL\n", __func__);
@@ -205,6 +210,8 @@ static pl2CameraPath *pl2CameraPathLoadInternal(const char *data)
 
     DEBUGPRINT("%s: loaded OK\n", __func__);
 
+    PRINTFREERAM();
+
     return path;
 }
 
@@ -271,7 +278,11 @@ void pl2CameraPathFree(pl2CameraPath *path)
 {
     if(path)
     {
+        PRINTFREERAM();
+
         DELETE(path);
+
+        PRINTFREERAM();
     }
 }
 

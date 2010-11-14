@@ -14,7 +14,7 @@ WIN_LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
 
 NIX_LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
 
-PSP_LIBS += -llua -lGLU -lGL -lalut -lOpenAL32 -logg
+PSP_LIBS += -llua -lGLU -lGL -lalut -lOpenAL32 -logg -lpthreadlite
 PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 
@@ -90,11 +90,12 @@ ifeq ($(PLATFORM),psp)
  PSPDEV = $(shell psp-config --pspdev-path)
  PSPSDK = $(shell psp-config --pspsdk-path)
 
+ OBJS += opl2_psp.o
  LIBS += $(PSP_LIBS)
 
  TARGET = opl2
  BUILD_PRX = 1
- CFLAGS += -G0
+ CFLAGS += -G0 -mpreferred-stack-boundary=4
 
  include $(PSPSDK)/lib/build.mak
 
@@ -111,6 +112,8 @@ else
  ifeq ($(WITH_SSE2),1)
   CFLAGS += -msse2 -DWITH_SSE2
  endif
+
+ OBJS += opl2_x86.o
 
  ifeq ($(PLATFORM),win)
 

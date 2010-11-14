@@ -145,10 +145,11 @@ function title()
     back:fade(0, 1)
     pl2.wait(1)
     
-    return ({ storyA, title, pl2.quit })[i]()
+    return ({ storyA, h_mode, pl2.quit })[i]()
 end
 
 function h_mode()
+    return title()
 end
 
 function storyA()

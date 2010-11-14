@@ -227,6 +227,8 @@ int pl2DoFrame()
 
     //SDL_PumpEvents();
 
+    PRINTFREERAM();
+
     while(SDL_PollEvent(&event))
     {
         switch(event.type)

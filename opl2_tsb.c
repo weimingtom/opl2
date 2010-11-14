@@ -7,6 +7,8 @@
 
 static pl2Anim *pl2AnimLoadInternal(const uint8_t *data)
 {
+    PRINTFREERAM();
+
     if(!data)
     {
         DEBUGPRINT("%s: data == NULL\n", __func__);
@@ -60,6 +62,8 @@ static pl2Anim *pl2AnimLoadInternal(const uint8_t *data)
 
     DEBUGPRINT("%s: %d bones, %d frames, loops at %d\n", __func__,
                anim->numBones, anim->numFrames, anim->loopFrame);
+
+    PRINTFREERAM();
 
     return anim;
 }
@@ -127,6 +131,8 @@ void pl2AnimFree(pl2Anim *anim)
 {
     if(anim)
     {
+        PRINTFREERAM();
+
         if(anim->bones)
         {
             DELETE(anim->bones);
@@ -137,6 +143,8 @@ void pl2AnimFree(pl2Anim *anim)
         }
 
         DELETE(anim);
+
+        PRINTFREERAM();
     }
 }
 
