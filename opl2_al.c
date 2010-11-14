@@ -26,18 +26,24 @@ static SDL_Thread *pl2_play_thread = NULL;
 
 static int pl2AlPlayThread(void *ud)
 {
+    alGenBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);
+    alGenSources(PL2_NUM_CHANNELS, pl2_al_sources);
+
+    while(pl2_running)
+    {
+        sleep(1000);
+    }
+
+    alDeleteBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);
+    alDeleteSources(PL2_NUM_CHANNELS, pl2_al_sources);
+
     return 0;
 }
 
 void pl2AlExit()
 {
-    SDL_KillThread(pl2_play_thread);
-    
-    alDeleteBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);
-    alDeleteSources(PL2_NUM_CHANNELS, pl2_al_sources);
     alutExit();
 }
-
 
 void pl2SoundPlay(pl2Sound *sound, int channel)
 {
@@ -66,17 +72,12 @@ int pl2AlInit(int *argc, char *argv[])
     alutInit(argc, argv);
     atexit(pl2AlExit);
 
-    alGenBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);
-    alGenSources(PL2_NUM_CHANNELS, pl2_al_sources);
-
     pl2_play_thread = SDL_CreateThread(pl2AlPlayThread, NULL);
 
     if(!pl2_play_thread)
     {
         return 0;
     }
-
-    atexit(pl2AlExit);
 
     return 1;
 }

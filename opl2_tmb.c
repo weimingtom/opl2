@@ -151,7 +151,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
     //DEBUGPRINT("%s: numObjects == %d\n", __func__, model->numObjects);
 
-    model->objects = NEWARR(model->numObjects, pl2Object);
+    model->objects = NEWALIGN(16, model->numObjects, pl2Object);
 
     if(!model->objects)
     {

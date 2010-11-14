@@ -4,7 +4,7 @@ OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o
 OBJS += opl2_int.o opl2_chr.o opl2_idx.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
 
 EXTRA_OBJS = pl2ex.o dumptmb.o
-EXTRA_TARGETS = $(PL2EX) $(DUMPTMB)
+EXTRA_TARGETS = $(PL2EX) $(DUMPTMB) $(VMTEST)
 
 CFLAGS += -Wall -g
 LIBS += -lvorbisfile -lvorbis -lm -lSDL
@@ -106,13 +106,6 @@ else
 
  CC = gcc
 
- ifeq ($(WITH_SSE),1)
-  CFLAGS += -msse -DWITH_SSE
- endif
- ifeq ($(WITH_SSE2),1)
-  CFLAGS += -msse2 -DWITH_SSE2
- endif
-
  OBJS += opl2_x86.o
 
  ifeq ($(PLATFORM),win)
@@ -126,6 +119,7 @@ else
 
   PL2EX = pl2ex.exe
   DUMPTMB = dumptmb.exe
+  VMTEST = vmtest.exe
 
  else
 
@@ -134,6 +128,7 @@ else
 
   PL2EX = pl2ex
   DUMPTMB = dumptmb
+  VMTEST = vmtest
 
  endif
 
@@ -154,6 +149,9 @@ debug: $(TARGET)
 
 release:
 	make RELEASE=1 rebuild
+
+$(VMTEST): opl2_vm.c
+	$(CC) -o $@ $^ -lm -DVMTEST
 
 opl2.rc: opl2.ico
 	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@

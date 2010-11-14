@@ -752,6 +752,8 @@ int main(int argc, char *argv[])
 {
 #if _PSP_FW_VERSION
     atexit(sceKernelExitGame);
+#else
+    pl2DetectSSE();
 #endif
 
     if(!pl2GameInit(&argc, argv))

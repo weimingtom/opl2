@@ -1,8 +1,31 @@
 //#include "opl2.h"
 #include "opl2_int.h"
-#include "opl2_vm.h"
+//#include "opl2_vm.h"
 
 #include <math.h>
+
+/******************************************************************************/
+
+typedef void (*PL2MULTMATRIX4F)(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b);
+typedef void (*PL2VECTORTRANSFORM4F)(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v);
+typedef void (*PL2TRANSPOSEMATRIX4F)(fmatrix4_t *out, const fmatrix4_t *m);
+typedef void (*PL2VECTORADD4F)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b);
+typedef void (*PL2VECTORSUB4F)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b);
+typedef float (*PL2VECTORDOT4F)(const fvector4_t *a, const fvector4_t *b);
+typedef void (*PL2VECTORSCALE4F)(fvector4_t *out, const fvector4_t *v, float s);
+typedef void (*PL2VECTORSCALEADD4F)(fvector4_t *out, const fvector4_t *v, float s);
+typedef void (*PL2VECTORADD3F)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
+typedef void (*PL2VECTORSUB3F)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
+typedef float (*PL2VECTORDOT3F)(const fvector3_t *a, const fvector3_t *b);
+typedef void (*PL2VECTORCROSS3F)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
+typedef void (*PL2VECTORSCALE3F)(fvector3_t *out, const fvector3_t *v, float s);
+typedef void (*PL2VECTORSCALEADD3F)(fvector3_t *out, const fvector3_t *v, float s);
+typedef float (*PL2VECTORLENGTH3F)(const fvector3_t *v);
+typedef void (*PL2VECTORNORMALIZE3F)(fvector3_t *out, const fvector3_t *v);
+typedef void (*PL2QUATMULTIPLY)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b);
+typedef void (*PL2QUATROTATE)(fvector3_t *out, const fvector3_t *v, const fvector3_t *axis, float angle);
+typedef void (*PL2VECTORORBIT)(fvector3_t *planet, const fvector3_t *sun, const fvector3_t *up, const fvector3_t *rotate);
+typedef void (*PL2VECTORZOOM)(fvector3_t *obj, const fvector3_t *targ, float distance);
 
 /******************************************************************************/
 
@@ -91,8 +114,7 @@ void pl2MultMatrix4f_NoSSE(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_
     *out = c;
 }
 
-void (*pl2MultMatrix4f)(fmatrix4_t*, const fmatrix4_t*, const fmatrix4_t*) =
-    pl2MultMatrix4f_NoSSE;
+PL2MULTMATRIX4F pl2MultMatrix4f = pl2MultMatrix4f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -142,8 +164,7 @@ void pl2VectorTransform4f_NoSSE(fvector4_t *out, const fmatrix4_t *m, const fvec
     *out = u;
 }
 
-void (*pl2VectorTransform4f)(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v) =
-    pl2VectorTransform4f_NoSSE;
+PL2VECTORTRANSFORM4F pl2VectorTransform4f = pl2VectorTransform4f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -151,7 +172,7 @@ void (*pl2VectorTransform4f)(fvector4_t *out, const fmatrix4_t *m, const fvector
 
 #else
 
-void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
+void pl2TransposeMatrix4f_NoSSE(fmatrix4_t *out, const fmatrix4_t *m)
 {
 # define MTRAN(i,j) \
     n.i.j = m->j.i
@@ -165,6 +186,8 @@ void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
 
 # undef MTRAN
 }
+
+PL2TRANSPOSEMATRIX4F pl2TransposeMatrix4f = pl2TransposeMatrix4f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -192,8 +215,7 @@ void pl2VectorAdd4f_NoSSE(fvector4_t *out, const fvector4_t *a, const fvector4_t
     out->w = a->w + b->w;
 }
 
-void (*pl2VectorAdd4f)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b) =
-    pl2VectorAdd4f_NoSSE;
+PL2VECTORADD4F pl2VectorAdd4f = pl2VectorAdd4f_NoSSE;
 
 #endif
 
@@ -221,8 +243,7 @@ void pl2VectorSub4f_NoSSE(fvector4_t *out, const fvector4_t *a, const fvector4_t
     out->w = a->w - b->w;
 }
 
-void (*pl2VectorSub4f)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b) =
-    pl2VectorSub4f_NoSSE;
+PL2VECTORSUB4F pl2VectorSub4f = pl2VectorSub4f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -254,6 +275,8 @@ float pl2VectorDot4f_NoSSE(const fvector4_t *a, const fvector4_t *b)
     return a->x * b->x + a->y * b->y + a->z * b->z + a->w * b->w;
 }
 
+PL2VECTORDOT4F pl2VectorDot4f = pl2VectorDot4f_NoSSE;
+
 #endif // _PSP_FW_VERSION
 
 #if _PSP_FW_VERSION
@@ -281,6 +304,8 @@ void pl2VectorScale4f_NoSSE(fvector4_t *out, const fvector4_t *v, float s)
     out->z = v->z * s;
     out->w = v->w * s;
 }
+
+PL2VECTORSCALE4F pl2VectorScale4f = pl2VectorScale4f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -312,6 +337,8 @@ void pl2VectorScaleAdd4f_NoSSE(fvector4_t *out, const fvector4_t *v, float s)
     out->w += v->w * s;
 }
 
+PL2VECTORSCALEADD4F pl2VectorScaleAdd4f = pl2VectorScaleAdd4f_NoSSE;
+
 #endif // _PSP_FW_VERSION
 
 #if _PSP_FW_VERSION
@@ -339,6 +366,8 @@ void pl2VectorAdd3f_NoSSE(fvector3_t *out, const fvector3_t *a, const fvector3_t
     out->z = a->z + b->z;
 }
 
+PL2VECTORADD3F pl2VectorAdd3f = pl2VectorAdd3f_NoSSE;
+
 #endif // _PSP_FW_VERSION
 
 #if _PSP_FW_VERSION
@@ -365,6 +394,8 @@ void pl2VectorSub3f_NoSSE(fvector3_t *out, const fvector3_t *a, const fvector3_t
     out->y = a->y - b->y;
     out->z = a->z - b->z;
 }
+
+PL2VECTORSUB3F pl2VectorSub3f = pl2VectorSub3f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -394,13 +425,15 @@ float pl2VectorDot3f_NoSSE(const fvector3_t *a, const fvector3_t *b)
     return a->x * b->x + a->y * b->y + a->z * b->z;
 }
 
+PL2VECTORDOT3F pl2VectorDot3f = pl2VectorDot3f_NoSSE;
+
 #endif // _PSP_FW_VERSION
 
 #if _PSP_FW_VERSION
 
 #else
 
-void pl2VectorCross3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
+void pl2VectorCross3f_NoSSE(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 {
     fvector3_t c;
     c.x = a->y * b->z - a->z * b->y;
@@ -408,6 +441,8 @@ void pl2VectorCross3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
     c.z = a->x * b->y - a->y * b->x;
     *out = c;
 }
+
+PL2VECTORCROSS3F pl2VectorCross3f = pl2VectorCross3f_NoSSE;
 
 #endif
 
@@ -437,6 +472,8 @@ void pl2VectorScale3f_NoSSE(fvector3_t *out, const fvector3_t *v, float s)
     out->y = v->y * s;
     out->z = v->z * s;
 }
+
+PL2VECTORSCALE3F pl2VectorScale3f = pl2VectorScale3f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -470,8 +507,7 @@ void pl2VectorScaleAdd3f_NoSSE(fvector3_t *out, const fvector3_t *v, float s)
     out->z += v->z * s;
 }
 
-void (*pl2VectorScaleAdd3f)(fvector3_t *out, const fvector3_t *v, float s) =
-    pl2VectorScaleAdd3f_NoSSE;
+PL2VECTORSCALEADD3F pl2VectorScaleAdd3f = pl2VectorScaleAdd3f_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -479,10 +515,12 @@ void (*pl2VectorScaleAdd3f)(fvector3_t *out, const fvector3_t *v, float s) =
 
 #else
 
-float pl2VectorLength3f(const fvector3_t *v)
+float pl2VectorLength3f_NoSSE(const fvector3_t *v)
 {
     return sqrtf(pl2VectorDot3f(v, v));
 }
+
+PL2VECTORLENGTH3F pl2VectorLength3f = pl2VectorLength3f_NoSSE;
 
 #endif
 
@@ -490,12 +528,14 @@ float pl2VectorLength3f(const fvector3_t *v)
 
 #else
 
-void pl2VectorNormalize3f(fvector3_t *out, const fvector3_t *v)
+void pl2VectorNormalize3f_NoSSE(fvector3_t *out, const fvector3_t *v)
 {
     float len = pl2VectorLength3f(v);
     if(len) len = 1.0f / len;
     pl2VectorScale3f(out, v, len);
 }
+
+PL2VECTORNORMALIZE3F pl2VectorNormalize3f = pl2VectorNormalize3f_NoSSE;
 
 #endif
 
@@ -546,8 +586,7 @@ void pl2QuatMultiply_NoSSE(fvector4_t *out, const fvector4_t *a, const fvector4_
     *out = c;
 }
 
-void (*pl2QuatMultiply)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b) =
-    pl2QuatMultiply_NoSSE;
+PL2QUATMULTIPLY pl2QuatMultiply = pl2QuatMultiply_NoSSE;
 
 #endif // _PSP_FW_VERSION
 
@@ -720,27 +759,60 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
 /******************************************************************************/
 
+void pl2DetectSSE()
+{
+    if(SDL_HasSSE())
+    {
+        pl2MultMatrix4f = pl2MultMatrix4f_SSE;
+        pl2VectorTransform4f = pl2VectorTransform4f_SSE;
+        //pl2TransposeMatrix4f = pl2TransposeMatrix4f_SSE;
+        pl2VectorAdd4f = pl2VectorAdd4f_SSE;
+        pl2VectorSub4f = pl2VectorSub4f_SSE;
+        pl2VectorDot4f = pl2VectorDot4f_SSE;
+        pl2VectorScale4f = pl2VectorScale4f_SSE;
+        pl2VectorScaleAdd4f = pl2VectorScaleAdd4f_SSE;
+        pl2VectorAdd3f = pl2VectorAdd3f_SSE;
+        pl2VectorSub3f = pl2VectorSub3f_SSE;
+        pl2VectorDot3f = pl2VectorDot3f_SSE;
+        //pl2VectorCross3f = pl2VectorCross3f_SSE;
+        pl2VectorScale3f = pl2VectorScale3f_SSE;
+        pl2VectorScaleAdd3f = pl2VectorScaleAdd3f_SSE;
+        //pl2VectorLength3f = pl2VectorLength3f_SSE;
+        //pl2VectorNormalize3f = pl2VectorNormalize3f_SSE;
+        pl2QuatMultiply = pl2QuatMultiply_SSE;
+    }
+}
+
+/******************************************************************************/
+
 #ifdef VMTEST
 
 #include <time.h>
 
+#define NUM_ROUNDS 1000000
+
 #define TIME(f, x...) \
-    start = time(NULL); \
+    start = clock(); \
     for(i = 0; i < NUM_ROUNDS; i++) { \
         f(x); } \
-    stop = time(NULL); \
-    DEBUGPRINT("%s: %d rounds took %.2fs\n", #f, NUM_ROUNDS, \
-        (float)(stop - start) / (float)(CLOCKS_PER_SEC));
+    stop = clock(); \
+    DEBUGPRINT("%s: %d rounds in %.2fs = %.1f rounds/s\n", #f, NUM_ROUNDS, \
+        (float)(stop - start) / (float)(CLOCKS_PER_SEC), \
+        (float)((long long)NUM_ROUNDS * (long long)CLOCKS_PER_SEC) / (float)(stop - start));
 
 int main(int argc, char *argv[])
 {
     const fvector4_t zero = { 0, 0, 0, 0 }, one = { 1, 1, 1, 1 };
 
     fvector4_t a, b, c;
+    fmatrix4_t m, n, o;
     
+    clock_t start, stop; int i;
     
-    
-    clock_t start, stop;
+    TIME(pl2VectorTransform4f_SSE, &a, &m, &b);
+    TIME(pl2VectorTransform4f_NoSSE, &a, &m, &b);
+    TIME(pl2MultMatrix4f_SSE, &m, &n, &o);
+    TIME(pl2MultMatrix4f_NoSSE, &m, &n, &o);
 
     return 0;
 }

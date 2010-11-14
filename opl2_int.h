@@ -62,6 +62,9 @@ uint32_t pl2GetFreeRam();
                         __FILE__, __LINE__, __func__, pl2GetFreeRam()>>10)
 #else
 # define PRINTFREERAM()
+
+void pl2DetectSSE();
+
 #endif
 
 #define STUB() DEBUGPRINT("%s(%d): %s is a stub function!\n", \
