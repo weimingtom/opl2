@@ -593,16 +593,10 @@ int pl2GameInit(int *argc, char *argv[])
     int i;
     for(i = 1; i < *argc; i++)
     {
-        if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "-fullscreen"))
+        if(!strcmp(argv[i], "-f") || !strcmp(argv[i], "--fullscreen"))
         {
             flags |= SDL_FULLSCREEN;
-        }
-        else if(!strcmp(argv[i], "-w") || !strcmp(argv[i], "-window"))
-        {
-            flags &= ~SDL_FULLSCREEN;
-        }
-        else if(!strcmp(argv[i], "-s") || !strcmp(argv[i], "-size"))
-        {
+
             if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
             {
                 i++;
@@ -622,10 +616,38 @@ int pl2GameInit(int *argc, char *argv[])
                     fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
                 }
             }
-            else
+        }
+        else if(!strcmp(argv[i], "-w") || !strcmp(argv[i], "--window"))
+        {
+            flags &= ~SDL_FULLSCREEN;
+
+            if(((i + 1) < *argc) && (argv[i+1][0] != '-'))
             {
-                fprintf(stderr, "%s: --size requires an argument\n", argv[0]);
+                i++;
+                int tw, th, td;
+                if(3 == sscanf(argv[i], "%dx%d:%d", &tw, &th, &td))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d:%d\n", __func__, tw, th, td);
+                    width = tw; height = th; bpp = td;
+                }
+                else if(2 == sscanf(argv[i], "%dx%d", &tw, &th))
+                {
+                    DEBUGPRINT("%s: parsed display mode %dx%d\n", __func__, tw, th);
+                    width = tw; height = th;
+                }
+                else
+                {
+                    fprintf(stderr, "%s: warning: invalid geometry\n", argv[0]);
+                }
             }
+        }
+        else if(!strcmp(argv[i], "-c") || !strcmp(argv[i], "--censor"))
+        {
+            pl2_censor = 1;
+        }
+        else if(!strcmp(argv[i], "-n") || !strcmp(argv[i], "--no-censor"))
+        {
+            pl2_censor = 0;
         }
         else if(argv[i][0] == '-')
         {
@@ -643,6 +665,7 @@ int pl2GameInit(int *argc, char *argv[])
 
     if(!(width && height))
     {
+        /*
         SDL_Rect **sizes = SDL_ListModes(NULL, flags);
 
         if(sizes && (sizes != (SDL_Rect**)(-1)))
@@ -651,6 +674,7 @@ int pl2GameInit(int *argc, char *argv[])
             height = (*sizes)[0].h;
         }
         else
+        */
         {
             width  = PL2_NOMINAL_SCREEN_WIDTH;
             height = PL2_NOMINAL_SCREEN_HEIGHT;
@@ -659,7 +683,17 @@ int pl2GameInit(int *argc, char *argv[])
 
     bpp = SDL_VideoModeOK(width, height, bpp, flags);
 
-    if(!bpp) return 0;
+    if(!bpp)
+    {
+        // Try again with default settings
+        bpp = 32;
+        width  = PL2_NOMINAL_SCREEN_WIDTH;
+        height = PL2_NOMINAL_SCREEN_HEIGHT;
+
+        bpp = SDL_VideoModeOK(width, height, bpp, flags);
+
+        if(!bpp) return 0;
+    }
 
     DEBUGPRINT("%s: using display mode %dx%d:%d\n", __func__, width, height, bpp);
 
@@ -694,13 +728,7 @@ static lua_State *pl2LuaGetState()
 {
     if(!pl2_L)
     {
-        lua_State *L = pl2_L = luaL_newstate();
-        //luaL_openlibs(pl2_L);
-        luaopen_base(L);
-        luaopen_table(L);
-        luaopen_string(L);
-        luaopen_math(L);
-        luaopen_pl2(L);
+        pl2_L = luaL_newstate();
     }
     return pl2_L;
 }
@@ -719,13 +747,23 @@ int pl2GameRun()
     lua_State *L = pl2LuaGetState();
     atexit(pl2LuaCloseState);
 
+    luaL_openlibs(pl2_L);
+    luaopen_pl2(L);
+    
+    // disable os.* for security
+    lua_pushnil(L); lua_setglobal(L, "os");
+
     if(!pl2_script_name) pl2_script_name = "script.lua";
 
+    static const char *error_handler = "return debug.traceback(...,2)";
+    
+    luaL_loadbuffer(L, error_handler, strlen(error_handler), "@<error_handler>");
+    
     int err = luaL_loadfile(L, pl2_script_name);
 
     if(!err)
     {
-        err = lua_pcall(L, 0, 0, 0);
+        err = lua_pcall(L, 0, 0, -2);
     }
 
     if(err)

@@ -17,8 +17,7 @@ NIX_LIBS += -llua5.1 -lGLU -lGL -lalut -lopenal
 PSP_LIBS += -llua -lGLU -lGL -lalut -lOpenAL32 -logg -lpthreadlite
 PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
-
-ARGS = -window -size 320x240
+ARGS = --window 640x480
 
 ifeq ($(RELEASE),1)
  CFLAGS += -O2 -DNDEBUG

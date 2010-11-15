@@ -407,8 +407,8 @@ float pl2VectorDot3f_SSE(const fvector3_t *a, const fvector3_t *b)
 {
     float r;
     asm volatile(
-    "movaps %1, %%xmm0\n"
-    "movaps %2, %%xmm1\n"
+    "movups %1, %%xmm0\n"
+    "movups %2, %%xmm1\n"
     "mulps  %%xmm1, %%xmm0\n"
     "pshufd $1, %%xmm0, %%xmm1\n"
     "pshufd $2, %%xmm0, %%xmm2\n"

@@ -1,4 +1,4 @@
-#labels Documentation
+#labels Phase-Design Phase-Implementation
 === OPL2 Lua Scripting Interface ===
 
 OPL2 replaces the original game script with Lua, a free, fast, and powerful
