@@ -764,7 +764,7 @@ void pl2DetectSSE()
 #if SDL_VERSION_ATLEAST(1,2,7)
     if(SDL_HasSSE())
 #else
-    uint32_t cpu_features[2] = 0;
+    uint32_t cpu_features[2] = { 0, 0 };
 
     asm volatile(
         "mov $1, %%eax\n"
