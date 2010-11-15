@@ -316,6 +316,7 @@ int pl2DoFrame()
                         }
                         break;
 
+#if SDL_VERSION_ATLEAST(1,2,5)
                     case SDL_BUTTON_WHEELUP:
                         if(pl2_menu_showing && (pl2_active_camera->locked || pl2_active_camera->path))
                             pl2MenuSelectPrev(&pl2_menu);
@@ -329,6 +330,7 @@ int pl2DoFrame()
                         else
                             pl2CameraZoom(pl2_active_camera, -2.0f);
                         break;
+#endif
                 }
 
                 SDL_ShowCursor(!move_mode);
