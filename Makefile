@@ -146,11 +146,15 @@ test: $(TARGET)
 debug: $(TARGET)
 	gdb -ex "break main" -ex run --args $(TARGET) $(ARGS)
 
+profile: $(TARGET)
+	./$(TARGET) $(ARGS)
+	gprof $(TARGET) > profile.log
+
 release:
 	make RELEASE=1 rebuild
 
-$(VMTEST): opl2_vm.c
-	$(CC) -o $@ $^ -lm -DVMTEST
+$(VMTEST): opl2_vm.o opl2_x86.c
+	$(CC) -o $@ $^ -lm -DVMTEST $(LIBS)
 
 opl2.rc: opl2.ico
 	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@
