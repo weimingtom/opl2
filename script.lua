@@ -161,9 +161,9 @@ end
 
 function h_mode()
     print'h_mode'
-    pl2.showWindow(true)
+    pl2.setWindow(true)
     text'とことんＨモード'
-    pl2.showWindow(false)
+    pl2.setWindow(false)
     return title()
 end
 
@@ -282,7 +282,7 @@ function storyA()
 
     text'そして瞳の色は‥'
 
-    pl2.showWindow(false)
+    pl2.setWindow(false)
     
     while not eyes do
         eyes = ({ 0, 1, 2, 3, 4, 6 })[menu{
@@ -293,7 +293,7 @@ function storyA()
             '綺麗な水色だ', 'いや、他の色だ‥' }]
     end
 
-    pl2.showWindow(true)
+    pl2.setWindow(true)
 
     text'顔はそんな感じだったと思う。'
     text'ちなみに身体は‥‥'
