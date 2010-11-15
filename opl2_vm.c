@@ -761,7 +761,21 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
 void pl2DetectSSE()
 {
+#if SDL_VERSION_ATLEAST(1,2,7)
     if(SDL_HasSSE())
+#else
+    uint32_t cpu_features[2] = 0;
+
+    asm volatile(
+        "mov $1, %%eax\n"
+        "cpuid\n"
+        "mov %%ecx, 0 %0\n"
+        "mov %%edx, 4 %0\n"
+        :"=m"(cpu_features)
+    );
+
+    if(cpu_features[1] & 0x20000000)
+#endif
     {
         pl2MultMatrix4f = pl2MultMatrix4f_SSE;
         pl2VectorTransform4f = pl2VectorTransform4f_SSE;
