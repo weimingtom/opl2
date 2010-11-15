@@ -17,6 +17,13 @@
 #include <math.h>
 #include <errno.h>
 
+#ifndef MIN
+# define MIN(a,b) ((a)<(b)?(a):(b))
+#endif
+#ifndef MAX
+# define MAX(a,b) ((a)>(b)?(a):(b))
+#endif
+
 #define DEG(r) ((r)*180.0f/M_PI)
 #define RAD(d) ((d)*M_PI/180.0f)
 

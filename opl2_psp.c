@@ -1,6 +1,11 @@
 #include "opl2_int.h"
 #include "opl2_vm.h"
 
+# include <pspuser.h>
+PSP_MODULE_INFO("opl2psp",0,1,0);
+PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_VFPU);
+PSP_HEAP_SIZE_MAX();
+
 /******************************************************************************/
 
 void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
@@ -391,3 +396,15 @@ uint32_t pl2GetFreeRam()
     return freeSize;
 }
 
+/******************************************************************************/
+
+int main(int argc, char *argv[])
+{
+    atexit(sceKernelExitGame);
+
+    if(!pl2GameInit(&argc, argv))
+        return 1;
+
+    pl2GameRun();
+    return 0;
+}

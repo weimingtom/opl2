@@ -197,7 +197,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
             m->count = READUINT32(data);
         }
 
-        fmatrix4_t m __attribute__((aligned(16))) = obj->transform;
+        //fmatrix4_t m __attribute__((aligned(16))) = obj->transform;
 
         for(j = 0; j < obj->numTriangles * 3; j++)
         {

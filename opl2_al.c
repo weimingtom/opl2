@@ -31,7 +31,7 @@ static int pl2AlPlayThread(void *ud)
 
     while(pl2_running)
     {
-        sleep(1000);
+        usleep(1000);
     }
 
     alDeleteBuffers(PL2_NUM_CHANNELS, pl2_al_buffers);

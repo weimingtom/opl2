@@ -6,13 +6,6 @@
 
 #include <ctype.h>
 
-#if _PSP_FW_VERSION
-# include <pspuser.h>
-PSP_MODULE_INFO("opl2psp",0,1,0);
-PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_VFPU);
-PSP_HEAP_SIZE_MAX();
-#endif
-
 int pl2_screen_width = -1, pl2_screen_height = -1;
 float pl2_screen_aspect = 1, pl2_screen_scale = 1;
 
@@ -391,7 +384,7 @@ int pl2DoFrame()
     }
 #endif // NDEBUG
 
-    //SDL_Delay(10);
+    SDL_Delay(10);
     SDL_GL_SwapBuffers();
 
     return pl2_running;
@@ -781,25 +774,3 @@ int pl2GameRun()
 
     return 1;
 }
-
-/******************************************************************************/
-
-//#ifdef main
-//#undef main
-//#endif
-
-int main(int argc, char *argv[])
-{
-#if _PSP_FW_VERSION
-    atexit(sceKernelExitGame);
-#else
-    pl2DetectSSE();
-#endif
-
-    if(!pl2GameInit(&argc, argv))
-        return 1;
-
-    pl2GameRun();
-    return 0;
-}
-
