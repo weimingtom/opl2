@@ -3,8 +3,20 @@ local menu, play, wait = pl2.showMenu, pl2.play, pl2.wait
 local function text(s)
     pl2.showText(s:gsub('&([0-9])',
         function(n)
-        return ({imo,ani,imo})[tonumber(n)]:getName()
+        return ({ani,imo,ani,imo})[tonumber(n)+1]:getName()
         end))
+end
+local function bgsound(...)
+    return play('bgsound',...)
+end
+local function music(...)
+    return play('music',...)
+end
+local function sound(...)
+    return play('sound',...)
+end
+local function voice(...)
+    return play('voice',...)
 end
 
 --------------------------------------------------------------------------------
@@ -263,7 +275,7 @@ function storyA()
     back:fade(0, 1)
     camera:setLocked(true)
 
-    text('そう、この可愛い声の主は俺の妹「' .. imo:getName() .. '」だ。')
+    text'そう、この可愛い声の主は俺の妹「&3」だ。')
 
     play('music', nil, 2)
 
