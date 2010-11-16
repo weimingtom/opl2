@@ -43,7 +43,7 @@ endif
 
  ifeq ($(CCINFO),)
 
-default:
+_default:
 	@echo "Could not auto-detect platform."
 	@echo "Try 'make platform' where platform is one of:"
 	@echo "	$(PLATFORMS)"
@@ -113,8 +113,8 @@ else
  ifeq ($(PLATFORM),win)
 
   WINDRES = windres.exe
-  EXTRA_OBJS += opl2.res
-  EXTRA_TARGETS += opl2.rc
+  OBJS += res/opl2.res
+  EXTRA_OBJS += res/opl2.rc
   #WINAPP = -mwindows
 
   LIBS += $(WIN_LIBS)
@@ -150,7 +150,8 @@ test: $(TARGET)
 debug: $(TARGET)
 	gdb -ex "break main" -ex run --args $(TARGET) $(ARGS)
 
-profile: $(TARGET)
+profile:
+	make PROFILE=1 rebuild
 	./$(TARGET) $(ARGS)
 	gprof $(TARGET) > profile.log
 
@@ -160,9 +161,9 @@ release:
 $(VMTEST): src/opl2_vm.o src/opl2_x86.c
 	$(CC) -o $@ $^ -lm -DVMTEST $(LIBS)
 
-opl2.rc: res/opl2.ico
+res/opl2.rc: res/opl2.ico
 	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@
-opl2.res: opl2.rc
+res/opl2.res: res/opl2.rc
 	$(WINDRES) --input-format=rc -o $@ $(RCINCS) $^ -O coff
 
 $(PL2EX): tools/pl2ex.o src/opl2_int.o src/opl2_pl2.o
@@ -173,4 +174,4 @@ $(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl
 
 endif
 	
-.PHONY: default all $(PLATFORMS) clean rebuild test debug
+.PHONY: _default all $(PLATFORMS) clean rebuild test debug release profile
