@@ -114,17 +114,17 @@ local skip = false
 function script()
     print'script'
     pl2.setQuit(false)
-    
+
     fore:fade(0, 0)
     back:fade(0, 0)
-    
+
     play('music', nil, 0)
     play('bgsound', nil, 0)
     play('voice', nil, 0)
-    
+
     camera:setPath(nil, false)
     camera:setPoint(nil)
-    
+
     pl2.setWindow(false)
     if not skip then
         skip = true
@@ -167,7 +167,7 @@ function title()
 
     back:fade(0, 1)
     wait(1)
-    
+
     return ({ storyA, h_mode, pl2.quit })[i]()
 end
 
@@ -184,21 +184,21 @@ function storyA()
 
     play('voice', '0007')
     play('music', nil, 4)
-    
+
     fore:fade(0, 2)
     wait(2)
 
     back:fade(0, 0)
     pl2.setTitle(false)
     pl2.setQuit(true)
-    
+
     ani:setModels{ 'ani_bodyB_00' }
     ani:setPoint('loc_pos00')
-    
+
     imo:setVisible(false)
     ani:setVisible(false)
     room:setVisible(false)
-    
+
     room:setModels{ 'room_01' }
     camera:setPoint('loc_pos00')
     camera:setPath('A1cam1', true)
@@ -230,11 +230,11 @@ function storyA()
     text'クリアするまでこの部屋を一歩も外に出ないぞっ\n後はぶっ倒れるまでやるだけだ！（何を？）'
     text'レッツゴー！！目眩く官能の世界へ！！'
     text'誰にも俺の邪魔をさせないゼェ〜〜！！'
-    
+
     play('sound', 'se25')
-    
+
     text'っと、思った所で早速邪魔が入った。'
-    
+
     play('voice', '0037')
     imo2'「おにいちゃ〜ん、居るの〜？」'
 
@@ -244,7 +244,7 @@ function storyA()
 
     play('voice', '0038')
     imo2'「‥‥‥‥‥あれ？居ないの？」'
-    
+
     ani'「‥‥‥‥‥‥‥‥‥‥‥」'
     ani'「‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥いないよ〜」'
 
@@ -256,18 +256,18 @@ function storyA()
     text'ドアの前から足音が遠ざかる。'
     text'‥‥ふう、危ない。\nとっさの機転で俺のプライベートタイムが守られたようだ。'
     text'では気を取り直して、レッツゴー！！\n目眩く官能の‥‥‥'
-    
+
     play('sound', 'se18')
 
     play('voice', '0040')
     imo2'「‥‥‥って、居るじゃない！！」'
-    
+
     ani'「ふふおっ！！」'
 
     text'驚きのあまり不思議な言葉を発してしまった。'
     text'完璧にやり過ごせたと思ったのだが、居ることを気づかれてしまったようだ。'
     text'やるな、流石は俺の妹だ。'
-    
+
     play('voice', '0041')
     imo'「ねぇ〜おにいちゃん〜〜居るんでしょ〜〜？\n‥‥‥‥返事してよ〜〜」'
 
@@ -275,7 +275,7 @@ function storyA()
     back:fade(0, 1)
     camera:setLocked(true)
 
-    text'そう、この可愛い声の主は俺の妹「&3」だ。')
+    text'そう、この可愛い声の主は俺の妹「&3」だ。'
 
     play('music', nil, 2)
 
@@ -286,16 +286,16 @@ function storyA()
     text'まずは髪型は茶色の長いツィンテールだ。'
     text'うん、それは間違いない。'
     text'それから‥‥‥‥'
-    
+
     local face, eyes, body
-    
+
     face = ({ 'A', 'B', 'C' })[menu{
         '普通に綺麗な顔つき', '意思の強そうな顔つき', '優しくて落ち着く顔つき' }]
 
     text'そして瞳の色は‥'
 
     pl2.setWindow(false)
-    
+
     while not eyes do
         eyes = ({ 0, 1, 2, 3, 4, 6 })[menu{
             '燃える赤色だ', '大自然の緑色だ', 'おいしそうなオレンジ色だ', '目立つ黄色だ',
@@ -320,17 +320,17 @@ function storyA()
         [13] = 'imo_hairB_06' }
     imo:setPoint('loc_pos00')
     imo:setAnim('event_01')
-    
+
     imo:setVisible(true)
     camera:setPath('camA', false)
-    
+
     back:fade(1, 1)
 
     text'‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥'
-    
+
     back:fade(0, 1)
     wait(1)
-    
+
     imo:setVisible(false)
 
     play('music', nil, 2)
@@ -338,7 +338,7 @@ function storyA()
     camera:setPath('A1cam1', true)
     imo:setAnim('event_06')
     imo:setAnim('event_02')
-    
+
     play('bgsound', 'se09')
     back:fade(1, 1)
     camera:setLocked(false)
@@ -353,152 +353,152 @@ function storyA()
     text'つまり、今は邪魔だ。'
 
     play('voice', '0042')
-    imo'「もしも〜し？おにいちゃん居るんでしょ？\n‥‥‥‥入るよ〜？」'    
+    imo'「もしも〜し？おにいちゃん居るんでしょ？\n‥‥‥‥入るよ〜？」'
 
     ani'「あっ、おい、ちょっと待て！！」'
-    
+
     back:fade(0, 0.2)
-    
+
     play('sound', 'se07')
 
     text'制止の声も空しく妹はドアを開けて部屋に入って来た。'
-    
+
     play('bgsound', nil)
 
     local outfits = {
         {   [ 3] = 'imo_underA_01A',
             [ 4] = 'imo_underA_01B',
             [ 5] = 'imo_socksB_01',
-	        [ 6] = 'imo_cosA_01A',
-	        [ 7] = 'imo_cosK_03B',
-	        [12] = 'imo_shoesB_03' },
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosK_05A',
-	        [7] = 'imo_cosA_05B',
-	        [13] = 'imo_shoesB_04' },
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosK_06A',
-	        [7] = 'imo_cosK_03B',
-	        [13] = 'imo_shoesB_04' },
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [6] = 'imo_cosA_06A',
-	        [7] = 'imo_cosA_01B',
-	        [13] = 'imo_shoesB_01', },
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosK_01A',
-	        [7] = 'imo_cosA_04B',
-	        [13] = 'imo_shoesB_04' },
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_00',
-	        [6] = 'imo_cosK_06A',
-	        [7] = 'imo_cosK_00B',
-	        [12] = 'imo_shoesD_00',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksA_05',
-	        [6] = 'imo_cosA_07A',
-	        [7] = 'imo_cosA_07B',
-	        [12] = 'imo_shoesB_01',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosA_03A',
-	        [7] = 'imo_cosK_05B',
-	        [12] = 'imo_shoesB_03',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksC_01',
-	        [6] = 'imo_cosK_07A',
-	        [7] = 'imo_cosA_03B',
-	        [12] = 'imo_shoesB_03',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [6] = 'imo_cosK_05A',
-	        [7] = 'imo_cosK_06B',
-	        [12] = 'imo_shoesB_01',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosA_04A',
-	        [7] = 'imo_cosA_04B',
-	        [12] = 'imo_shoesD_05',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosK_00A',
-	        [7] = 'imo_cosA_06B',
-	        [12] = 'imo_shoesB_00',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosA_00A',
-	        [7] = 'imo_cosK_07B',
-	        [12] = 'imo_shoesB_00',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosA_05A',
-	        [7] = 'imo_cosK_07B',
-	        [12] = 'imo_shoesB_04',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [6] = 'imo_cosA_06A',
-	        [7] = 'imo_cosK_06B',
-	        [12] = 'imo_shoesB_01',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosK_04A',
-	        [7] = 'imo_cosK_04B',
-	        [12] = 'imo_shoesB_04',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosK_07A',
-	        [7] = 'imo_cosK_01B',
-	        [12] = 'imo_shoesB_04',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosA_01A',
-	        [7] = 'imo_cosA_07B',
-	        [12] = 'imo_shoesB_04',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [5] = 'imo_socksB_01',
-	        [6] = 'imo_cosA_04A',
-	        [7] = 'imo_cosK_04B',
-	        [12] = 'imo_shoesB_04',	},
-        {	[3] = 'imo_underA_01A',
-	        [4] = 'imo_underA_01B',
-	        [6] = 'imo_cosA_03A',
-	        [7] = 'imo_cosA_03B',
-	        [12] = 'imo_shoesD_00',	},
+            [ 6] = 'imo_cosA_01A',
+            [ 7] = 'imo_cosK_03B',
+            [12] = 'imo_shoesB_03' },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosK_05A',
+            [7] = 'imo_cosA_05B',
+            [13] = 'imo_shoesB_04' },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosK_06A',
+            [7] = 'imo_cosK_03B',
+            [13] = 'imo_shoesB_04' },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [6] = 'imo_cosA_06A',
+            [7] = 'imo_cosA_01B',
+            [13] = 'imo_shoesB_01', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosK_01A',
+            [7] = 'imo_cosA_04B',
+            [13] = 'imo_shoesB_04' },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_00',
+            [6] = 'imo_cosK_06A',
+            [7] = 'imo_cosK_00B',
+            [12] = 'imo_shoesD_00', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksA_05',
+            [6] = 'imo_cosA_07A',
+            [7] = 'imo_cosA_07B',
+            [12] = 'imo_shoesB_01', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosA_03A',
+            [7] = 'imo_cosK_05B',
+            [12] = 'imo_shoesB_03', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksC_01',
+            [6] = 'imo_cosK_07A',
+            [7] = 'imo_cosA_03B',
+            [12] = 'imo_shoesB_03', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [6] = 'imo_cosK_05A',
+            [7] = 'imo_cosK_06B',
+            [12] = 'imo_shoesB_01', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosA_04A',
+            [7] = 'imo_cosA_04B',
+            [12] = 'imo_shoesD_05', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosK_00A',
+            [7] = 'imo_cosA_06B',
+            [12] = 'imo_shoesB_00', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosA_00A',
+            [7] = 'imo_cosK_07B',
+            [12] = 'imo_shoesB_00', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosA_05A',
+            [7] = 'imo_cosK_07B',
+            [12] = 'imo_shoesB_04', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [6] = 'imo_cosA_06A',
+            [7] = 'imo_cosK_06B',
+            [12] = 'imo_shoesB_01', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosK_04A',
+            [7] = 'imo_cosK_04B',
+            [12] = 'imo_shoesB_04', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosK_07A',
+            [7] = 'imo_cosK_01B',
+            [12] = 'imo_shoesB_04', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosA_01A',
+            [7] = 'imo_cosA_07B',
+            [12] = 'imo_shoesB_04', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [5] = 'imo_socksB_01',
+            [6] = 'imo_cosA_04A',
+            [7] = 'imo_cosK_04B',
+            [12] = 'imo_shoesB_04', },
+        {   [3] = 'imo_underA_01A',
+            [4] = 'imo_underA_01B',
+            [6] = 'imo_cosA_03A',
+            [7] = 'imo_cosA_03B',
+            [12] = 'imo_shoesD_00', },
         }
 
     imo:setModels(randomItem(outfits), true)
 
     imo:setVisible(true)
-    
+
     camera:setPath('B1cam1', false)
-    
+
     play('music', 'BGM04')
     back:fade(1, 1)
     wait(1)
 
     imo'「‥‥‥‥‥‥‥‥‥‥‥‥‥」'
-    
+
     imo:setAnim('event_06')
     camera:setPath('cam01', false)
-    
+
     play('voice', '0043')
     imo'「‥‥‥‥‥‥‥‥‥‥‥あっ‥‥‥」'
 
@@ -508,28 +508,28 @@ end
 function storyB()
     print'storyB'
 --[==[
-	room:setVisible(true)
-	imo:setVisible(true)
+    room:setVisible(true)
+    imo:setVisible(true)
     pl2.setWindow(true)
 
-	room:setModels{ 'eventBG_01' }
-	camera:setLocked(true)
-	imo:setPoint('loc_pos00')
-	ani:setPoint('loc_pos00')
-	camera:setPoint('loc_pos00')
-	camera:setPath('cam05', false)
-	back:fade(1, 2)
-	wait(2)
+    room:setModels{ 'eventBG_01' }
+    camera:setLocked(true)
+    imo:setPoint('loc_pos00')
+    ani:setPoint('loc_pos00')
+    camera:setPoint('loc_pos00')
+    camera:setPath('cam05', false)
+    back:fade(1, 2)
+    wait(2)
 
     play('voice', '0085')
-    
+
     imo'「おにいちゃん‥‥‥‥ここって‥‥‥‥」'
 
-	ani'「そう！！ここは乙女の園、レディスインナーウェア専門店「ボディースクラッチ」だ！！」'
+    ani'「そう！！ここは乙女の園、レディスインナーウェア専門店「ボディースクラッチ」だ！！」'
 
-	text'最近はこういった下着の専門店が増えて来てる。'
+    text'最近はこういった下着の専門店が増えて来てる。'
 
-	text'流石の俺も一人では入れないこのお店も、今日は妹と言うカモフラージュがあるから大丈夫だ。'
+    text'流石の俺も一人では入れないこのお店も、今日は妹と言うカモフラージュがあるから大丈夫だ。'
 
     --camera:setPath('cam03', false)
 --]==]
