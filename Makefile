@@ -1,12 +1,15 @@
 PLATFORMS = nix win psp
 
-OBJS += opl2.o opl2_pl2.o opl2_tmb.o opl2_tsb.o opl2_tcm.o opl2_psd.o opl2_ogg.o opl2_fnt.o
-OBJS += opl2_int.o opl2_chr.o opl2_idx.o opl2_gl.o opl2_al.o opl2_vm.o opl2_lua.o
+OBJS += src/opl2.o src/opl2_al.o src/opl2_chr.o src/opl2_fnt.o src/opl2_gl.o
+OBJS += src/opl2_idx.o src/opl2_int.o src/opl2_lua.o src/opl2_ogg.o src/opl2_pl2.o
+OBJS += src/opl2_psd.o src/opl2_tcm.o src/opl2_tmb.o src/opl2_tsb.o src/opl2_vm.o
 
-EXTRA_OBJS = pl2ex.o dumptmb.o
+EXTRA_OBJS = tools/pl2ex.o tools/dumptmb.o
 EXTRA_TARGETS = $(PL2EX) $(DUMPTMB) $(VMTEST)
 
-CFLAGS += -Wall -g
+INCDIR = include/
+
+CFLAGS += -Wall -g $(addprefix -I,$(INCDIR))
 LIBS += -lvorbisfile -lvorbis -lm
 
 WIN_LIBS += -lmingw32 -lSDLmain -lSDL.dll
@@ -89,7 +92,7 @@ ifeq ($(PLATFORM),psp)
  PSPDEV = $(shell psp-config --pspdev-path)
  PSPSDK = $(shell psp-config --pspsdk-path)
 
- OBJS += opl2_psp.o
+ OBJS += src/opl2_psp.o
  LIBS += $(PSP_LIBS)
 
  TARGET = opl2
@@ -105,12 +108,13 @@ else
 
  CC = gcc
 
- OBJS += opl2_x86.o
+ OBJS += src/opl2_x86.o
 
  ifeq ($(PLATFORM),win)
 
   WINDRES = windres.exe
-  OBJS += opl2.res
+  EXTRA_OBJS += opl2.res
+  EXTRA_TARGETS += opl2.rc
   #WINAPP = -mwindows
 
   LIBS += $(WIN_LIBS)
@@ -153,18 +157,18 @@ profile: $(TARGET)
 release:
 	make RELEASE=1 rebuild
 
-$(VMTEST): opl2_vm.o opl2_x86.c
+$(VMTEST): src/opl2_vm.o src/opl2_x86.c
 	$(CC) -o $@ $^ -lm -DVMTEST $(LIBS)
 
-opl2.rc: opl2.ico
+opl2.rc: res/opl2.ico
 	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@
 opl2.res: opl2.rc
 	$(WINDRES) --input-format=rc -o $@ $(RCINCS) $^ -O coff
 
-$(PL2EX): pl2ex.o opl2_int.o opl2_pl2.o
+$(PL2EX): tools/pl2ex.o src/opl2_int.o src/opl2_pl2.o
 	$(CC) -o $@ $^ $(LIBS)
 
-$(DUMPTMB): dumptmb.o opl2_int.o opl2_tmb.o opl2_pl2.o opl2_vm.o opl2_idx.o
+$(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl2_vm.o src/opl2_idx.o
 	$(CC) -o $@ $^ $(LIBS)
 
 endif
