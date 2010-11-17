@@ -461,7 +461,7 @@ void pl2VectorScaleAdd3f_SSE(fvector3_t *out, const fvector3_t *v, float s)
 
 void pl2VectorScaleAdd3f_NoSSE(fvector3_t *out, const fvector3_t *v, float s)
 {
-    if(s != s) { DEBUGPRINT("%s: s is NaN!\n", __func__); }
+    DEBUGPRINTIF(s != s, "%s: s is NaN!\n", __func__);
     out->x += v->x * s;
     out->y += v->y * s;
     out->z += v->z * s;

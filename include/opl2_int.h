@@ -10,8 +10,10 @@
 
 #ifndef NDEBUG
 # define DEBUGPRINT(x...) (fprintf(stderr,x))
+# define DEBUGPRINTIF(c,x...) ({if((c))fprintf(stderr,x);})
 #else
 # define DEBUGPRINT(x...)
+# define DEBUGPRINTIF(c,x...)
 #endif
 
 #include <math.h>

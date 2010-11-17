@@ -29,8 +29,16 @@ pl2Package *pl2PackageOpen(const char *filename)
 
     pl2_strlcpy(package->filename, filename, sizeof(package->filename));
 
-    fread(&package->header,     sizeof(pl2PackageHeader), 1, package->file);
-    fread(&package->entries[0], sizeof(pl2PackageEntry),  1, package->file);
+    if(fread(&package->header, sizeof(pl2PackageHeader), 1, package->file) < 1)
+    {
+        pl2PackageFree(package);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+    if(fread(&package->entries[0], sizeof(pl2PackageEntry), 1, package->file) < 1)
+    {
+        pl2PackageFree(package);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
 
     package->numEntries = (package->entries[0].offset - 16) / sizeof(pl2PackageEntry);
 
@@ -51,7 +59,12 @@ pl2Package *pl2PackageOpen(const char *filename)
         package = (pl2Package *)temp;
     }
 
-    fread(&package->entries[1], sizeof(pl2PackageEntry), package->numEntries - 1, package->file);
+    if(fread(&package->entries[1], sizeof(pl2PackageEntry),
+             package->numEntries - 1, package->file) < (package->numEntries - 1))
+    {
+        pl2PackageFree(package);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
 
     return package;
 }
@@ -198,7 +211,11 @@ pl2PackageFile *pl2PackageReadIndex(pl2Package *package, int index)
 
     if (entry->length == entry->packedLength)
     {
-        fread(file->data, file->length, 1, package->file);
+        if(fread(file->data, file->length, 1, package->file) < 1)
+        {
+            pl2PackageFree(package);
+            PL2_ERROR(PL2_ERR_FILEIO);
+        }
     }
     else
     {
@@ -210,7 +227,11 @@ pl2PackageFile *pl2PackageReadIndex(pl2Package *package, int index)
             PL2_ERROR(PL2_ERR_MEMORY);
         }
 
-        fread(temp, entry->packedLength, 1, package->file);
+        if(fread(temp, entry->packedLength, 1, package->file) < 1)
+        {
+            pl2PackageFree(package);
+            PL2_ERROR(PL2_ERR_FILEIO);
+        }
 
         pl2PackageDecompressFile(temp, entry->packedLength,
                                  file->data, entry->length);
@@ -262,7 +283,11 @@ pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name)
 
             if (entry->length == entry->packedLength)
             {
-                fread(file->data, file->length, 1, package->file);
+                if(fread(file->data, file->length, 1, package->file) < 1)
+                {
+                    pl2PackageFree(package);
+                    PL2_ERROR(PL2_ERR_FILEIO);
+                }
             }
             else
             {
@@ -274,7 +299,11 @@ pl2PackageFile *pl2PackageRead(pl2Package *package, const char *name)
                     PL2_ERROR(PL2_ERR_MEMORY);
                 }
 
-                fread(temp, entry->packedLength, 1, package->file);
+                if(fread(temp, entry->packedLength, 1, package->file) < 1)
+                {
+                    pl2PackageFree(package);
+                    PL2_ERROR(PL2_ERR_FILEIO);
+                }
 
                 pl2PackageDecompressFile(temp, entry->packedLength,
                                          file->data, entry->length);

@@ -285,21 +285,28 @@ pl2PackageFile *pl2PackageGetFile(const char *filename)
 
         pl2PackageFile *file = NEWVAR(pl2PackageFile, size);
 
-        if(file)
+        if(!file)
         {
-            pl2_strlcpy(file->name, filename, sizeof(file->name));
-            file->length = size;
-            fread(file->data, size, 1, fh);
-
+            DEBUGPRINT("%s: file == NULL\n", __func__);
             fclose(fh);
-
-            DEBUGPRINT("%s: loaded OK\n", __func__);
-
-            return file;
         }
 
-        DEBUGPRINT("%s: file == NULL\n", __func__);
+        pl2_strlcpy(file->name, filename, sizeof(file->name));
+        file->length = size;
+
+        if(fread(file->data, size, 1, fh) < 1)
+        {
+            DEBUGPRINT("%s: error reading from file\n", __func__);
+            fclose(fh);
+            DELETE(file);
+            PL2_ERROR(PL2_ERR_FILEIO);
+        }
+
         fclose(fh);
+
+        DEBUGPRINT("%s: loaded OK\n", __func__);
+
+        return file;
     }
 
     pl2Package *package = pl2PackageIndexSearch(filename);

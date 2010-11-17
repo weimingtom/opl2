@@ -31,7 +31,7 @@ static int pl2AlPlayThread(void *ud)
 {
     while(pl2_running)
     {
-        int i, j; Uint32 n;
+        int i, j; //Uint32 n;
 
         for(i = 0; i < PL2_NUM_CHANNELS; i++)
         {

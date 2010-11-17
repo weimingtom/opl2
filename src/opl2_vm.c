@@ -108,6 +108,19 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
         {
             pl2Vertex *vert = &(obj->vertices[j]);
 
+            DEBUGPRINTIF(vert->bones[0] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[0], numBones);
+            DEBUGPRINTIF(vert->bones[1] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[1], numBones);
+            DEBUGPRINTIF(vert->bones[2] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[2], numBones);
+            DEBUGPRINTIF(vert->bones[3] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[3], numBones);
+
             float w0 = vert->weights[0],
                   w1 = vert->weights[1],
                   w2 = vert->weights[2],
@@ -115,7 +128,7 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 
             fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
             fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
-            fvector4_t t;
+            //fvector4_t t;
             fvector4_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
 
             //pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
