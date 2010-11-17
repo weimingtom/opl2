@@ -272,10 +272,17 @@ pl2Model;
 
 typedef struct
 {
+    uint32_t code;
+    uint8_t *glyph;
+}
+pl2FontChar;
+
+typedef struct
+{
     uint32_t magic;
     uint32_t numGlyphs;
     uint32_t glyphSize;
-    uint32_t *chars;
+    pl2FontChar *chars;
     uint8_t *glyphs;
 }
 pl2Font;
@@ -384,6 +391,9 @@ typedef struct
 {
     pl2PackageFile *file;
     uint32_t offset;
+    float volume;
+    int channels;
+    int sampleRate;
     OggVorbis_File vf;
     int16_t buffer[4096];
 }
@@ -471,6 +481,7 @@ void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha);
 pl2Sound *pl2SoundLoad(const char *name);
 void pl2SoundFree(pl2Sound *sound);
 void pl2SoundPlay(pl2Sound *sound, int channel);
+int pl2SoundDecode(pl2Sound *sound, void *buffer, int bytes);
 
 /******************************************************************************/
 

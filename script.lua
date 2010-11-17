@@ -1,4 +1,4 @@
-local menu, play, wait = pl2.showMenu, pl2.play, pl2.wait
+local image, menu, play, wait = pl2.setImage, pl2.showMenu, pl2.play, pl2.wait
 
 local function text(s)
     pl2.showText(s:gsub('&([0-9])',
@@ -107,7 +107,8 @@ local rooms = {
 
 --------------------------------------------------------------------------------
 
-local init, title, h_mode, storyA, storyB, storyC, storyD, storyE, storyF
+local script, title, h_mode, Hselect
+local storyA, storyB, storyC, storyD, storyE, storyF
 
 local skip = false
 
@@ -118,9 +119,9 @@ function script()
     fore:fade(0, 0)
     back:fade(0, 0)
 
-    play('music', nil, 0)
-    play('bgsound', nil, 0)
-    play('voice', nil, 0)
+    music(nil, 0)
+    bgsound(nil, 0)
+    voice(nil, 0)
 
     camera:setPath(nil, false)
     camera:setPoint(nil)
@@ -128,29 +129,33 @@ function script()
     pl2.setWindow(false)
     if not skip then
         skip = true
-
---[==[
-        pl2.setImage('op1')
+        image'op1'
         fore:fade(1, 2)
         wait(6)
         fore:fade(0, 2)
         wait(2)
-        pl2.setImage('op2')
+        image'op2'
         fore:fade(1, 2)
-        play('voice', '0002')
+        voice'0002'
         wait(2)
---]==]
     end
+
     return title()
+end
+
+function quit()
+    pl2.setWindow(false)
+    pl2.setQuit(false)
+    voice'0011'
+    music(nil, 2)
+    fore:fade(0, 2)
+    wait(2.25)
+    pl2.quit()
 end
 
 function title()
     print'title'
     local r = rooms[randomItem(rooms)]
-
-    back:fade(0, 0)
-    fore:fade(0, 0)
-    wait(0)
 
     room:setModels(r)
     room:setAnim(r.anim)
@@ -158,32 +163,126 @@ function title()
 
     camera:setPath('A1cam1', true)
 
-    fore:fade(1, 1)
-    back:fade(1, 1)
+    fore:fade(0, 1)
     wait(1)
+    image(nil)
+
+    music('BGM01',0)
+    voice'0004'
+
+    fore:fade(1, 2)
+    back:fade(1, 2)
+    wait(1)
+
+    pl2.setQuit(true)
 
     local i = menu{ 'ストーリーモード', 'とことんＨモード', '終了' }
     print('selected',i)
 
-    back:fade(0, 1)
-    wait(1)
-
-    return ({ storyA, h_mode, pl2.quit })[i]()
+    return ({ storyA, h_mode, quit })[i]()
 end
 
 function h_mode()
     print'h_mode'
+
+    voice'0008'
+    fore:fade(0, 2)
+    music(nil, 4)
+    wait(2)
+
+    pl2.setTitle(false)
+    pl2.setQuit(true)
+
+    imo:setModels{
+        'imo_bodyA_00',
+        'imo_eye_01',
+        'imo_underA_01A',
+        'imo_underA_01B',
+        [13]='imo_hairB_06',
+    }
+    imo:setAnim'event_01'
+
+    ani:setModels{ 'ani_bodyB_00' }
+    ani:setVisible(false)
+
+    camera:setPath(nil)
+    music('BGM05',0)
+
+    --pl2.showHModeSetup(true)
+    room:setModels{ 'room_01' }
+    imo:setVisible(true)
     pl2.setWindow(true)
     text'とことんＨモード'
     pl2.setWindow(false)
-    return title()
+
+    music(nil, 2)
+    fore:fade(0, 2)
+    wait(2)
+    --pl2.showHModeSetup(false)
+
+    imo:setAnim'event_02'
+    imo:setPoint'loc_pos00'
+    camera:setPoint'loc_pos00'
+    camera:setPath'B1cam2'
+
+    pl2.setWindow(true)
+    back:fade(1, 0)
+    fore:fade(1, 2)
+
+    text'&3が待ち合わせた場所にやってきた。'
+    text'恥ずかしいのかもじもじと身体を動かしている。'
+
+    ani'「よしよし‥‥‥‥ちゃんと言われた通りの格好をして来たな」'
+    imo'「‥‥‥‥‥‥‥‥‥‥‥‥‥‥」'
+
+    text'こくんっと小さく頷く。'
+
+    ani'「じゃあ早速始めようか‥‥‥‥‥」'
+
+
+    pl2.setWindow(false)
+
+    if 1 == menu{ '色々なポーズを取らせる', '‥‥えっちする' } then
+        camera:setPath'cam2_3'
+        ani'うん、可愛い格好だよ‥‥&3‥‥‥‥'
+
+        ani'それじゃー、もっと良く見せて？'
+
+        local txt = { '通常立ち', 'もじもじ', 'ぷんぷん', 'えへへ〜',
+                      'しょんぼり', 'うっそ〜！', 'ウマウマー', '‥‥えっちする' }
+        local evt = { 'event_01', 'event_02', 'event_03', 'event_04',
+                      'event_05', 'event_06', 'umauma00_F' }
+
+        repeat
+            pl2.setWindow(false)
+
+            local i = menu(txt)
+
+            if i < 8 then
+                imo:setAnim(evt[i])
+                wait(3)
+                pl2.setWindow(true)
+                text(txt[i])
+            end
+        until i == 8
+    end
+
+    text'俺は&3を隣に誘い静かに腰をかけた。'
+
+    back:fade(0, 2)
+    wait(2)
+    return Hselect()
+end
+
+function Hselect()
+    return script()
 end
 
 function storyA()
     print'storyA'
 
-    play('voice', '0007')
-    play('music', nil, 4)
+    voice'0007'
+    music(nil, 4)
 
     fore:fade(0, 2)
     wait(2)
@@ -193,18 +292,18 @@ function storyA()
     pl2.setQuit(true)
 
     ani:setModels{ 'ani_bodyB_00' }
-    ani:setPoint('loc_pos00')
+    ani:setPoint'loc_pos00'
 
     imo:setVisible(false)
     ani:setVisible(false)
     room:setVisible(false)
 
     room:setModels{ 'room_01' }
-    camera:setPoint('loc_pos00')
+    camera:setPoint'loc_pos00'
     camera:setPath('A1cam1', true)
 
     fore:fade(1, 0)
-    play('bgsound', 'se09')
+    bgsound'se09'
     pl2.setWindow(true)
     back:fade(1, 1)
     wait(1)
@@ -231,35 +330,35 @@ function storyA()
     text'レッツゴー！！目眩く官能の世界へ！！'
     text'誰にも俺の邪魔をさせないゼェ〜〜！！'
 
-    play('sound', 'se25')
+    sound'se25'
 
     text'っと、思った所で早速邪魔が入った。'
 
-    play('voice', '0037')
+    voice'0037'
     imo2'「おにいちゃ〜ん、居るの〜？」'
 
     text'ドアの向こうから俺を呼ぶ声がする。'
     text'ちぃ〜こんな時に来なくてもいいだろう、\nタイミング悪すぎるぞあいつ。'
     text'ここは一つ‥‥‥‥‥\n大学に受かったこの俺の冴えた頭脳であいつをやり過ごすとするか。'
 
-    play('voice', '0038')
+    voice'0038'
     imo2'「‥‥‥‥‥あれ？居ないの？」'
 
     ani'「‥‥‥‥‥‥‥‥‥‥‥」'
     ani'「‥‥‥‥‥‥‥‥‥‥‥‥‥‥‥いないよ〜」'
 
-    play('voice', '0039')
+    voice'0039'
     imo2'「あ、そっか‥‥‥‥じゃーまた後で来るね〜」'
 
-    play('sound', 'se17')
+    sound'se17'
 
     text'ドアの前から足音が遠ざかる。'
     text'‥‥ふう、危ない。\nとっさの機転で俺のプライベートタイムが守られたようだ。'
     text'では気を取り直して、レッツゴー！！\n目眩く官能の‥‥‥'
 
-    play('sound', 'se18')
+    sound'se18'
 
-    play('voice', '0040')
+    voice'0040'
     imo2'「‥‥‥って、居るじゃない！！」'
 
     ani'「ふふおっ！！」'
@@ -268,16 +367,16 @@ function storyA()
     text'完璧にやり過ごせたと思ったのだが、居ることを気づかれてしまったようだ。'
     text'やるな、流石は俺の妹だ。'
 
-    play('voice', '0041')
+    voice'0041'
     imo'「ねぇ〜おにいちゃん〜〜居るんでしょ〜〜？\n‥‥‥‥返事してよ〜〜」'
 
-    play('bgsound', nil)
+    bgsound(nil)
     back:fade(0, 1)
     camera:setLocked(true)
 
     text'そう、この可愛い声の主は俺の妹「&3」だ。'
 
-    play('music', nil, 2)
+    music(nil, 2)
 
     text'‥‥‥‥‥‥‥‥‥‥‥‥‥'
     text'‥‥‥‥‥‥あれ？'
@@ -318,8 +417,8 @@ function storyA()
         ('imo_body%s_%02d'):format(face, body),
         ('imo_eye_%02d'):format(eyes),
         [13] = 'imo_hairB_06' }
-    imo:setPoint('loc_pos00')
-    imo:setAnim('event_01')
+    imo:setPoint'loc_pos00'
+    imo:setAnim'event_01'
 
     imo:setVisible(true)
     camera:setPath('camA', false)
@@ -333,13 +432,13 @@ function storyA()
 
     imo:setVisible(false)
 
-    play('music', nil, 2)
+    music(nil, 2)
 
     camera:setPath('A1cam1', true)
-    imo:setAnim('event_06')
-    imo:setAnim('event_02')
+    imo:setAnim'event_06'
+    imo:setAnim'event_02'
 
-    play('bgsound', 'se09')
+    bgsound'se09'
     back:fade(1, 1)
     camera:setLocked(false)
     wait(1)
@@ -352,18 +451,18 @@ function storyA()
     text'俺はエロゲーを遊ばなくてはいけないと言う崇高な使命があり義務があり責任がある。'
     text'つまり、今は邪魔だ。'
 
-    play('voice', '0042')
+    voice'0042'
     imo'「もしも〜し？おにいちゃん居るんでしょ？\n‥‥‥‥入るよ〜？」'
 
     ani'「あっ、おい、ちょっと待て！！」'
 
     back:fade(0, 0.2)
 
-    play('sound', 'se07')
+    sound'se07'
 
     text'制止の声も空しく妹はドアを開けて部屋に入って来た。'
 
-    play('bgsound', nil)
+    bgsound(nil)
 
     local outfits = {
         {   [ 3] = 'imo_underA_01A',
@@ -490,16 +589,16 @@ function storyA()
 
     camera:setPath('B1cam1', false)
 
-    play('music', 'BGM04')
+    music'BGM04'
     back:fade(1, 1)
     wait(1)
 
     imo'「‥‥‥‥‥‥‥‥‥‥‥‥‥」'
 
-    imo:setAnim('event_06')
+    imo:setAnim'event_06'
     camera:setPath('cam01', false)
 
-    play('voice', '0043')
+    voice'0043'
     imo'「‥‥‥‥‥‥‥‥‥‥‥あっ‥‥‥」'
 
     return storyB()
@@ -514,14 +613,14 @@ function storyB()
 
     room:setModels{ 'eventBG_01' }
     camera:setLocked(true)
-    imo:setPoint('loc_pos00')
-    ani:setPoint('loc_pos00')
-    camera:setPoint('loc_pos00')
+    imo:setPoint'loc_pos00'
+    ani:setPoint'loc_pos00'
+    camera:setPoint'loc_pos00'
     camera:setPath('cam05', false)
     back:fade(1, 2)
     wait(2)
 
-    play('voice', '0085')
+    voice'0085'
 
     imo'「おにいちゃん‥‥‥‥ここって‥‥‥‥」'
 

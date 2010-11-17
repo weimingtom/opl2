@@ -29,7 +29,7 @@ else
   CFLAGS += -pg
   LIBS += -pg
  endif
-endif 
+endif
 
 ifeq ($(PLATFORM),)
 
@@ -60,9 +60,9 @@ nix-debug:
 	make PLATFORM=nix debug
 nix-release:
 	make PLATFORM=nix RELEASE=1 rebuild
-	
+
 win:
-	make PLATFORM=win all	
+	make PLATFORM=win all
 win-clean:
 	make PLATFORM=win clean
 win-rebuild:
@@ -73,7 +73,7 @@ win-debug:
 	make PLATFORM=win debug
 win-release:
 	make PLATFORM=win RELEASE=1 rebuild
-	
+
 psp:
 	make PLATFORM=psp all
 psp-clean:
@@ -158,20 +158,20 @@ profile:
 release:
 	make RELEASE=1 rebuild
 
-$(VMTEST): src/opl2_vm.o src/opl2_x86.c
-	$(CC) -o $@ $^ -lm -DVMTEST $(LIBS)
-
 res/opl2.rc: res/opl2.ico
 	@echo A ICON MOVEABLE PURE LOADONCALL DISCARDABLE $< > $@
 res/opl2.res: res/opl2.rc
 	$(WINDRES) --input-format=rc -o $@ $(RCINCS) $^ -O coff
 
+$(VMTEST): src/opl2_vm.o src/opl2_x86.c
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ -lm -DVMTEST $(LIBS)
+
 $(PL2EX): tools/pl2ex.o src/opl2_int.o src/opl2_pl2.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 $(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl2_vm.o src/opl2_idx.o
-	$(CC) -o $@ $^ $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 endif
-	
+
 .PHONY: _default all $(PLATFORMS) clean rebuild test debug release profile

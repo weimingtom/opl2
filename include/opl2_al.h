@@ -5,8 +5,8 @@
 #include <AL/alut.h>
 
 int pl2AlInit(int *argc, char *argv[]);
-void pl2AlSetListenerPosition(float x, float y, float z);
-void pl2AlSetSourcePosition(int channel, float x, float y, float z);
+void pl2AlSetListenerPosition(const fvector3_t *v);
+void pl2AlSetSourcePosition(int channel, const fvector3_t *v);
 void pl2AlPlaySound(int channel, pl2Sound *sound);
 
 #endif // __OPL2_AL_H__

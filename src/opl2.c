@@ -346,7 +346,7 @@ int pl2DoFrame()
                 SDL_ShowCursor(!move_mode);
                 break;
             }
-                
+
             case SDL_VIDEORESIZE:
             {
                 pl2Reshape(event.resize.w, event.resize.h);
@@ -368,10 +368,12 @@ int pl2DoFrame()
 
     pl2GlRenderFrame(dt);
 
-#ifndef NDEBUG    
+    pl2AlSetListenerPosition(&(pl2_active_camera->eye));
+
+#ifndef NDEBUG
     static int frames = 0;
     static float sec = 0, fps = 0;
-    
+
     frames++;
 
     if((sec += dt) >= 1)
@@ -408,6 +410,7 @@ void pl2ShowText()
     pl2Tick();
 
     pl2_text_showing = 1;
+    pl2_show_window = 1;
 
     while(pl2_text_showing && pl2DoFrame());
 }
@@ -511,7 +514,7 @@ int pl2MenuConfirm(pl2Menu *menu)
 {
     if(menu && pl2_menu_showing && !pl2_hide_overlay)
     {
-        if(((unsigned)menu->selection < menu->numItems) && 
+        if(((unsigned)menu->selection < menu->numItems) &&
            (menu->items[menu->selection].enabled))
         {
             pl2MenuClear(menu);
@@ -536,13 +539,33 @@ int pl2SetImage(const char *name)
         pl2ImageFree(pl2_current_image);
         pl2_current_image = NULL;
     }
-    
+
     pl2_current_image = pl2ImageLoad(name);
-    
+
     return name ? (NULL != pl2_current_image) : 1;
 }
 
 /******************************************************************************/
+
+void pl2LayerFade(pl2Layer *layer, float target, float length)
+{
+    if(layer)
+    {
+        target = (target < 0) ? 0 : (target > 1) ? 1 : target;
+
+        if(length > 0)
+        {
+            layer->fade_target = target;
+            layer->fade_length = length;
+            layer->fade_time   = 0;
+        }
+        else
+        {
+            layer->fade_target = layer->fade_level = target;
+            layer->fade_length = layer->fade_time = 0;
+        }
+    }
+}
 
 void pl2Wait(float sec)
 {
@@ -555,7 +578,51 @@ void pl2Wait(float sec)
 
 void pl2Quit()
 {
+    pl2_running = 0;
     exit(0);
+}
+
+/******************************************************************************/
+
+pl2Sound *pl2_sounds[PL2_NUM_CHANNELS] = { NULL };
+
+static void pl2MixAudio(void *ud, Uint8 *stream, int len)
+{
+    int i, j; Uint32 n;
+
+    SDL_AudioCVT cvt;
+    int16_t buffer[4096];
+
+    //DEBUGPRINT("%s: stream == %p, len == %d\n", __func__, stream, len);
+
+    for(i = j = 0; i < PL2_NUM_CHANNELS; i++)
+    {
+        pl2Sound *sound = pl2_sounds[i];
+
+        if(sound)
+        {
+            OggVorbis_File *vf = &(sound->vf);
+            vorbis_info *info = ov_info(vf, -1);
+            n = MIN(len >> (2 - info->channels), sizeof(buffer));
+
+            int bytes = pl2SoundDecode(sound, buffer, n);
+            //2*info->channels*(ov_pcm_total(vf, -1) - ov_pcm_tell(vf));
+            //if(n > len) n = len;
+
+            SDL_BuildAudioCVT(&cvt, AUDIO_S16, info->channels, info->rate, AUDIO_S16, 2, 44100);
+
+            cvt.buf = (Uint8*)buffer;
+            cvt.len = bytes;
+            SDL_ConvertAudio(&cvt);
+
+            SDL_MixAudio(stream, (Uint8*)(buffer), cvt.len_cvt,
+                         (float)SDL_MIX_MAXVOLUME * sound->volume);
+
+            j++;
+        }
+    }
+
+    //DEBUGPRINT("%s: %d of %d channels playing\n", __func__, j, i);
 }
 
 /******************************************************************************/
@@ -566,6 +633,7 @@ static const char *pl2_script_name = NULL;
 
 void pl2GameShutdown()
 {
+    SDL_CloseAudio();
     pl2PackageClearIndex();
 }
 
@@ -576,8 +644,6 @@ int pl2GameInit(int *argc, char *argv[])
     pl2PackageBuildIndex();
 
     pl2_font = pl2FontLoad("font");
-
-    pl2AlInit(argc, argv);
 
     SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     atexit(SDL_Quit);
@@ -640,7 +706,7 @@ int pl2GameInit(int *argc, char *argv[])
         {
             pl2_censor = 1;
         }
-        else if(!strcmp(argv[i], "-n") || !strcmp(argv[i], "--no-censor"))
+        else if(!strcmp(argv[i], "-C") || !strcmp(argv[i], "--no-censor"))
         {
             pl2_censor = 0;
         }
@@ -675,6 +741,26 @@ int pl2GameInit(int *argc, char *argv[])
             height = PL2_NOMINAL_SCREEN_HEIGHT;
         }
     }
+
+#if 0
+    pl2AlInit(argc, argv);
+#else
+    SDL_AudioSpec fmt = {
+        freq: 44100,
+        format: AUDIO_S16,
+        channels: 2,
+        samples: 1024,
+        callback: pl2MixAudio,
+        userdata: 0
+    };
+
+    if(SDL_OpenAudio(&fmt, &fmt) < 0)
+    {
+        fprintf(stderr, "%s: error opening audio device\n", argv[0]);
+        return 0;
+    }
+    SDL_PauseAudio(0);
+#endif
 
     bpp = SDL_VideoModeOK(width, height, bpp, flags);
 
@@ -713,7 +799,7 @@ int pl2GameInit(int *argc, char *argv[])
     pl2Reshape(width, height);
 
     pl2GlInit();
-    
+
     return 1;
 }
 
@@ -744,16 +830,16 @@ int pl2GameRun()
 
     luaL_openlibs(pl2_L);
     luaopen_pl2(L);
-    
+
     // disable os.* for security
     lua_pushnil(L); lua_setglobal(L, "os");
 
     if(!pl2_script_name) pl2_script_name = "script.lua";
 
     static const char *error_handler = "return debug.traceback(...,2)";
-    
+
     luaL_loadbuffer(L, error_handler, strlen(error_handler), "@<error_handler>");
-    
+
     int err = luaL_loadfile(L, pl2_script_name);
 
     if(!err)

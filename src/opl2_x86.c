@@ -19,7 +19,7 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "pshufd $0x00,  0 %1, %%xmm0\n"
         "pshufd $0x55,  0 %1, %%xmm1\n"
         "pshufd $0xaa,  0 %1, %%xmm2\n"
-        "pshufd $0xff,  0 %1, %%xmm3\n"        
+        "pshufd $0xff,  0 %1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -93,7 +93,7 @@ void pl2VectorTransform4f_SSE(fvector4_t *out, const fmatrix4_t *m, const fvecto
         "movaps 16 %1, %%xmm5\n"
         "movaps 32 %1, %%xmm6\n"
         "movaps 48 %1, %%xmm7\n"
-#if 0
+#if 1
         "pshufd $0x00, 0 %2, %%xmm0\n"
         "pshufd $0x55, 0 %2, %%xmm1\n"
         "pshufd $0xaa, 0 %2, %%xmm2\n"
@@ -280,6 +280,50 @@ void pl2VectorScaleAdd4f_NoSSE(fvector4_t *out, const fvector4_t *v, float s)
     out->y += v->y * s;
     out->z += v->z * s;
     out->w += v->w * s;
+}
+
+void pl2VectorTransScaleAdd4f_NoSSE(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s)
+{
+    fvector4_t t;
+    pl2VectorTransform4f_NoSSE(&t, m, v);
+    pl2VectorScaleAdd4f_NoSSE(out, &t, s);
+}
+
+void pl2VectorTransScaleAdd4f_SSE(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s)
+{
+    asm volatile(
+        "movaps  0 %1, %%xmm4\n"
+        "movaps 16 %1, %%xmm5\n"
+        "movaps 32 %1, %%xmm6\n"
+        "movaps 48 %1, %%xmm7\n"
+#if 1
+        "pshufd $0x00, 0 %2, %%xmm0\n"
+        "pshufd $0x55, 0 %2, %%xmm1\n"
+        "pshufd $0xaa, 0 %2, %%xmm2\n"
+        "pshufd $0xff, 0 %2, %%xmm3\n"
+#else
+        "movaps 0 %2, %%xmm3\n"
+        "pshufd $0x00, %%xmm3, %%xmm0\n"
+        "pshufd $0x55, %%xmm3, %%xmm1\n"
+        "pshufd $0xaa, %%xmm3, %%xmm2\n"
+        "pshufd $0xff, %%xmm3, %%xmm3\n"
+#endif
+        "mulps  %%xmm4, %%xmm0\n"
+        "mulps  %%xmm5, %%xmm1\n"
+        "mulps  %%xmm6, %%xmm2\n"
+        "mulps  %%xmm7, %%xmm3\n"
+        "movss  %3, %%xmm5\n"
+        "movaps %0, %%xmm4\n"
+        "shufps $0, %%xmm5, %%xmm5\n"
+        "addps  %%xmm1, %%xmm0\n"
+        "addps  %%xmm3, %%xmm2\n"
+        "addps  %%xmm2, %%xmm0\n"
+        "mulps  %%xmm5, %%xmm0\n"
+        "addps  %%xmm4, %%xmm0\n"
+        "movaps %%xmm0,  0 %0\n"
+        :"=m"(*out)
+        :"m"(*m), "m"(*v), "m"(s)
+    );
 }
 
 void pl2VectorAdd3f_SSE(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
@@ -526,6 +570,7 @@ typedef void (*PL2VECTORSUB4F)(fvector4_t *out, const fvector4_t *a, const fvect
 typedef float (*PL2VECTORDOT4F)(const fvector4_t *a, const fvector4_t *b);
 typedef void (*PL2VECTORSCALE4F)(fvector4_t *out, const fvector4_t *v, float s);
 typedef void (*PL2VECTORSCALEADD4F)(fvector4_t *out, const fvector4_t *v, float s);
+typedef void (*PL2VECTORTRANSSCALEADD4F)(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s);
 typedef void (*PL2VECTORADD3F)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
 typedef void (*PL2VECTORSUB3F)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
 typedef float (*PL2VECTORDOT3F)(const fvector3_t *a, const fvector3_t *b);
@@ -547,6 +592,7 @@ PL2VECTORSUB4F pl2VectorSub4f = pl2VectorSub4f_NoSSE;
 PL2VECTORDOT4F pl2VectorDot4f = pl2VectorDot4f_NoSSE;
 PL2VECTORSCALE4F pl2VectorScale4f = pl2VectorScale4f_NoSSE;
 PL2VECTORSCALEADD4F pl2VectorScaleAdd4f = pl2VectorScaleAdd4f_NoSSE;
+PL2VECTORTRANSSCALEADD4F pl2VectorTransScaleAdd4f = pl2VectorTransScaleAdd4f_NoSSE;
 PL2VECTORADD3F pl2VectorAdd3f = pl2VectorAdd3f_NoSSE;
 PL2VECTORSUB3F pl2VectorSub3f = pl2VectorSub3f_NoSSE;
 PL2VECTORDOT3F pl2VectorDot3f = pl2VectorDot3f_NoSSE;
@@ -591,13 +637,13 @@ int main(int argc, char *argv[])
     fmatrix4_t tm, m,
                n = {{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,16}},
                o = {{0,0,0,1},{0,0,1,0},{0,1,0,0},{1,0,0,0}};
-    
+
     clock_t start, stop; int i;
 
     PRINTVECTOR(b);
     PRINTMATRIX(n);
     PRINTMATRIX(o);
-    
+
     TIME(pl2VectorTransform4f_SSE, &a, &n, &b);
     PRINTVECTOR(a);
     TIME(pl2VectorTransform4f_NoSSE, &a, &n, &b);
@@ -646,6 +692,7 @@ void pl2DetectSSE()
         pl2VectorDot4f = pl2VectorDot4f_SSE;
         pl2VectorScale4f = pl2VectorScale4f_SSE;
         pl2VectorScaleAdd4f = pl2VectorScaleAdd4f_SSE;
+        pl2VectorTransScaleAdd4f = pl2VectorTransScaleAdd4f_SSE;
         pl2VectorAdd3f = pl2VectorAdd3f_SSE;
         pl2VectorSub3f = pl2VectorSub3f_SSE;
         pl2VectorDot3f = pl2VectorDot3f_SSE;

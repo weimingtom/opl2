@@ -254,61 +254,72 @@ int pl2PackageBuildIndex()
 
 void pl2PackageClearIndex()
 {
-   int i;
-   for (i = 0; i < PACKAGE_INDEX_SIZE; ++i)
-   {
-      if (pl2PackageIndex[i].package)
-      {
-         pl2PackageClose(pl2PackageIndex[i].package);
-      }
-   }
+    int i;
+    for (i = 0; i < PACKAGE_INDEX_SIZE; ++i)
+    {
+        if (pl2PackageIndex[i].package)
+        {
+            pl2PackageClose(pl2PackageIndex[i].package);
+        }
+    }
 }
 
 pl2PackageFile *pl2PackageGetFile(const char *filename)
 {
-   PL2_CLEAR_ERROR();
+    PL2_CLEAR_ERROR();
 
-   if (!filename)
-   {
-      PL2_ERROR(PL2_ERR_PARAM);
-   }
+    if (!filename)
+    {
+        PL2_ERROR(PL2_ERR_PARAM);
+    }
 
-   FILE *fh = fopen(filename, "rb");
+    FILE *fh = fopen(filename, "rb");
 
-   if(fh)
-   {
-       fseek(fh, 0, SEEK_END);
-       long int size = ftell(fh);
-       fseek(fh, 0, SEEK_SET);
+    if(fh)
+    {
+        DEBUGPRINT("%s: \"%s\" found on disk\n", __func__, filename);
 
-       pl2PackageFile *file = NEWVAR(pl2PackageFile, size);
+        fseek(fh, 0, SEEK_END);
+        long int size = ftell(fh);
+        fseek(fh, 0, SEEK_SET);
 
-       if(file)
-       {
-           pl2_strlcpy(file->name, filename, sizeof(file->name));
-           file->length = size;
-           fread(file->data, size, 1, fh);
+        pl2PackageFile *file = NEWVAR(pl2PackageFile, size);
 
-           fclose(fh);
+        if(file)
+        {
+            pl2_strlcpy(file->name, filename, sizeof(file->name));
+            file->length = size;
+            fread(file->data, size, 1, fh);
 
-           return file;
-       }
+            fclose(fh);
 
-       fclose(fh);
-   }
+            DEBUGPRINT("%s: loaded OK\n", __func__);
 
-   pl2Package *package = pl2PackageIndexSearch(filename);
+            return file;
+        }
 
-   if (package)
-   {
-      pl2PackageFile *file = pl2PackageRead(package, filename);
+        DEBUGPRINT("%s: file == NULL\n", __func__);
+        fclose(fh);
+    }
 
-      pl2PackageClose(package);
+    pl2Package *package = pl2PackageIndexSearch(filename);
 
-      return file;
-   }
+    if (package)
+    {
+        DEBUGPRINT("%s: \"%s\" found in package \"%s\"\n", __func__, filename, package->filename);
 
-   PL2_ERROR(PL2_ERR_NOTFOUND);
+        pl2PackageFile *file = pl2PackageRead(package, filename);
+
+        pl2PackageClose(package);
+
+        DEBUGPRINT(file ? "%s: loaded OK\n" : "%s: load error\n", __func__);
+
+        return file;
+    }
+
+    DEBUGPRINT("%s: \"%s\" not found\n", __func__, filename);
+
+    PL2_ERROR(PL2_ERR_NOTFOUND);
 }
 
 /******************************************************************************/

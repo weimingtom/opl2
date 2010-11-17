@@ -66,6 +66,8 @@ void pl2CameraZoom(pl2Camera *cam, float distance)
 
 /******************************************************************************/
 
+static fmatrix4_t pl2_temp_bones[256];
+
 void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
 {
     if(!(model && anim)) return;
@@ -80,17 +82,13 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
     int numBones = (model->numBones < anim->numBones) ? model->numBones : anim->numBones;
 
     if(numBones <= 0) return;
-    
+
     //DEBUGPRINT("%s: model->numBones == %d, anim->numBones == %d, numBones == %d\n",
     //           __func__, model->numBones, anim->numBones, numBones);
 
-    fmatrix4_t *bones = (fmatrix4_t*)alloca(numBones * sizeof(fmatrix4_t));
-    //fmatrix4_t bones[numBones] __attribute__((aligned(16)));
-    //fmatrix4_t bones_[numBones+1];
-    //fmatrix4_t *bones = (fmatrix4_t*)((((uint32_t)(bones_)) + 15) & ~15);
-
     int i, j;
 
+    fmatrix4_t *bones = pl2_temp_bones;
     fmatrix4_t *mdlBones = model->bones;
     fmatrix4_t *seqBones = anim->bones + (anim->numBones * frame);
 
@@ -98,6 +96,7 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
     {
         pl2MultMatrix4f(&(bones[i]), &(mdlBones[i]), &(seqBones[i]));
     }
+    bones[255] = (fmatrix4_t){{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
 
     for(i = 0; i < model->numObjects; i++)
     {
@@ -109,59 +108,50 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
         {
             pl2Vertex *vert = &(obj->vertices[j]);
 
-            if(vert->bones[0] != 255)
-            {
-                float w0 = vert->weights[0],
-                      w1 = vert->weights[1],
-                      w2 = vert->weights[2],
-                      w3 = 1.0f - w0 - w1 - w2;
+            float w0 = vert->weights[0],
+                  w1 = vert->weights[1],
+                  w2 = vert->weights[2],
+                  w3 = 1.0f - w0 - w1 - w2;
 
-                fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
-                fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
-                fvector4_t t;
-                fvector4_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
+            fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
+            fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
+            fvector4_t t;
+            fvector4_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
 
-                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
-                pl2VectorScaleAdd4f(&tv, &t, w0);
-                pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
-                pl2VectorScaleAdd4f(&tn, &t, w0);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w0);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w0);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[0]]), &v, w0);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[0]]), &n, w0);
 
-                if(vert->bones[1] != 255)
-                {
-                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
-                    pl2VectorScaleAdd4f(&tv, &t, w1);
-                    pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
-                    pl2VectorScaleAdd4f(&tn, &t, w1);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w1);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w1);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[1]]), &v, w1);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[1]]), &n, w1);
 
-                    if(vert->bones[2] != 255)
-                    {
-                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
-                        pl2VectorScaleAdd4f(&tv, &t, w2);
-                        pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
-                        pl2VectorScaleAdd4f(&tn, &t, w2);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w2);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w2);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[2]]), &v, w2);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[2]]), &n, w2);
 
-                        if(vert->bones[3] != 255)
-                        {
-                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
-                            pl2VectorScaleAdd4f(&tv, &t, w3);
-                            pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
-                            pl2VectorScaleAdd4f(&tn, &t, w3);
-                        }
-                    }
-                }
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w3);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w3);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[3]]), &v, w3);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[3]]), &n, w3);
 
-                obj->glVertices[j].vertex.x = tv.x;
-                obj->glVertices[j].vertex.y = tv.y;
-                obj->glVertices[j].vertex.z = tv.z;
-                obj->glVertices[j].normal.x = tn.x;
-                obj->glVertices[j].normal.y = tn.y;
-                obj->glVertices[j].normal.z = tn.z;
-            }
-            else
-            {
-                obj->glVertices[j].vertex = vert->vertex;
-                obj->glVertices[j].normal = vert->normal;
-            }
+            obj->glVertices[j].vertex.x = tv.x;
+            obj->glVertices[j].vertex.y = tv.y;
+            obj->glVertices[j].vertex.z = tv.z;
+            obj->glVertices[j].normal.x = tn.x;
+            obj->glVertices[j].normal.y = tn.y;
+            obj->glVertices[j].normal.z = tn.z;
         }
     }
 }

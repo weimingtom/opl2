@@ -61,7 +61,7 @@ static int l_pl2Character_setModel(lua_State *L)
 static int l_pl2Character_setModels(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
-    luaL_checktype(L, 2, LUA_TTABLE);    
+    luaL_checktype(L, 2, LUA_TTABLE);
     int keep = lua_toboolean(L, 3);
 
     int i; int r = 1;
@@ -71,9 +71,9 @@ static int l_pl2Character_setModels(lua_State *L)
         lua_rawgeti(L, 2, i);
 
         const char *name = luaL_optstring(L, -1, NULL);
-        
+
         //DEBUGPRINT("%s: model[%d] == %#s\n", __func__, i, name);
-        
+
         if(name || !keep)
         {
             if(!pl2CharSetModel(chr, i - 1, name))
@@ -81,7 +81,7 @@ static int l_pl2Character_setModels(lua_State *L)
                 r = 0;
             }
         }
-        
+
         lua_pop(L, 1);
     }
 
@@ -132,7 +132,7 @@ static int l_pl2Character_setName(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
     const char *name = luaL_optstring(L, 2, NULL);
-    
+
     if(lua_gettop(L) > 2)
     {
         float r, g, b, a;
@@ -140,19 +140,19 @@ static int l_pl2Character_setName(lua_State *L)
         g = luaL_checknumber(L, 4);
         b = luaL_checknumber(L, 5);
         a = luaL_optnumber(L, 6, 1);
-        
+
         chr->nameColor = RGBAf(r, g, b, a);
     }
 
     lua_pushboolean(L, pl2CharSetName(chr, name));
-    
+
     return 1;
 }
 
 static int l_pl2Character_getName(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
-    
+
     lua_pushstring(L, chr->name);
 
     return 1;
@@ -179,7 +179,7 @@ static int l_pl2Character_getBlack(lua_State *L)
 static int l_pl2Character_clear(lua_State *L)
 {
     pl2Character *chr = *checkpl2Character(L, 1);
-    
+
     pl2CharClear(chr);
 
     return 0;
@@ -555,13 +555,11 @@ static luaL_Reg pl2Camera_meta[] =
 static int l_pl2Layer_fade(lua_State *L)
 {
     pl2Layer *layer = *checkpl2Layer(L, 1);
-
     float target = luaL_checknumber(L, 2);
     float length = luaL_checknumber(L, 3);
 
-    layer->fade_target = (target < 0) ? 0 : (target > 1) ? 1 : target;
-    layer->fade_length = (length < 0) ? 0 : length;
-    layer->fade_time   = 0;
+    pl2LayerFade(layer, target, length);
+
     return 0;
 }
 
@@ -637,7 +635,7 @@ static int l_pl2_play(lua_State *L)
     }
 
     const char *name = luaL_optstring(L, 2, NULL);
-    
+
     //float fade = luaL_optnumber(L, 3, 0);
 
     pl2Sound *sound = pl2SoundLoad(name);
@@ -707,8 +705,8 @@ static int l_pl2_quit(lua_State *L)
 
 static int l_pl2_setImage(lua_State *L)
 {
-    const char *name = luaL_checkstring(L, 1);
-    
+    const char *name = luaL_optstring(L, 1, NULL);
+
     pl2SetImage(name);
 
     return 0;
@@ -916,7 +914,7 @@ int luaopen_pl2(lua_State *L)
     {
         DEBUGPRINT("%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
     }
-    
+
     return 1;
 }
 

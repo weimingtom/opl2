@@ -275,6 +275,8 @@ void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const
 
         int i, j;
 
+        int pl2FontFindChar(pl2Font *font, uint32_t code);
+
         for(i = 0; i < len; i++)
         {
             if(text[i] == '\n')
@@ -284,16 +286,13 @@ void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const
             }
             else if(text[i] >= 32)
             {
-                for(j = 0; j < font->numGlyphs; j++)
-                {
-                    if(font->chars[j] == text[i]) break;
-                }
+                j = pl2FontFindChar(font, text[i]);
 
-                if(j < font->numGlyphs)
+                if(j >= 0)
                 {
                     //pl2GlClearErrors();
                     glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA,
-                                 GL_UNSIGNED_BYTE, font->glyphs + w * h * j);
+                                 GL_UNSIGNED_BYTE, font->chars[j].glyph);
                     //pl2GlPrintErrors();
 
                     const struct { float u, v, x, y, z; } rect[4] = {
@@ -425,7 +424,7 @@ void pl2ModelRender(const pl2Model *model, bool black)
     //glMatrixMode(GL_MODELVIEW);
 
     int i, j;
-    
+
     static GLfloat mtlBlack[4] = { 0, 0, 0, 0.5f };
 
     for(i = 0; i < model->numObjects; i++)
@@ -511,7 +510,7 @@ void pl2CharRender(pl2Character *chr)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         }
-        
+
         for(i = 0; i < PL2_MAX_CHARPARTS; i++)
         {
             pl2ModelRender(chr->models[i], chr->black);
@@ -578,7 +577,7 @@ void pl2GlRenderFrame(float dt)
         {
             int x = (int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
             int y = (int)(0.5f * (float)(PL2_NOMINAL_SCREEN_HEIGHT - (2 * pl2_menu.numItems - 1) * pl2_font->glyphSize));
-            
+
             int h = 2 * pl2_font->glyphSize;
 
             glBegin(GL_QUADS);

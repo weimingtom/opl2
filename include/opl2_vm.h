@@ -13,6 +13,7 @@ void (*pl2VectorSub4f)(fvector4_t *out, const fvector4_t *a, const fvector4_t *b
 float (*pl2VectorDot4f)(const fvector4_t *a, const fvector4_t *b);
 void (*pl2VectorScale4f)(fvector4_t *out, const fvector4_t *v, float s);
 void (*pl2VectorScaleAdd4f)(fvector4_t *out, const fvector4_t *v, float s);
+void (*pl2VectorTransScaleAdd4f)(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s);
 void (*pl2VectorAdd3f)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
 void (*pl2VectorSub3f)(fvector3_t *out, const fvector3_t *a, const fvector3_t *b);
 float (*pl2VectorDot3f)(const fvector3_t *a, const fvector3_t *b);

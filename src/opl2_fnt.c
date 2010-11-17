@@ -1773,6 +1773,23 @@ static uint32_t sjis2ucs(uint16_t c)
     return c;
 }
 
+static int pl2FontCompareChars(const void *a, const void *b)
+{
+    return ((pl2FontChar*)(a))->code - ((pl2FontChar*)(b))->code;
+}
+
+int pl2FontFindChar(pl2Font *font, uint32_t code)
+{
+    if(font)
+    {
+        pl2FontChar t = { code, 0 };
+        pl2FontChar *c = bsearch(&t, font->chars, font->numGlyphs,
+                                 sizeof(font->chars[0]), pl2FontCompareChars);
+        if(c) return c - font->chars;
+    }
+    return -1;
+}
+
 static pl2Font *pl2FontLoadInternal(const uint8_t *data)
 {
     if(!data)
@@ -1798,7 +1815,7 @@ static pl2Font *pl2FontLoadInternal(const uint8_t *data)
     DEBUGPRINT("%s: numGlyphs == %d, glyphSize == %d\n",
                __func__, font->numGlyphs, font->glyphSize);
 
-    font->chars = NEWARR(font->numGlyphs, uint32_t);
+    font->chars = NEWARR(font->numGlyphs, pl2FontChar);
 
     if(NULL == font->chars)
     {
@@ -1821,10 +1838,15 @@ static pl2Font *pl2FontLoadInternal(const uint8_t *data)
 
     for(i = 0; i < font->numGlyphs; i++)
     {
-        font->chars[i] = sjis2ucs(READUINT16(data));
+        font->chars[i].code = sjis2ucs(READUINT16(data));
+        font->chars[i].glyph = glyph;
+
         READSTRING(size, glyph, data);
         glyph += size;
     }
+
+    qsort(font->chars, font->numGlyphs, sizeof(font->chars[0]),
+          pl2FontCompareChars);
 
     return font;
 }
