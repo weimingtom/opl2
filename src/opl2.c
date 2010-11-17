@@ -726,7 +726,6 @@ int pl2GameInit(int *argc, char *argv[])
 
     if(!(width && height))
     {
-        /*
         SDL_Rect **sizes = SDL_ListModes(NULL, flags);
 
         if(sizes && (sizes != (SDL_Rect**)(-1)))
@@ -735,7 +734,6 @@ int pl2GameInit(int *argc, char *argv[])
             height = (*sizes)[0].h;
         }
         else
-        */
         {
             width  = PL2_NOMINAL_SCREEN_WIDTH;
             height = PL2_NOMINAL_SCREEN_HEIGHT;

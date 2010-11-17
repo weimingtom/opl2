@@ -12,12 +12,12 @@ INCDIR = include/
 CFLAGS += -Wall -g $(addprefix -I,$(INCDIR))
 LIBS += -lvorbisfile -lvorbis -lm
 
-WIN_LIBS += -lmingw32 -lSDLmain -lSDL.dll
-WIN_LIBS += -llua -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
+WIN_LIBS += -llua -lmingw32 -lSDLmain -lSDL.dll
+WIN_LIBS += -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lALut -lOpenAL32
 
-NIX_LIBS += -lSDL -llua5.1 -lGLU -lGL -lalut -lopenal
+NIX_LIBS += -llua5.1 -lSDL -lGLU -lGL -lalut -lopenal
 
-PSP_LIBS += -lSDL -llua -lGLU -lGL -lalut -lOpenAL32 -logg -lpthreadlite
+PSP_LIBS += -llua -lSDL -lGLU -lGL -lalut -lOpenAL32 -logg -lpthreadlite
 PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 ARGS = --window 640x480

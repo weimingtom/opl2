@@ -560,6 +560,50 @@ void pl2QuatMultiply_NoSSE(fvector4_t *out, const fvector4_t *a, const fvector4_
     *out = c;
 }
 
+#include <math.h>
+
+/******************************************************************************/
+
+void pl2QuatRotate(fvector3_t *out, const fvector3_t *v, const fvector3_t *axis, float angle)
+{
+    float s = sinf(0.5f * angle) / pl2VectorLength3f(axis);
+    float c = cosf(0.5f * angle);
+
+    fvector4_t q = { s * axis->x, s * axis->y, s * axis->z, c };
+    fvector4_t t = { v->x, v->y, v->z, 0.0f };
+    fvector4_t r;
+
+    pl2QuatMultiply(&r, &q, &t);
+    q.x = -q.x; q.y = -q.y; q.z = -q.z;
+    pl2QuatMultiply(&t, &r, &q);
+
+    out->x = t.x; out->y = t.y; out->z = t.z;
+}
+
+void pl2VectorOrbit(fvector3_t *planet, const fvector3_t *sun, const fvector3_t *up, const fvector3_t *rotate)
+{
+    //DEBUGPRINT("glmOrbit(<%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>, <%6.3f %6.3f %6.3f>)",
+    //   planet->x, planet->y, planet->z, sun->x, sun->y, sun->z, up->x, up->y, up->z, rotate->x, rotate->y, rotate->z);
+    fvector3_t fwd, right;
+    pl2VectorSub3f(&fwd, planet, sun);
+    pl2VectorCross3f(&right, up, &fwd);
+
+    fvector3_t r = fwd;
+    pl2QuatRotate(&r, &r, &right, rotate->x);
+    pl2QuatRotate(&r, &r, up,     rotate->y);
+    pl2QuatRotate(&r, &r, &fwd,   rotate->z);
+    pl2VectorAdd3f(planet, &r, sun);
+
+    //DEBUGPRINT(" == <%6.3f %6.3f %6.3f>\n", planet->x, planet->y, planet->z);
+}
+
+void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance)
+{
+    fvector3_t t;
+    pl2VectorSub3f(&t, targ, obj);
+    pl2VectorScaleAdd3f(obj, &t, distance / pl2VectorLength3f(&t));
+}
+
 /******************************************************************************/
 
 typedef void (*PL2MULTMATRIX4F)(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b);

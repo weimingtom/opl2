@@ -122,6 +122,25 @@ void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
     );
 }
 
+void pl2VectorTransScaleAdd4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s)
+{
+    asm volatile(
+        "lv.q   c000, 0+%0\n"
+        "lv.q   c100,  0+%1\n"
+        "lv.q   c110, 16+%1\n"
+        "lv.q   c120, 32+%1\n"
+        "lv.q   c130, 48+%1\n"
+        "lv.q   c020, 0+%2\n"
+        "mtv    %3, s030\n"
+        "vtfm4.q c010, m100, c020\n"
+        "vscl.q c010, c010, s030\n"
+        "vadd.q c000, c000, c010\n"
+        "sv.q  c000, 0+%0\n"
+        :"+m"(*out)
+        :"m"(*m), "m"(*v), "r"(s)
+    );
+}
+
 void pl2VectorAdd3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 {
     asm volatile(
@@ -394,6 +413,13 @@ uint32_t pl2GetFreeRam()
         free(temp[--i]);
 
     return freeSize;
+}
+
+/******************************************************************************/
+
+int usleep(useconds_t usec)
+{
+    return sceKernelDelayThread(usec);
 }
 
 /******************************************************************************/

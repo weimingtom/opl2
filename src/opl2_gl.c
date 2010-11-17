@@ -560,6 +560,7 @@ void pl2GlRenderFrame(float dt)
         pl2CharRender(&(pl2_chars[i]));
     }
 
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 
     pl2GlBegin2D();
