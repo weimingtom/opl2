@@ -108,16 +108,16 @@ void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
         {
             pl2Vertex *vert = &(obj->vertices[j]);
 
-            DEBUGPRINTIF(vert->bones[0] >= numBones,
+            DEBUGPRINTIF(vert->bones[0] != 255 && vert->bones[0] >= numBones,
                          "%s: need bone %d but only %d bones\n",
                          __func__, vert->bones[0], numBones);
-            DEBUGPRINTIF(vert->bones[1] >= numBones,
+            DEBUGPRINTIF(vert->bones[1] != 255 && vert->bones[1] >= numBones,
                          "%s: need bone %d but only %d bones\n",
                          __func__, vert->bones[1], numBones);
-            DEBUGPRINTIF(vert->bones[2] >= numBones,
+            DEBUGPRINTIF(vert->bones[2] != 255 && vert->bones[2] >= numBones,
                          "%s: need bone %d but only %d bones\n",
                          __func__, vert->bones[2], numBones);
-            DEBUGPRINTIF(vert->bones[3] >= numBones,
+            DEBUGPRINTIF(vert->bones[3] != 255 && vert->bones[3] >= numBones,
                          "%s: need bone %d but only %d bones\n",
                          __func__, vert->bones[3], numBones);
 
