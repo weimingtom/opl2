@@ -37,8 +37,8 @@ pl2Light pl2_lights[PL2_MAX_LIGHTS] =
 
 pl2Camera pl2_cameras[PL2_MAX_CAMERAS] =
 {
-    { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 1, 0 }, 45, NULL, NULL, 0, false, false },
-    { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 1, 0 }, 45, NULL, NULL, 0, false, false },
+    { { 0, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, 45, NULL, NULL, 0, false, false },
+    { { 0, 0, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, 45, NULL, NULL, 0, false, false },
 };
 
 pl2Layer pl2_layers[PL2_MAX_LAYERS] =
@@ -102,26 +102,6 @@ size_t pl2Utf8Strlen(const char *text)
     return len;
 }
 
-/*
-static struct { uint16_t ascii, jascii; } jasciitable[] = {
-    { '0', 0xff10 }, { '1', 0xff11 }, { '2', 0xff12 }, { '3', 0xff13 },
-    { '4', 0xff14 }, { '5', 0xff15 }, { '6', 0xff16 }, { '7', 0xff17 },
-    { '8', 0xff18 }, { '9', 0xff19 }, { 'A', 0xff21 }, { 'B', 0xff22 },
-    { 'C', 0xff23 }, { 'D', 0xff24 }, { 'E', 0xff25 }, { 'F', 0xff26 },
-    { 'G', 0xff27 }, { 'H', 0xff28 }, { 'I', 0xff29 }, { 'J', 0xff2a },
-    { 'K', 0xff2b }, { 'L', 0xff2c }, { 'M', 0xff2d }, { 'N', 0xff2e },
-    { 'O', 0xff2f }, { 'P', 0xff30 }, { 'Q', 0xff31 }, { 'R', 0xff32 },
-    { 'S', 0xff33 }, { 'T', 0xff34 }, { 'U', 0xff35 }, { 'V', 0xff36 },
-    { 'W', 0xff37 }, { 'X', 0xff38 }, { 'Y', 0xff39 }, { 'Z', 0xff3a },
-    { 'a', 0xff41 }, { 'b', 0xff42 }, { 'c', 0xff43 }, { 'd', 0xff44 },
-    { 'e', 0xff45 }, { 'f', 0xff46 }, { 'g', 0xff47 }, { 'h', 0xff48 },
-    { 'i', 0xff49 }, { 'j', 0xff4a }, { 'k', 0xff4b }, { 'l', 0xff4c },
-    { 'm', 0xff4d }, { 'n', 0xff4e }, { 'o', 0xff4f }, { 'p', 0xff50 },
-    { 'q', 0xff51 }, { 'r', 0xff52 }, { 's', 0xff53 }, { 't', 0xff54 },
-    { 'u', 0xff55 }, { 'v', 0xff56 }, { 'w', 0xff57 }, { 'x', 0xff58 },
-    { 'y', 0xff59 }, { 'z', 0xff5a },
-};
-*/
 size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length)
 {
     uint8_t *utf = (uint8_t*)text;
@@ -156,7 +136,6 @@ size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length)
 
 #if 1
         // ASCII -> JASCII
-        //if((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
         if(c >= '!' && c <= '~')
             c += 0xfee0;
         else if(c == ' ')
@@ -218,9 +197,7 @@ int pl2DoFrame()
 
     SDL_Event event;
 
-    //SDL_PumpEvents();
-
-    PRINTFREERAM();
+    //PRINTFREERAM();
 
     while(SDL_PollEvent(&event))
     {
@@ -362,6 +339,11 @@ int pl2DoFrame()
 
             default: break;
         }
+    }
+
+    if(SDL_GetModState() & KMOD_CTRL)
+    {
+        pl2TextAdvance(); // text skip
     }
 
     float dt = pl2Tick();
@@ -858,3 +840,79 @@ int pl2GameRun()
 
     return 1;
 }
+
+/******************************************************************************/
+
+#if _PSP_FW_VERSION
+
+static SceUID pl2_psp_callback_thread_id = -1;
+static SceUID pl2_psp_exit_callback_id = -1;
+
+static int pl2PspExitCallback(int x, int y, void *z)
+{
+    sceKernelExitGame();
+    return 0;
+}
+
+static int pl2PspCallbackThread(SceSize args, void *argp)
+{
+    int err;
+
+    err = pl2_psp_exit_callback_id = sceKernelCreateCallback(
+        "pl2PspExitCallback", pl2PspExitCallback, NULL);
+
+    if(err < 0) return err;
+
+    err = sceKernelRegisterExitCallback(pl2_psp_exit_callback_id);
+
+    if(err < 0) return err;
+
+    err = sceKernelSleepThread();
+
+    if(err < 0) return err;
+
+    return 0;
+}
+
+static int pl2PspRegisterCallbacks()
+{
+    int err;
+
+    err = pl2_psp_callback_thread_id = sceKernelCreateThread(
+        "pl2PspCallbackThread", pl2PspCallbackThread, 0x10, 0x400, 0, NULL);
+
+    if(err < 0) return err;
+
+    err = sceKernelStartThread(pl2_psp_callback_thread_id, 0, NULL);
+
+    if(err < 0) return err;
+
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    pl2PspRegisterCallbacks();
+    atexit(sceKernelExitGame);
+
+    if(!pl2GameInit(&argc, argv))
+        return 1;
+
+    pl2GameRun();
+    return 0;
+}
+
+#else
+
+int main(int argc, char *argv[])
+{
+    pl2DetectSSE();
+
+    if(!pl2GameInit(&argc, argv))
+        return 1;
+
+    pl2GameRun();
+    return 0;
+}
+
+#endif

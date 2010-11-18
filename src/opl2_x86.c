@@ -753,17 +753,4 @@ void pl2DetectSSE()
     }
 }
 
-/******************************************************************************/
-
-int main(int argc, char *argv[])
-{
-    pl2DetectSSE();
-
-    if(!pl2GameInit(&argc, argv))
-        return 1;
-
-    pl2GameRun();
-    return 0;
-}
-
 #endif

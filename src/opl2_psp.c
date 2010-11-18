@@ -421,16 +421,3 @@ int usleep(useconds_t usec)
 {
     return sceKernelDelayThread(usec);
 }
-
-/******************************************************************************/
-
-int main(int argc, char *argv[])
-{
-    atexit(sceKernelExitGame);
-
-    if(!pl2GameInit(&argc, argv))
-        return 1;
-
-    pl2GameRun();
-    return 0;
-}

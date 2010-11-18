@@ -67,7 +67,7 @@ static int pl2AlPlayThread(void *ud)
 
         int r = alGetError();
         if(r) DEBUGPRINT("%s: alGetError() returned %d\n", __func__, r);
-        usleep(1000);
+        SDL_Delay(1);
     }
 
     return 0;

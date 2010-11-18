@@ -167,10 +167,10 @@ $(VMTEST): src/opl2_vm.o src/opl2_x86.c
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ -lm -DVMTEST $(LIBS)
 
 $(PL2EX): tools/pl2ex.o src/opl2_int.o src/opl2_pl2.o
-	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
 
-$(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl2_vm.o src/opl2_idx.o
-	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+$(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl2_vm.o src/opl2_x86.c src/opl2_idx.o
+	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
 
 endif
 
