@@ -7,7 +7,7 @@
 static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 {
     //const uint8_t *org = data;
-    
+
     PRINTFREERAM();
 
     if(!data)
@@ -307,6 +307,8 @@ pl2Model *pl2ModelLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
+    if(!name) return 0;
+
     char temp[FILENAME_MAX];
     snprintf(temp, sizeof(temp), "%s.tmb", name);
 
@@ -326,6 +328,8 @@ pl2Model *pl2ModelLoad(const char *name)
 pl2Model *pl2ModelLoadFile(const char *name)
 {
     PL2_CLEAR_ERROR();
+
+    if(!name) return 0;
 
     FILE *file = fopen(name, "rb");
 
@@ -443,4 +447,3 @@ void pl2ModelFree(pl2Model *model)
         PRINTFREERAM();
     }
 }
-

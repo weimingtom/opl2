@@ -72,6 +72,8 @@ pl2Anim *pl2AnimLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
+    if(!name) return 0;
+
     char temp[FILENAME_MAX];
     snprintf(temp, sizeof(temp), "%s.tsb", name);
 
@@ -91,6 +93,8 @@ pl2Anim *pl2AnimLoad(const char *name)
 pl2Anim *pl2AnimLoadFile(const char *name)
 {
     PL2_CLEAR_ERROR();
+
+    if(!name) return 0;
 
     FILE *file = fopen(name, "rb");
 

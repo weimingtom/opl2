@@ -417,7 +417,7 @@ uint32_t pl2GetFreeRam()
 
 /******************************************************************************/
 
-int usleep(useconds_t usec)
-{
-    return sceKernelDelayThread(usec);
-}
+//int usleep(useconds_t usec)
+//{
+//    return sceKernelDelayThread(usec);
+//}

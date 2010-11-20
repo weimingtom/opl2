@@ -219,6 +219,8 @@ pl2CameraPath *pl2CameraPathLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
+    if(!name) return 0;
+
     char temp[FILENAME_MAX];
     snprintf(temp, sizeof(temp), "%s.tcm", name);
 
@@ -238,6 +240,8 @@ pl2CameraPath *pl2CameraPathLoad(const char *name)
 pl2CameraPath *pl2CameraPathLoadFile(const char *name)
 {
     PL2_CLEAR_ERROR();
+
+    if(!name) return 0;
 
     FILE *file = fopen(name, "rb");
 

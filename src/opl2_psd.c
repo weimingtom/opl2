@@ -7,6 +7,8 @@ pl2Image *pl2ImageLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
+    if(!name) return 0;
+
     char temp[FILENAME_MAX];
     snprintf(temp, sizeof(temp), "%s.psd", name);
 
@@ -33,7 +35,7 @@ pl2Image *pl2ImageLoad(const char *name)
         pl2PackageFileFree(file);
         PL2_ERROR(PL2_ERR_MEMORY);
     }
-    
+
     // TODO: load image
 
     pl2PackageFileFree(file);

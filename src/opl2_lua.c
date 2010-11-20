@@ -858,6 +858,127 @@ static luaL_Reg pl2_functions[] =
 
 /******************************************************************************/
 
+static int l_pl2SaveState_gc(lua_State *L)
+{
+    if(luaL_getmetafield(L, 1, "__index"))
+    {
+        luaL_checktype(L, -1, LUA_TTABLE);
+        lua_replace(L, 1);
+
+        DEBUGPRINT("%s: saving state...\n", __func__);
+
+        FILE *save = fopen(PL2_SAVEFILE, "wt");
+
+        if(save)
+        {
+            lua_pushnil(L);
+
+            while(lua_next(L, 1))
+            {
+                const char *name = luaL_checkstring(L, -2);
+
+                switch(lua_type(L, -1))
+                {
+                    case LUA_TNONE:
+                    case LUA_TNIL:
+                    {
+                        // shouldn't even get here
+                        DEBUGPRINT("%s: found nil value in 'save' table?", __func__);
+                        break;
+                    }
+
+                    case LUA_TBOOLEAN:
+                    {
+                        int value = lua_toboolean(L, -1);
+                        fprintf(save, "%s = %s\n", name, value ? "true" : "false");
+                        break;
+                    }
+
+                    case LUA_TNUMBER:
+                    {
+                        float value = lua_tonumber(L, -1);
+                        fprintf(save, "%s = %.14g\n", name, value);
+                        break;
+                    }
+
+                    case LUA_TSTRING:
+                    {
+                        lua_getfield(L, -1, "format");
+                        lua_pushstring(L, "%q");
+                        lua_pushvalue(L, -3);
+                        lua_call(L, 2, 1);
+                        const char *value = lua_tostring(L, -1);
+                        fprintf(save, "%s = %s\n", name, value);
+                        lua_pop(L, 1);
+                        break;
+                    }
+
+                    default:
+                    {
+                        //return luaL_error(L, "can't save value of type %s",
+                        //                  luaL_typename(L, -1));
+                        break;
+                    }
+                }
+
+                DEBUGPRINT("\t%s\n", name);
+
+                lua_pop(L, 1);
+            }
+
+            fclose(save);
+            DEBUGPRINT("%s: done.\n", __func__);
+        }
+        else
+        {
+            DEBUGPRINT("%s: error opening save file\n", __func__);
+        }
+    }
+    else
+    {
+        DEBUGPRINT("%s: save state has no __index metafield?\n", __func__);
+    }
+
+    return 0;
+}
+
+static int l_pl2SaveState_new(lua_State *L)
+{
+    lua_newuserdata(L, 0);
+
+    lua_newtable(L);
+    lua_newtable(L);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -3, "__index");
+    lua_setfield(L, -2, "__newindex");
+    lua_pushcfunction(L, l_pl2SaveState_gc);
+    lua_setfield(L, -2, "__gc");
+    lua_setmetatable(L, -2);
+
+    return 1;
+}
+
+static int l_pl2SaveState_load(lua_State *L)
+{
+    l_pl2SaveState_new(L);
+
+    int err = luaL_loadfile(L, PL2_SAVEFILE);
+
+    if(!err)
+    {
+        luaL_getmetafield(L, -2, "__index");
+        lua_setfenv(L, -2);
+        err = lua_pcall(L, 0, 0, 0);
+    }
+
+    if(err)
+    {
+        DEBUGPRINT("%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
+    }
+
+    return 1;
+}
+
 static char pl2_lua_init[] =
 "light1=pl2.light(1)"
 "light2=pl2.light(2)"
@@ -872,8 +993,23 @@ static char pl2_lua_init[] =
 
 int luaopen_pl2(lua_State *L)
 {
+    int err;
+
     luaL_register(L, "pl2", pl2_functions);
-    lua_pop(L, 1);
+
+    lua_pushcfunction(L, l_pl2SaveState_load);
+
+    err = lua_pcall(L, 0, 1, 0);
+
+    if(err)
+    {
+        DEBUGPRINT("%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    else
+    {
+        lua_setfield(L, -2, "save");
+    }
 
     luaL_newmetatable(L, "pl2Character");
     lua_newtable(L);
@@ -903,7 +1039,7 @@ int luaopen_pl2(lua_State *L)
     luaL_register(L, NULL, pl2Layer_meta);
     lua_pop(L, 1);
 
-    int err = luaL_loadbuffer(L, pl2_lua_init, strlen(pl2_lua_init), "@init.lua");
+    err = luaL_loadbuffer(L, pl2_lua_init, strlen(pl2_lua_init), "@init.lua");
 
     if(!err)
     {

@@ -122,6 +122,8 @@ pl2Sound *pl2SoundLoad(const char *name)
 {
     PL2_CLEAR_ERROR();
 
+    if(!name) return 0;
+
     char temp[FILENAME_MAX];
     snprintf(temp, sizeof(temp), "%s.ogg", name);
 

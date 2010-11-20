@@ -1,10 +1,16 @@
-local image, menu, play, wait = pl2.setImage, pl2.showMenu, pl2.play, pl2.wait
+local image, text, menu = pl2.setImage, pl2.showText, pl2.showMenu
+local play, wait = pl2.play, pl2.wait
 
-local function text(s)
-    pl2.showText(s:gsub('&([0-9])',
+local save, temp = pl2.save, {}
+
+local script, title, h_mode, Hselect
+local storyA, storyB, storyC, storyD, storyE, storyF
+
+local function _(s)
+    return s:gsub('&([0-3])',
         function(n)
-        return ({ani,imo,ani,imo})[tonumber(n)+1]:getName()
-        end))
+            return ({ani,imo,ani,imo})[tonumber(n)+1]:getName()
+        end)
 end
 local function bgsound(...)
     return play('bgsound',...)
@@ -20,28 +26,6 @@ local function voice(...)
 end
 
 --------------------------------------------------------------------------------
-
-fore:fade(0, 0)
-back:fade(0, 0)
-
-light1:setPosition(-1, -1, -1)
-light1:setDiffuse(0.6, 0.6, 0.6)
-light1:setAmbient(0.8, 0.8, 0.8)
-light1:setSpecular(1.0, 1.0, 1.0)
-light1:setEnabled(true)
-
-light2:setPosition(1, 1, 1)
-light2:setDiffuse(0.2, 0.2, 0.2)
-light2:setAmbient(0.2, 0.2, 0.2)
-light2:setSpecular(0.8, 0.8, 0.8)
-light2:setEnabled(true)
-
-camera:setUp(0, 1, 0)
-camera:setFov(35)
-
-imo:clear()
-ani:clear()
-room:clear()
 
 imo2:setName('？？？', 1.0, 1.0, 1.0)
 imo:setName('早苗', 1.0, 0.6, 0.6)
@@ -107,9 +91,6 @@ local rooms = {
 
 --------------------------------------------------------------------------------
 
-local script, title, h_mode, Hselect
-local storyA, storyB, storyC, storyD, storyE, storyF
-
 local skip = false
 
 function script()
@@ -150,12 +131,36 @@ function quit()
     music(nil, 2)
     fore:fade(0, 2)
     wait(2.25)
-    pl2.quit()
+    --pl2.quit()
 end
 
 function title()
     print'title'
     local r = rooms[randomItem(rooms)]
+
+    camera:setUp(0, 1, 0)
+    camera:setFov(35)
+
+    imo:clear()
+    ani:clear()
+    room:clear()
+
+    camera:setLocked(false)
+
+    light1:setPosition(-1, -1, -1)
+    light1:setDiffuse(0.6, 0.6, 0.6)
+    light1:setAmbient(0.8, 0.8, 0.8)
+    light1:setSpecular(1.0, 1.0, 1.0)
+    light1:setEnabled(true)
+
+    light2:setPosition(1, 1, 1)
+    light2:setDiffuse(0.2, 0.2, 0.2)
+    light2:setAmbient(0.2, 0.2, 0.2)
+    light2:setSpecular(0.8, 0.8, 0.8)
+    light2:setEnabled(true)
+
+    imo:setVisible(false)
+    ani:setVisible(false)
 
     room:setModels(r)
     room:setAnim(r.anim)
@@ -176,7 +181,12 @@ function title()
 
     pl2.setQuit(true)
 
-    local i = menu{ 'ストーリーモード', 'とことんＨモード', '終了' }
+    local i = menu{
+        'ストーリーモード',
+        save.unlocked_h_mode
+            and 'とことんＨモード'
+            or '*とことんＨモード',
+        '終了' }
     print('selected',i)
 
     return ({ storyA, h_mode, quit })[i]()
@@ -205,6 +215,8 @@ function h_mode()
     ani:setModels{ 'ani_bodyB_00' }
     ani:setVisible(false)
 
+    temp.h_mode = true
+
     camera:setPath(nil)
     music('BGM05',0)
 
@@ -229,7 +241,7 @@ function h_mode()
     back:fade(1, 0)
     fore:fade(1, 2)
 
-    text'&3が待ち合わせた場所にやってきた。'
+    text(_'&3が待ち合わせた場所にやってきた。')
     text'恥ずかしいのかもじもじと身体を動かしている。'
 
     ani'「よしよし‥‥‥‥ちゃんと言われた通りの格好をして来たな」'
@@ -244,7 +256,7 @@ function h_mode()
 
     if 1 == menu{ '色々なポーズを取らせる', '‥‥えっちする' } then
         camera:setPath'cam2_3'
-        ani'うん、可愛い格好だよ‥‥&3‥‥‥‥'
+        ani(_'うん、可愛い格好だよ‥‥&3‥‥‥‥')
 
         ani'それじゃー、もっと良く見せて？'
 
@@ -267,7 +279,7 @@ function h_mode()
         until i == 8
     end
 
-    text'俺は&3を隣に誘い静かに腰をかけた。'
+    text(_'俺は&3を隣に誘い静かに腰をかけた。')
 
     back:fade(0, 2)
     wait(2)
@@ -275,6 +287,767 @@ function h_mode()
 end
 
 function Hselect()
+    pl2.setTitle(false)
+    pl2.setQuit(true)
+
+    if temp.h_mode then
+        if temp.zen_step ~= 4 then
+            imo:setPoint'loc_pos01'
+            ani:setPoint'loc_pos01'
+            camera:setPoint'loc_pos01'
+            ani:setVisible(true)
+
+            music('BGM02', 0)
+
+            imo:setAnim'zen_a01_F'
+            ani:setAnim'zen_a01_M'
+
+            camera:setPath'zen_a01_1'
+
+            back:fade(1, 1)
+        end
+    else
+--[==[
+#＜初めて来たか？の分岐＞
+
+    %E18,=,1,h_mode;
+    %E11,=,0,zen01a;
+
+
+
+#＜妹と兄の状態が達してないか？＞
+
+
+
+%E128,>=,100,end00;
+%E129,>=,100,end00;
+
+
+
+#＜%nおにいちゃんの状態、服装＞
+
+
+
+
+%E129,>=,17,ani2;
+
+
+
+:ani1;
+    %E12,=,0,ani1a;
+    %E12,=,1,zensex;
+
+
+:ani1a;
+    %ml1,ani_bodyB_00;
+    %S12,=,1;
+    %Jzensex;
+
+
+:ani2;
+
+%E129,>=,50,ani3;
+
+    %E13,=,0,ani2a;
+    %E13,=,1,zensex;
+
+:ani2a;
+    %f0,0,60;
+    %w60;
+    %ml1,ani_bodyC_00;
+    %W1;
+
+    興奮で身体が燃えるように熱い。%K
+
+    汗が服に張り付く感触が不快だ。%K
+
+    だから、俺はシャツを脱ぐ事にした‥‥‥‥%K
+
+    %S65,=,1;
+    %S13,=,1;
+    %Jzensex;
+
+:ani3;
+    %E14,=,0,ani3a;
+    %E14,=,1,zensex;
+
+:ani3a;
+    %f0,0,60;
+    %w60;
+    %ml1,ani_bodyA_00;
+    %W1;
+
+    これ以上我慢が出来ない。%K
+
+    下半身を覆う布の下で俺の半身が爆発しそうだ。%K
+
+    それを解放する為にズボンを脱ぎ、俺は全裸になった‥‥‥‥%K
+
+    %S65,=,1;
+    %S14,=,1;
+    %Jzensex;
+--]==]
+
+    end
+
+--[==[
+#＜前戯か本番か＞
+:zensex;
+    %E16,=,0,zen00;
+    %E16,=,1,sex00;
+
+
+
+
+
+#＜前戯＞
+
+:zen00;
+    %W0;
+
+
+
+%E129,>=,17,zen00b;
+
+
+
+:zen00a;
+    %W0;
+
+    %i話す,zen01;
+    %i抱きしめる,zen02;
+    %iキスをする,zen03;
+
+    %E65,=,1,nugi1;
+
+    %i‥‥服を脱ぐ＆脱がす,nude00;
+
+
+    %E18,=,0,b1;
+    %i次のステップへ‥‥‥,h1;
+
+:nugi1;
+    %S65,=,0;
+
+:b1;
+
+
+    %I
+
+
+:zen00b;
+    %W0;
+
+%E129,>=,50,zen00c;
+
+    %i胸を揉む,zen04;
+    %i胸を舐める,zen05;
+    %iあそこを触る,zen06;
+    %iあそこを舐める,zen07;
+    %i足でしてもらう,ashi01;
+    %i足でされる,ashi02;
+
+
+    %E65,=,1,a2;
+    %i‥‥服を脱ぐ＆脱がす,nude00;
+
+
+    %E18,=,0,b2;
+    %i次のステップへ‥‥‥,h2;
+
+:a2;
+
+    %S65,=,0;
+
+
+:b2;
+
+
+
+
+
+    %I
+
+
+
+:zen00c;
+    %W0;
+
+    %i舐めてもらう,zen08;
+    %i口に含んでもらう,zen09;
+    %iオナニーをさせる,zen10;
+    %i両足くにくに,ashi03;
+    %i手でしてもらう,tekoki01;
+    %iパイズリ,paizuri01;
+    %iヴァイブプレイ,vib01;
+    %E65,=,1,a3;
+    %i‥‥妹と一つになる,sex00;
+    %i‥‥服を脱ぐ＆脱がす,nude00;
+
+
+
+:a3;
+    %S65,=,0;
+
+    %I
+
+
+
+:paizuri01;
+    %f0,0,60;
+    %w60;
+    %Gpaizuri_01;
+
+
+
+:zen01;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %S11,=,1;
+    %Gzen_01;
+
+
+:zen01a;
+    %W0;
+    %f0,0,60;
+    %w60;
+
+    %S11,=,1;
+    %S12,=,1;
+    %Gzen_01;
+
+:zen02;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_02;
+
+
+:zen03;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_03;
+
+
+:zen04;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_04;
+
+
+:zen05;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_05;
+
+
+:zen06;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_06;
+
+
+:zen07;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_07;
+
+
+:zen08;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_08;
+
+
+:zen09;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_09;
+
+
+:zen10;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gzen_10;
+
+
+
+
+
+
+
+#＜おかわり、追加分＞
+
+
+:ashi01;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gok_ashi01;
+
+
+:ashi02;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gok_ashi02;
+
+
+
+:ashi03;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gok_ashi03;
+
+
+:tekoki01;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gok_tekoki01;
+
+
+
+:vib01;
+    %W0;
+    %f0,0,60;
+    %w60;
+    %Gok_vib01;
+
+
+
+
+
+
+#＜前戯、服脱ぎ＞
+
+
+
+:nude00;
+
+    %n;
+    &3の綺麗な肌が見たい‥‥‥%K
+
+    そう思い、彼女の服を脱がそうと手をのばした‥‥‥%K
+
+    %E61,=,1,up;
+    %i上半身の服を脱がす,nude01;
+
+:up;
+    %E62,=,1,dw;
+    %i下半身の服を脱がす,nude02;
+
+:dw;
+    %E61,=,0,br1;
+    %E63,>=,1,br1;
+    %iブラを半脱ぎ,nude03;
+
+:br1;
+
+    %E64,>=,1,pn1;
+    %iパンティを半脱ぎ,nude04;
+
+:pn1;
+    %E63,=,0,br2;
+    %E63,=,2,br2;
+    %iブラを脱がす,nude05;
+
+:br2;
+    %E64,=,0,pn2;
+    %E64,=,2,pn2;
+    %iパンティを脱がす,nude06;
+
+:pn2;
+    %E68,=,1,pn3;
+
+    %i靴を脱がす,nude10;
+
+:pn3;
+
+    %i‥‥脱がすのを止める,nude07;
+
+    %E18,=,0,an1;
+    %E14,=,1,an1;
+
+    %i‥‥自分の服を脱ぐ,ani01;
+
+:an1;
+
+    %I
+
+
+
+
+
+:nude01;
+    %f0,0,30;
+    %w30;
+    %md0,5;
+
+    %S61,=,1;
+
+
+    %n&0;「暑いから脱ごうな‥‥‥」%K
+
+    %n;
+    そう言って俺は&3の上着を丁寧に脱がしてあげた‥‥‥%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+:nude02;
+    %f0,0,30;
+    %w30;
+    %md0,6;
+
+    %S62,=,1;
+
+    %n;
+    &3の下半身に手を伸ばし服を掴む。%K
+
+    &3は赤くなりながらも、俺に抵抗せず服を脱がされていく‥‥‥%K
+
+
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+:nude03;
+    %f0,0,30;
+    %w30;
+
+    %S63,=,1;
+
+    %mh0,0,1;   #＜ブラを半脱ぎ＞
+
+    %n;
+    ブラを少しだけずらした。%K
+
+    すると、柔らかい桃の果実が姿を現した。%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+
+:nude04;
+    %f0,0,30;
+    %w30;
+
+    %S64,=,1;
+    %S15,=,1;
+
+    %mh0,1,1;   #＜パンツを半脱ぎ＞
+
+    %mc0,0,1;
+    %mc0,1,0;
+#   %mc0,2,0;
+
+    %n;
+    &3の大事な部分を覆う布をずらした。%K
+
+    現れた秘裂は汗かそれとも別の分泌物でてらてら光ってる。%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+:nude05;
+    %f0,0,30;
+    %w30;
+
+    %mh0,0,2;
+    %S63,=,2;
+    %S15,=,1;
+
+
+    %mc0,0,1;
+    %mc0,1,0;
+    %mc0,2,0;
+
+
+
+    %n;
+    この綺麗な果実をしっかり堪能したいと思った。%K
+
+    だから俺は下着を剥ぐように脱がせた。%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+:nude06;
+    %f0,0,30;
+    %w30;
+
+    %S15,=,1;
+    %S64,=,2;
+
+    %mh0,1,2;
+
+    %mc0,0,1;
+    %mc0,1,0;
+    %mc0,2,0;
+
+    %n;
+    &3のおしりは綺麗だと思った。%K
+
+    だから下半身を覆う下着を脱がせる‥‥‥%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+
+:nude07;
+    %f0,0,30;
+    %w30;
+
+    %n;
+    やっぱり脱がすのは止めよう。%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+
+
+:ani01;
+    %f0,0,30;
+    %w30;
+
+
+    %E13,=,1,an02;
+    %E12,=,1,an01;
+
+
+:an01;
+    %S12,=,0;
+    %S13,=,1;
+
+    %n;
+    我慢出来ない‥‥‥‥俺はシャツを脱いだ。%K
+
+    %S65,=,1;
+    %ml1,ani_bodyC_00;
+#   %f0,255,30;
+    %w30;
+
+
+
+    %Jzen00;
+
+
+:an02;
+
+    %S13,=,0;
+    %S14,=,1;
+
+
+    %n;
+    俺はズボンとパンツを脱ぎ、自分の下半身の解放した。%K
+
+    %S65,=,1;
+    %ml1,ani_bodyA_00;
+#   %f0,255,30;
+    %w30;
+
+
+    %Jzen00;
+
+
+:nude10;
+    %f0,0,30;
+    %w30;
+
+    %S68,=,1;
+
+    %md0,11;
+
+    %n;
+    &3の小さな足が好きだ%K
+
+    だから靴を脱がせた‥‥‥%K
+
+    %f0,255,30;
+    %w30;
+    %Jzen00;
+
+
+
+
+
+
+
+
+
+#＜本番＞
+
+
+:sex00;
+    %W0;
+    %Gsex_sel;
+
+
+
+
+#＜初めてのエッチ＞
+:sex00a;
+
+    %E18,=,1,h3;
+
+
+#   <ストーリーモード導入>
+
+
+    %f0,0,120;
+    %w120;
+    %W1;
+
+    我慢の限界だった。%K
+
+    &3と一つになりたい衝動をこれ以上押さえ切れない。%K
+
+    %n&0;「‥‥‥‥‥‥‥‥&3‥‥‥」%K
+
+%o0283; %n&1;「うん‥‥‥‥‥いいよ‥‥‥おにいちゃん‥‥‥‥わたしは‥‥‥‥‥大丈夫だから‥‥‥‥‥」%K
+
+    %n&0;「‥‥‥‥‥‥わかった」%K
+    %n;
+    亀頭を割れ目にあてがう。%K
+
+    お互いの粘液が絡み合い、くちゅりっと音を立てる。%K
+
+    体重をかけ、ずぶずぶと太い肉塊を膣内に収めていく。%K
+
+
+    %mp0,loc_pos02;
+    %mp1,loc_pos02;
+    %cploc_pos02;
+    %mv1,1;
+
+
+    %mm0,sex_a01_F;
+    %mm1,sex_a01_M;
+    %csex_a01_1,0;
+    %f0,255,60;
+    %w60;
+
+
+
+
+
+%o0284; %n&1;「くうっ！！‥‥‥‥‥‥‥‥‥あっ‥‥‥‥‥‥‥あっ‥‥‥」%K
+    %n;
+    少し挿入したところで軽い抵抗を感じる。%K
+
+    &3の処女膜だ。%K
+
+%o0285; %n&1;「あああああっ！！‥‥‥‥‥‥い‥‥痛い‥‥‥‥‥痛いよぅ‥‥‥‥」%K
+    %n;
+    可愛そうにも思えたが、一つになりたいと言う欲望の方が勝っていた。%K
+
+    俺は構わずに腰を進める。%K
+
+%o0286; %n&1;「あああっ！！‥‥‥‥おにぃちゃんっ！！‥‥‥‥‥おにぃちゃんっ！！」%K
+    %n;
+    異物に対する恐怖と痛みに耐える為、&3が俺を呼び続ける。%K
+
+    我慢の限界かと思われたその時‥‥‥‥‥‥‥%K
+
+    ぷつっ‥‥‥%K
+
+    突然抵抗が消えた。%K
+
+    先ほどまでの圧迫感は消え、代わりに全体を包む温もりが陰茎を伝ってくる。%K
+
+%o0287; %n&1;「あああああっ！！‥‥‥‥‥‥‥‥はあっ‥‥‥‥‥‥‥はあっ‥‥‥‥‥‥‥」%K
+
+    %n;
+    ‥‥‥‥‥‥&3は女になった。%K
+
+    見ると瞳から涙が溢れ出ていた。%K
+
+    %n&0;「‥‥‥‥‥痛いのか？」%K
+
+%o0288; %n&1;「ううん‥‥‥‥‥ちがうの‥‥‥‥‥うれしいの‥‥‥‥‥」%K
+    %n;
+    痛くない筈はない。%K
+
+    それなのに&3は笑顔でそう答える‥‥‥‥%K
+
+    自分の中に愛おしさが堪らなくこみ上げて来るのがわかった。%K
+
+%o0288A;%n&1;「へ、平気だから‥‥‥‥‥‥‥続けて‥‥‥‥いいよ‥‥‥‥‥‥‥」%K
+
+    %n&0;「‥‥‥‥ああ」%K
+    %n;
+    今は精一杯優しくしてやろう‥‥‥‥‥俺はそう思った。%K
+
+
+    %S17,=,1;
+
+    %Jsex00b;
+
+
+
+
+
+
+
+
+
+
+
+:h1;
+
+    %W0;
+    %S129,=,30;
+
+    %Jzensex;
+
+:h2;
+    %W0;
+    %S129,=,70;
+
+    %Jzensex;
+
+
+:h3;
+    %W0;
+    %S16,=,1;
+    %S17,=,1;
+
+    %Jsex00;
+
+
+
+
+
+
+
+
+#＜エンディング判定＞
+
+:end00;
+
+    %Gsex_sel;
+
+
+--]==]
+
     return script()
 end
 
