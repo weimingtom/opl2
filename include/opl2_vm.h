@@ -28,6 +28,7 @@ void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b);
 void pl2QuatRotate(fvector3_t *out, const fvector3_t *v, const fvector3_t *axis, float angle);
 void pl2VectorOrbit(fvector3_t *planet, const fvector3_t *sun, const fvector3_t *up, const fvector3_t *rotate);
 void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance);
+void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame);
 
 # else
 
@@ -52,6 +53,7 @@ extern void (*pl2QuatMultiply)(fvector4_t *out, const fvector4_t *a, const fvect
 extern void pl2QuatRotate(fvector3_t *out, const fvector3_t *v, const fvector3_t *axis, float angle);
 extern void pl2VectorOrbit(fvector3_t *planet, const fvector3_t *sun, const fvector3_t *up, const fvector3_t *rotate);
 extern void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance);
+extern void (*pl2ModelAnimate)(pl2Model *model, const pl2Anim *anim, uint32_t frame);
 
 # endif
 

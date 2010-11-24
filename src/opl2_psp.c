@@ -8,7 +8,7 @@ PSP_HEAP_SIZE_MAX();
 
 /******************************************************************************/
 
-void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
+inline void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
 {
     asm volatile(
         "lv.q   c100,  0+%1\n"
@@ -29,7 +29,7 @@ void pl2MultMatrix4f(fmatrix4_t *out, const fmatrix4_t *a, const fmatrix4_t *b)
     );
 }
 
-void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v)
+inline void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v)
 {
     asm volatile(
         "lv.q   c100,  0+%1\n"
@@ -44,7 +44,7 @@ void pl2VectorTransform4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t
     );
 }
 
-void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
+inline void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
 {
     asm volatile(
         "lv.q  c000,  0+%1\n"
@@ -59,7 +59,7 @@ void pl2TransposeMatrix4f(fmatrix4_t *out, const fmatrix4_t *m)
     );
 }
 
-void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
+inline void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
     asm volatile(
         "lv.q  c010, 0+%1\n"
@@ -71,7 +71,7 @@ void pl2VectorAdd4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
     );
 }
 
-void pl2VectorSub4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
+inline void pl2VectorSub4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
     asm volatile(
         "lv.q  c010, 0+%1\n"
@@ -83,7 +83,7 @@ void pl2VectorSub4f(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
     );
 }
 
-float pl2VectorDot4f(const fvector4_t *a, const fvector4_t *b)
+inline float pl2VectorDot4f(const fvector4_t *a, const fvector4_t *b)
 {
     float r;
     asm volatile(
@@ -96,7 +96,7 @@ float pl2VectorDot4f(const fvector4_t *a, const fvector4_t *b)
     return r;
 }
 
-void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
+inline void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
 {
     asm volatile(
         "mtv    %2, s020\n"
@@ -108,7 +108,7 @@ void pl2VectorScale4f(fvector4_t *out, const fvector4_t *v, float s)
     );
 }
 
-void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
+inline void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
 {
     asm volatile(
         "mtv    %2, s020\n"
@@ -122,7 +122,7 @@ void pl2VectorScaleAdd4f(fvector4_t *out, const fvector4_t *v, float s)
     );
 }
 
-void pl2VectorTransScaleAdd4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s)
+inline void pl2VectorTransScaleAdd4f(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s)
 {
     asm volatile(
         "lv.q   c000, 0+%0\n"
@@ -141,7 +141,7 @@ void pl2VectorTransScaleAdd4f(fvector4_t *out, const fmatrix4_t *m, const fvecto
     );
 }
 
-void pl2VectorAdd3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
+inline void pl2VectorAdd3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 {
     asm volatile(
         "ulv.q  c010, %1\n"
@@ -155,7 +155,7 @@ void pl2VectorAdd3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
     );
 }
 
-void pl2VectorSub3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
+inline void pl2VectorSub3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 {
     asm volatile(
         "ulv.q  c010, %1\n"
@@ -169,7 +169,7 @@ void pl2VectorSub3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
     );
 }
 
-float pl2VectorDot3f(const fvector3_t *a, const fvector3_t *b)
+inline float pl2VectorDot3f(const fvector3_t *a, const fvector3_t *b)
 {
     float r;
     asm volatile(
@@ -183,7 +183,7 @@ float pl2VectorDot3f(const fvector3_t *a, const fvector3_t *b)
     return r;
 }
 
-void pl2VectorCross3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
+inline void pl2VectorCross3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
 {
     asm volatile(
         "ulv.q  c010, %1\n"
@@ -197,7 +197,7 @@ void pl2VectorCross3f(fvector3_t *out, const fvector3_t *a, const fvector3_t *b)
     );
 }
 
-void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
+inline void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
 {
     asm volatile(
         "mtv    %2, s020\n"
@@ -211,7 +211,7 @@ void pl2VectorScale3f(fvector3_t *out, const fvector3_t *v, float s)
     );
 }
 
-void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
+inline void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
 {
     asm volatile(
         "mtv    %2, s020\n"
@@ -227,7 +227,7 @@ void pl2VectorScaleAdd3f(fvector3_t *out, const fvector3_t *v, float s)
     );
 }
 
-float pl2VectorLength3f(const fvector3_t *v)
+inline float pl2VectorLength3f(const fvector3_t *v)
 {
     float r;
     asm volatile(
@@ -241,7 +241,7 @@ float pl2VectorLength3f(const fvector3_t *v)
     return r;
 }
 
-void pl2VectorNormalize3f(fvector3_t *out, const fvector3_t *v)
+inline void pl2VectorNormalize3f(fvector3_t *out, const fvector3_t *v)
 {
     asm volatile(
         "ulv.q  c010, %1\n"
@@ -256,7 +256,7 @@ void pl2VectorNormalize3f(fvector3_t *out, const fvector3_t *v)
     );
 }
 
-void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
+inline void pl2QuatMultiply(fvector4_t *out, const fvector4_t *a, const fvector4_t *b)
 {
     asm volatile(
         "ulv.q  c010, 0+%1\n"
@@ -380,6 +380,112 @@ void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance)
     );
 }
 
+/******************************************************************************/
+
+static fmatrix4_t pl2_temp_bones[256];
+
+void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame)
+{
+    if(!(model && anim)) return;
+
+    if(frame >= anim->numFrames)
+    {
+        frame = anim->loopFrame +
+                (frame - anim->loopFrame) %
+                (anim->numFrames - anim->loopFrame);
+    }
+
+    int numBones = (model->numBones < anim->numBones) ? model->numBones : anim->numBones;
+
+    if(numBones <= 0) return;
+
+    //DEBUGPRINT("%s: model->numBones == %d, anim->numBones == %d, numBones == %d\n",
+    //           __func__, model->numBones, anim->numBones, numBones);
+
+    int i, j;
+
+    fmatrix4_t *bones = pl2_temp_bones;
+    fmatrix4_t *mdlBones = model->bones;
+    fmatrix4_t *seqBones = anim->bones + (anim->numBones * frame);
+
+    for(i = 0; i < numBones; i++)
+    {
+        pl2MultMatrix4f(&(bones[i]), &(mdlBones[i]), &(seqBones[i]));
+    }
+    bones[255] = (fmatrix4_t){{1,0,0,0},{0,1,0,0},{0,0,1,0},{0,0,0,1}};
+
+    for(i = 0; i < model->numObjects; i++)
+    {
+        pl2Object *obj = &(model->objects[i]);
+
+        uint32_t numVertices = obj->numTriangles * 3;
+
+        for(j = 0; j < numVertices; j++)
+        {
+            pl2Vertex *vert = &(obj->vertices[j]);
+
+            DEBUGPRINTIF(vert->bones[0] != 255 && vert->bones[0] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[0], numBones);
+            DEBUGPRINTIF(vert->bones[1] != 255 && vert->bones[1] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[1], numBones);
+            DEBUGPRINTIF(vert->bones[2] != 255 && vert->bones[2] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[2], numBones);
+            DEBUGPRINTIF(vert->bones[3] != 255 && vert->bones[3] >= numBones,
+                         "%s: need bone %d but only %d bones\n",
+                         __func__, vert->bones[3], numBones);
+
+            float w0 = vert->weights[0],
+                  w1 = vert->weights[1],
+                  w2 = vert->weights[2],
+                  w3 = 1.0f - w0 - w1 - w2;
+
+            fvector4_t v = { vert->vertex.x, vert->vertex.y, vert->vertex.z, 1.0f };
+            fvector4_t n = { vert->normal.x, vert->normal.y, vert->normal.z, 0.0f };
+            //fvector4_t t;
+            fvector4_t tv = { 0, 0, 0 }, tn = { 0, 0, 0 };
+
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w0);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[0]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w0);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[0]]), &v, w0);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[0]]), &n, w0);
+
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w1);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[1]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w1);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[1]]), &v, w1);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[1]]), &n, w1);
+
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w2);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[2]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w2);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[2]]), &v, w2);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[2]]), &n, w2);
+
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &v);
+            //pl2VectorScaleAdd4f(&tv, &t, w3);
+            //pl2VectorTransform4f(&t, &(bones[vert->bones[3]]), &n);
+            //pl2VectorScaleAdd4f(&tn, &t, w3);
+            pl2VectorTransScaleAdd4f(&tv, &(bones[vert->bones[3]]), &v, w3);
+            pl2VectorTransScaleAdd4f(&tn, &(bones[vert->bones[3]]), &n, w3);
+
+            obj->glVertices[j].vertex.x = tv.x;
+            obj->glVertices[j].vertex.y = tv.y;
+            obj->glVertices[j].vertex.z = tv.z;
+            obj->glVertices[j].normal.x = tn.x;
+            obj->glVertices[j].normal.y = tn.y;
+            obj->glVertices[j].normal.z = tn.z;
+        }
+    }
+}
+
+/******************************************************************************/
 
 #define MEMORYSIZE (64<<20)
 #define MEMBLOCKBITS (20)

@@ -9,7 +9,10 @@ local storyA, storyB, storyC, storyD, storyE, storyF
 local function _(s)
     return s:gsub('&([0-3])',
         function(n)
-            return ({ani,imo,ani,imo})[tonumber(n)+1]:getName()
+            local t = {ani,imo,ani,imo}
+            local p = tonumber(n)+1
+            print(p, t[p], t[p]:getName())
+            return t[p]:getName()
         end)
 end
 local function bgsound(...)
@@ -27,9 +30,173 @@ end
 
 --------------------------------------------------------------------------------
 
+local function print(...)
+    local t = {...}
+    for i, v in ipairs(t) do
+        t[i] = tostring(v)
+    end
+    io.write(table.concat(t, '\t'), '\n')
+end
+
+local params = {
+    -- camera
+    c = 2, cp = 1, cl = 1, cu = 4, cv = 2,
+    -- lighting
+    l = -1, lv = 4, ld = 4, la = 4, ls = 4, le = 2,
+    -- models/animation
+    m = -1, mc = 3, ml = 2, mp = 2, ma = 3, md = 2, mh = 3, mv = 2, mV = 2,
+    mm = 2, mb = 2, mn = 2, mr = 0,
+    -- text/menus
+    Wl = 1, W = 1, n = 1, K = 0, r = 0, i = 2, I = 0,
+    -- graphics/effects
+    T = 1, g = 1, w = 1, f = 3,
+    -- sound/music
+    M = 2, MA = 2, MS = 2, o = 1, oR = 5,
+    -- flow control
+    G = 1, J = 1, Q = 0, q = 1, S = 3, E = 4,
+    -- unknown commands
+    X = 0, Z = 1,
+    }
+
+local done, scripts = {}, {}
+
+local hdr = string.rep('=',80)
+local sep = string.rep('-',80)
+
+function string:gfind(pattern, init, plain)
+    if not init then init = 1 end
+    local function f()
+        local t = { self:find(pattern, init, plain) }
+        if not t[2] then return end
+        init = t[2] + 1
+        return unpack(t)
+    end
+    return f
+end
+
+function string:split(d, m, k)
+    if not m then m = #self end
+    --print('split: m == ' .. m)
+    local r, i, n = {}, 1, 0
+    for s, e, p in self:gfind(d) do
+        r[#r+1] = self:sub(i, s-1)
+        if k then r[#r+1] = self:sub(s, e) end
+        i = e + 1 ; n = n + 1
+        if n > m then break end
+    end
+    if i <= #self then
+        r[#r+1] = self:sub(i)
+    end
+    return r
+end
+
+local function parseScript(name)
+    if scripts[name] then
+        return
+    end
+
+    scripts[name] = { labels = {}, commands = {} }
+
+    local lbls = scripts[name].labels
+    local cmds = scripts[name].commands
+
+    --print(hdr)
+    --print(name)
+    --print(hdr)
+
+    local scr = pl2.loadScript(name)
+
+    if not scr then
+        --print'Load error'
+        --print()
+        return
+    end
+
+    local x, y = 1, #scr
+
+    local line = 1
+
+    local c, l
+    while x <= y do
+        c = scr:sub(x,x)
+        x = x + 1
+
+        if c == '%' then
+            local xx = x
+            local cmd, arg = scr:sub(x, xx), {}
+
+            if params[cmd] then
+                while params[cmd] and xx <= y do
+                    xx = xx + 1
+                    cmd = scr:sub(x, xx)
+                end
+            else
+                x = xx + 1
+            end
+
+            cmd = scr:sub(x, xx - 1)
+            x = xx
+
+            if params[cmd] and params[cmd] >= 0 then
+                local t = '\t%' .. cmd
+
+                if params[cmd] > 0 then
+                    while scr:sub(xx, xx) ~= ';' do
+                        xx = xx + 1
+                    end
+                    arg = scr:sub(x, xx - 1):split(',', params[cmd])
+
+                    t = t .. table.concat(arg,',') .. ';'
+                end
+
+                print(t)
+
+                if cmd == 'G' then
+                    parseScript(arg[1])
+                    --print(sep)
+                    --print('>>> Back to ' .. name)
+                    --print(sep)
+                end
+            else
+                print(('%s(%d): warning: unknown command "%s"'):format(name, line, cmd))
+            end
+        elseif c == ':' then
+            local xx = x
+            while scr:sub(xx, xx) ~= ';' do
+                xx = xx + 1
+            end
+            x = xx + 1
+            lbls[scr:sub(x, xx-1)] = x
+        elseif c == '#' then
+            repeat
+                x = x + 1
+                c = scr:sub(x, x)
+            until c == '\013' or c == '\010'
+        elseif c == '\013' or c == '\010' then
+            if not(c == '\010' and l == '\013') then
+                line = line + 1
+            end
+        elseif c ~= '\009' then
+        end
+
+        l = c
+    end
+end
+
+if false then
+    local t = io.output()
+    io.output('parseScript.log')
+    parseScript('script')
+    io.output(t)
+    return
+end
+
+--------------------------------------------------------------------------------
+
 imo2:setName('？？？', 1.0, 1.0, 1.0)
 imo:setName('早苗', 1.0, 0.6, 0.6)
 ani:setName('おにいちゃん', 0.6, 0.6, 1.0)
+ani:setBlack(true)
 
 --------------------------------------------------------------------------------
 
@@ -136,7 +303,8 @@ end
 
 function title()
     print'title'
-    local r = rooms[randomItem(rooms)]
+    local r = (save.title_room or 0) % 3 + 1
+    save.title_room = r
 
     camera:setUp(0, 1, 0)
     camera:setFov(35)
@@ -162,7 +330,7 @@ function title()
     imo:setVisible(false)
     ani:setVisible(false)
 
-    room:setModels(r)
+    room:setModels(rooms[r])
     room:setAnim(r.anim)
     room:setVisible(true)
 
@@ -292,6 +460,8 @@ function Hselect()
 
     if temp.h_mode then
         if temp.zen_step ~= 4 then
+            temp.zen_step = 4
+
             imo:setPoint'loc_pos01'
             ani:setPoint'loc_pos01'
             camera:setPoint'loc_pos01'
@@ -312,83 +482,53 @@ function Hselect()
 
     %E18,=,1,h_mode;
     %E11,=,0,zen01a;
-
-
-
-#＜妹と兄の状態が達してないか？＞
-
-
-
-%E128,>=,100,end00;
-%E129,>=,100,end00;
-
-
-
-#＜%nおにいちゃんの状態、服装＞
-
-
-
-
-%E129,>=,17,ani2;
-
-
-
-:ani1;
-    %E12,=,0,ani1a;
-    %E12,=,1,zensex;
-
-
-:ani1a;
-    %ml1,ani_bodyB_00;
-    %S12,=,1;
-    %Jzensex;
-
-
-:ani2;
-
-%E129,>=,50,ani3;
-
-    %E13,=,0,ani2a;
-    %E13,=,1,zensex;
-
-:ani2a;
-    %f0,0,60;
-    %w60;
-    %ml1,ani_bodyC_00;
-    %W1;
-
-    興奮で身体が燃えるように熱い。%K
-
-    汗が服に張り付く感触が不快だ。%K
-
-    だから、俺はシャツを脱ぐ事にした‥‥‥‥%K
-
-    %S65,=,1;
-    %S13,=,1;
-    %Jzensex;
-
-:ani3;
-    %E14,=,0,ani3a;
-    %E14,=,1,zensex;
-
-:ani3a;
-    %f0,0,60;
-    %w60;
-    %ml1,ani_bodyA_00;
-    %W1;
-
-    これ以上我慢が出来ない。%K
-
-    下半身を覆う布の下で俺の半身が爆発しそうだ。%K
-
-    それを解放する為にズボンを脱ぎ、俺は全裸になった‥‥‥‥%K
-
-    %S65,=,1;
-    %S14,=,1;
-    %Jzensex;
 --]==]
 
+        if temp.f_arousal >= 100 or temp.m_arousal >= 100 then
+            return sex_sel()
+        end
+
+        if temp.m_arousal >= 50 then
+            if temp.ani_state ~= 3 then
+                temp.ani_state = 3
+
+                back:fade(0, 1)
+                wait(1)
+                ani:setModels{ 'ani_bodyA_00' }
+                pl2.setWindow(true)
+
+                text'これ以上我慢が出来ない。'
+                text'下半身を覆う布の下で俺の半身が爆発しそうだ。'
+                text'それを解放する為にズボンを脱ぎ、俺は全裸になった‥‥‥‥'
+
+                --%S65,=,1;
+                --%S14,=,1;
+            end
+        elseif temp.m_arousal >= 17 then
+            if temp.ani_state ~= 2 then
+                temp.ani_state = 2
+
+                back:fade(0, 1)
+                wait(1)
+                ani:setModels{ 'ani_bodyC_00' }
+                pl2.setWindow(true)
+
+                text'興奮で身体が燃えるように熱い。'
+                text'汗が服に張り付く感触が不快だ。'
+                text'だから、俺はシャツを脱ぐ事にした‥‥‥‥'
+
+                --%S65,=,1;
+                --%S13,=,1;
+            end
+        else
+            if temp.ani_state ~= 1 then
+                temp.ani_state = 1
+
+                ani:setModels{ 'ani_bodyB_00' }
+            end
+        end
     end
+
 
 --[==[
 #＜前戯か本番か＞
@@ -636,7 +776,7 @@ function Hselect()
 :nude00;
 
     %n;
-    &3の綺麗な肌が見たい‥‥‥%K
+    text(_'&3の綺麗な肌が見たい‥‥‥')
 
     そう思い、彼女の服を脱がそうと手をのばした‥‥‥%K
 
@@ -700,7 +840,7 @@ function Hselect()
     %n&0;「暑いから脱ごうな‥‥‥」%K
 
     %n;
-    そう言って俺は&3の上着を丁寧に脱がしてあげた‥‥‥%K
+    text(_'そう言って俺は&3の上着を丁寧に脱がしてあげた‥‥‥')
 
     %f0,255,30;
     %w30;
@@ -714,9 +854,9 @@ function Hselect()
     %S62,=,1;
 
     %n;
-    &3の下半身に手を伸ばし服を掴む。%K
+    text(_'&3の下半身に手を伸ばし服を掴む。')
 
-    &3は赤くなりながらも、俺に抵抗せず服を脱がされていく‥‥‥%K
+    text(_'&3は赤くなりながらも、俺に抵抗せず服を脱がされていく‥‥‥')
 
 
 
@@ -756,7 +896,7 @@ function Hselect()
 #   %mc0,2,0;
 
     %n;
-    &3の大事な部分を覆う布をずらした。%K
+    text(_'&3の大事な部分を覆う布をずらした。')
 
     現れた秘裂は汗かそれとも別の分泌物でてらてら光ってる。%K
 
@@ -802,7 +942,7 @@ function Hselect()
     %mc0,2,0;
 
     %n;
-    &3のおしりは綺麗だと思った。%K
+    text(_'&3のおしりは綺麗だと思った。')
 
     だから下半身を覆う下着を脱がせる‥‥‥%K
 
@@ -877,7 +1017,7 @@ function Hselect()
     %md0,11;
 
     %n;
-    &3の小さな足が好きだ%K
+    text(_'&3の小さな足が好きだ')
 
     だから靴を脱がせた‥‥‥%K
 
@@ -918,11 +1058,12 @@ function Hselect()
 
     我慢の限界だった。%K
 
-    &3と一つになりたい衝動をこれ以上押さえ切れない。%K
+    text(_'&3と一つになりたい衝動をこれ以上押さえ切れない。')
 
-    %n&0;「‥‥‥‥‥‥‥‥&3‥‥‥」%K
+    ani(_'「‥‥‥‥‥‥‥‥&3‥‥‥」')
 
-%o0283; %n&1;「うん‥‥‥‥‥いいよ‥‥‥おにいちゃん‥‥‥‥わたしは‥‥‥‥‥大丈夫だから‥‥‥‥‥」%K
+voice'0283'
+ %n&1;「うん‥‥‥‥‥いいよ‥‥‥おにいちゃん‥‥‥‥わたしは‥‥‥‥‥大丈夫だから‥‥‥‥‥」%K
 
     %n&0;「‥‥‥‥‥‥わかった」%K
     %n;
@@ -949,21 +1090,24 @@ function Hselect()
 
 
 
-%o0284; %n&1;「くうっ！！‥‥‥‥‥‥‥‥‥あっ‥‥‥‥‥‥‥あっ‥‥‥」%K
+voice'0284'
+ %n&1;「くうっ！！‥‥‥‥‥‥‥‥‥あっ‥‥‥‥‥‥‥あっ‥‥‥」%K
     %n;
     少し挿入したところで軽い抵抗を感じる。%K
 
-    &3の処女膜だ。%K
+    text(_'&3の処女膜だ。')
 
-%o0285; %n&1;「あああああっ！！‥‥‥‥‥‥い‥‥痛い‥‥‥‥‥痛いよぅ‥‥‥‥」%K
+voice'0285'
+ %n&1;「あああああっ！！‥‥‥‥‥‥い‥‥痛い‥‥‥‥‥痛いよぅ‥‥‥‥」%K
     %n;
     可愛そうにも思えたが、一つになりたいと言う欲望の方が勝っていた。%K
 
     俺は構わずに腰を進める。%K
 
-%o0286; %n&1;「あああっ！！‥‥‥‥おにぃちゃんっ！！‥‥‥‥‥おにぃちゃんっ！！」%K
+voice'0286'
+ %n&1;「あああっ！！‥‥‥‥おにぃちゃんっ！！‥‥‥‥‥おにぃちゃんっ！！」%K
     %n;
-    異物に対する恐怖と痛みに耐える為、&3が俺を呼び続ける。%K
+    text(_'異物に対する恐怖と痛みに耐える為、&3が俺を呼び続ける。')
 
     我慢の限界かと思われたその時‥‥‥‥‥‥‥%K
 
@@ -973,24 +1117,27 @@ function Hselect()
 
     先ほどまでの圧迫感は消え、代わりに全体を包む温もりが陰茎を伝ってくる。%K
 
-%o0287; %n&1;「あああああっ！！‥‥‥‥‥‥‥‥はあっ‥‥‥‥‥‥‥はあっ‥‥‥‥‥‥‥」%K
+voice'0287'
+ %n&1;「あああああっ！！‥‥‥‥‥‥‥‥はあっ‥‥‥‥‥‥‥はあっ‥‥‥‥‥‥‥」%K
 
     %n;
-    ‥‥‥‥‥‥&3は女になった。%K
+    text(_'‥‥‥‥‥‥&3は女になった。')
 
     見ると瞳から涙が溢れ出ていた。%K
 
     %n&0;「‥‥‥‥‥痛いのか？」%K
 
-%o0288; %n&1;「ううん‥‥‥‥‥ちがうの‥‥‥‥‥うれしいの‥‥‥‥‥」%K
+voice'0288'
+ %n&1;「ううん‥‥‥‥‥ちがうの‥‥‥‥‥うれしいの‥‥‥‥‥」%K
     %n;
     痛くない筈はない。%K
 
-    それなのに&3は笑顔でそう答える‥‥‥‥%K
+    text(_'それなのに&3は笑顔でそう答える‥‥‥‥')
 
     自分の中に愛おしさが堪らなくこみ上げて来るのがわかった。%K
 
-%o0288A;%n&1;「へ、平気だから‥‥‥‥‥‥‥続けて‥‥‥‥いいよ‥‥‥‥‥‥‥」%K
+voice'0288A'
+%n&1;「へ、平気だから‥‥‥‥‥‥‥続けて‥‥‥‥いいよ‥‥‥‥‥‥‥」%K
 
     %n&0;「‥‥‥‥ああ」%K
     %n;
@@ -1147,7 +1294,7 @@ function storyA()
     back:fade(0, 1)
     camera:setLocked(true)
 
-    text'そう、この可愛い声の主は俺の妹「&3」だ。'
+    text(_'そう、この可愛い声の主は俺の妹「&3」だ。')
 
     music(nil, 2)
 
@@ -1217,7 +1364,7 @@ function storyA()
     wait(1)
 
     text'そうそう〜こんな感じだ。（何故か裸）'
-    text'‥‥‥‥で、そんな&3だが、おにいちゃんの俺が言うのもなんだがそこら辺にいる女の子よりも可愛いと思う。'
+    text(_'‥‥‥‥で、そんな&3だが、おにいちゃんの俺が言うのもなんだがそこら辺にいる女の子よりも可愛いと思う。')
     text'ただ、いつも何かと理由を見つけては俺の部屋にやってくるのが困りものだ。'
     text'それはもう自分の部屋よりも俺の部屋で過ごす時間の方が多いんじゃないか？って思えるぐらい長く居座る。'
     text'普段なら適当に相手するし、どこに居ようと別に構わないのだが‥‥‥‥'

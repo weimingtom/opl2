@@ -254,6 +254,27 @@ void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha)
 
 /******************************************************************************/
 
+static inline int pl2FontFindChar(pl2Font *font, uint32_t code)
+{
+    //if(font)
+    //{
+        int a = 0, b = font->numGlyphs - 1, m;
+
+        if(font->chars[a].code == code) return a;
+        if(font->chars[b].code == code) return b;
+
+        while((b - a) > 1)
+        {
+            m = (a + b) >> 1;
+
+            if(font->chars[m].code == code) return m;
+
+            if(font->chars[m].code < code) a = m; else b = m;
+        }
+    //}
+    return -1;
+}
+
 void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len)
 {
     if(font && text)
@@ -425,7 +446,7 @@ void pl2ModelRender(const pl2Model *model, bool black)
 
     int i, j;
 
-    static GLfloat mtlBlack[4] = { 0, 0, 0, 0.5f };
+    static const GLfloat mtlBlack[4] = { 0, 0, 0, 0.5f };
 
     for(i = 0; i < model->numObjects; i++)
     {

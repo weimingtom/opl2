@@ -470,7 +470,7 @@ pl2Model *pl2ModelLoad(const char *name);
 pl2Model *pl2ModelLoadFile(const char *name);
 void pl2ModelFree(pl2Model *model);
 int pl2ModelAddPoints(pl2Model *model);
-void pl2ModelAnimate(pl2Model *model, const pl2Anim *anim, uint32_t frame);
+//void (*pl2ModelAnimate)(pl2Model *model, const pl2Anim *anim, uint32_t frame);
 
 /******************************************************************************/
 

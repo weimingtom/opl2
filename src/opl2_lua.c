@@ -754,6 +754,26 @@ static int l_pl2_getWindow(lua_State *L)
     return 1;
 }
 
+static int l_pl2_loadScript(lua_State *L)
+{
+    const char *name = luaL_checkstring(L, 1);
+
+    char temp[FILENAME_MAX];
+    snprintf(temp, sizeof(temp), "%s.txt", name);
+
+    pl2PackageFile *file = pl2PackageGetFile(temp);
+
+    if(NULL == file)
+    {
+        PL2_ERROR(PL2_ERR_NOTFOUND);
+    }
+
+    lua_pushlstring(L, (char*)(file->data), file->length);
+
+    pl2PackageFileFree(file);
+    return 1;
+}
+
 static int l_pl2_dofile(lua_State *L)
 {
     const char *name = luaL_checkstring(L, 1);
@@ -851,6 +871,7 @@ static luaL_Reg pl2_functions[] =
     { "setWindow", l_pl2_setWindow },
     { "getWindow", l_pl2_getWindow },
 
+    { "loadScript", l_pl2_loadScript },
     { "dofile", l_pl2_dofile },
     { "ucs", l_pl2_ucs },
     { NULL, NULL }

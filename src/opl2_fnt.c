@@ -1740,7 +1740,7 @@ static struct { uint32_t sjis, ucs; } cctable[] = {
     {0xEAA1,0x9059},{0xEAA2,0x7464},{0xEAA3,0x51DC},{0xEAA4,0x7199},
 };
 
-static uint32_t sjis2ucs(uint16_t c)
+static inline uint32_t sjis2ucs(uint16_t c)
 {
     int a = 0, b = ARRLEN(cctable) - 1;
 
@@ -1776,18 +1776,6 @@ static uint32_t sjis2ucs(uint16_t c)
 static int pl2FontCompareChars(const void *a, const void *b)
 {
     return ((pl2FontChar*)(a))->code - ((pl2FontChar*)(b))->code;
-}
-
-int pl2FontFindChar(pl2Font *font, uint32_t code)
-{
-    if(font)
-    {
-        pl2FontChar t = { code, 0 };
-        pl2FontChar *c = bsearch(&t, font->chars, font->numGlyphs,
-                                 sizeof(font->chars[0]), pl2FontCompareChars);
-        if(c) return c - font->chars;
-    }
-    return -1;
 }
 
 static pl2Font *pl2FontLoadInternal(const uint8_t *data)
@@ -2006,4 +1994,3 @@ void pl2FontPrintRight(pl2Font *font, float x, float y, uint32_t color, const ch
 
     pl2FontUcsPrintRight(font, x, y, color, ucs4);
 }
-

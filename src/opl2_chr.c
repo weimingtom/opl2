@@ -1,4 +1,5 @@
 #include "opl2_int.h"
+#include "opl2_vm.h"
 
 /******************************************************************************/
 
@@ -11,9 +12,9 @@ int pl2CharSetName(pl2Character *chr, const char *name)
             free((char*)(chr->name));
             chr->name = NULL;
         }
-    
+
         if(name) chr->name = strdup(name);
-        
+
         return name ? (NULL != chr->name) : 1;
     }
     return 0;

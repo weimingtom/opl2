@@ -811,8 +811,9 @@ int pl2GameRun()
     luaL_openlibs(pl2_L);
     luaopen_pl2(L);
 
-    // disable os.* for security
+    // disable os.*, io.* for security
     lua_pushnil(L); lua_setglobal(L, "os");
+    //lua_pushnil(L); lua_setglobal(L, "io");
 
     if(!pl2_script_name) pl2_script_name = "script.lua";
 
@@ -844,6 +845,8 @@ int pl2GameRun()
 /******************************************************************************/
 
 #if _PSP_FW_VERSION
+
+#include <pspuser.h>
 
 static SceUID pl2_psp_callback_thread_id = -1;
 static SceUID pl2_psp_exit_callback_id = -1;
