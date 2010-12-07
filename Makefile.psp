@@ -1,0 +1,39 @@
+PSPDEV = $(shell psp-config --pspdev-path)
+PSPSDK = $(shell psp-config --pspsdk-path)
+
+TARGET = opl2
+BUILD_PRX = 1
+CFLAGS += -Wall -g -G0 -mpreferred-stack-boundary=4
+# $(addprefix -I,$(INCDIR))
+
+OBJS += src/opl2.o src/opl2_al.o src/opl2_chr.o src/opl2_fnt.o src/opl2_gl.o
+OBJS += src/opl2_idx.o src/opl2_int.o src/opl2_lua.o src/opl2_ogg.o src/opl2_pl2.o
+OBJS += src/opl2_psd.o src/opl2_tcm.o src/opl2_tmb.o src/opl2_tsb.o src/opl2_vm.o
+OBJS += src/opl2_psp.o
+
+INCDIR = include/
+
+LIBS += -lvorbisfile -lvorbis -llua -lSDL -lGLU -lGL -lOpenAL32 -logg -lpthreadlite
+LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
+
+ifeq ($(RELEASE),1)
+ CFLAGS += -O2 -DNDEBUG
+else
+ ifeq ($(PROFILE),1)
+  CFLAGS += -pg
+  LIBS += -pg
+ endif
+endif
+
+include $(PSPSDK)/lib/build.mak
+
+debug: $(TARGET).prx $(TARGET).elf
+	psp-gdb -ex "target remote :10001" --args "$(TARGET).elf"
+
+release:
+	make -f Makefile.psp RELEASE=1 rebuild
+
+profile:
+	make -f Makefile.psp PROFILE=1 rebuild
+
+.PHONY: debug release profile

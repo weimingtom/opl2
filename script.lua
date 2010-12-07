@@ -258,7 +258,7 @@ local rooms = {
 
 --------------------------------------------------------------------------------
 
-local skip = false
+local skip = save.skip
 
 function script()
     print'script'
@@ -330,9 +330,17 @@ function title()
     imo:setVisible(false)
     ani:setVisible(false)
 
-    room:setModels(rooms[r])
-    room:setAnim(r.anim)
-    room:setVisible(true)
+    if save.title_room == 3 then
+        room:setModels{ 'room_03', 'room_03A' }
+        room:setAnim'room_03A'
+        room:setVisible(true)
+    elseif save.title_room == 2 then
+        room:setModels{ 'room_02' }
+        room:setVisible(true)
+    else
+        room:setModels{ 'room_01' }
+        room:setVisible(true)
+    end
 
     camera:setPath('A1cam1', true)
 
@@ -1578,5 +1586,28 @@ function storyF()
 
     return script()
 end
+
+function test()
+    back:fade(1, 0)
+    fore:fade(1, 0)
+
+    --camera:setPath('A1cam1', true)
+    camera:setEye(0, 10, -20)
+    camera:setFocus(0, 10, 0)
+    camera:setUp(0, 1, 0)
+    camera:setFov(35)
+
+    room:setModels{ 'room_01' }
+    room:setVisible(true)
+
+    text'test'
+
+    voice'0011'
+    music(nil, 2)
+    fore:fade(0, 2)
+    wait(2.25)
+end
+
+if test then return test() end
 
 return script()

@@ -1,4 +1,4 @@
-PLATFORMS = nix win psp
+PLATFORMS = nix win
 
 OBJS += src/opl2.o src/opl2_al.o src/opl2_chr.o src/opl2_fnt.o src/opl2_gl.o
 OBJS += src/opl2_idx.o src/opl2_int.o src/opl2_lua.o src/opl2_ogg.o src/opl2_pl2.o
@@ -16,9 +16,6 @@ WIN_LIBS += -llua -lmingw32 -lSDLmain -lSDL.dll
 WIN_LIBS += -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lOpenAL32
 
 NIX_LIBS += -llua5.1 -lSDL -lGLU -lGL -lopenal
-
-PSP_LIBS += -llua -lSDL -lGLU -lGL -lOpenAL32 -logg -lpthreadlite
-PSP_LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 ARGS = --window 640x480
 
@@ -74,66 +71,37 @@ win-debug:
 win-release:
 	make PLATFORM=win RELEASE=1 rebuild
 
-psp:
-	make PLATFORM=psp all
-psp-clean:
-	make PLATFORM=psp clean
-psp-rebuild:
-	make PLATFORM=psp rebuild
-psp-debug:
-	make PLATFORM=psp debug
-psp-release:
-	make PLATFORM=psp RELEASE=1 rebuild
  endif
 endif
 
-ifeq ($(PLATFORM),psp)
+CC = gcc
 
- PSPDEV = $(shell psp-config --pspdev-path)
- PSPSDK = $(shell psp-config --pspsdk-path)
+OBJS += src/opl2_x86.o
 
- OBJS += src/opl2_psp.o
- LIBS += $(PSP_LIBS)
+ifeq ($(PLATFORM),win)
 
- TARGET = opl2
- BUILD_PRX = 1
- CFLAGS += -G0 -mpreferred-stack-boundary=4
+ WINDRES = windres.exe
+ OBJS += res/opl2.res
+ EXTRA_OBJS += res/opl2.rc
+ #WINAPP = -mwindows
 
- include $(PSPSDK)/lib/build.mak
+ LIBS += $(WIN_LIBS)
+ TARGET = opl2.exe
 
-debug: $(TARGET).prx $(TARGET).elf
-	psp-gdb -ex "target remote :10001" --args "$(TARGET).elf"
+ PL2EX = pl2ex.exe
+ DUMPTMB = dumptmb.exe
+ VMTEST = vmtest.exe
 
 else
 
- CC = gcc
+ LIBS += $(NIX_LIBS)
+ TARGET = opl2
 
- OBJS += src/opl2_x86.o
+ PL2EX = pl2ex
+ DUMPTMB = dumptmb
+ VMTEST = vmtest
 
- ifeq ($(PLATFORM),win)
-
-  WINDRES = windres.exe
-  OBJS += res/opl2.res
-  EXTRA_OBJS += res/opl2.rc
-  #WINAPP = -mwindows
-
-  LIBS += $(WIN_LIBS)
-  TARGET = opl2.exe
-
-  PL2EX = pl2ex.exe
-  DUMPTMB = dumptmb.exe
-  VMTEST = vmtest.exe
-
- else
-
-  LIBS += $(NIX_LIBS)
-  TARGET = opl2
-
-  PL2EX = pl2ex
-  DUMPTMB = dumptmb
-  VMTEST = vmtest
-
- endif
+endif
 
 all: $(TARGET) $(PL2EX) $(DUMPTMB)
 
@@ -171,7 +139,5 @@ $(PL2EX): tools/pl2ex.o src/opl2_int.o src/opl2_pl2.o
 
 $(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl2_vm.o src/opl2_x86.c src/opl2_idx.o
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
-
-endif
 
 .PHONY: _default all $(PLATFORMS) clean rebuild test debug release profile

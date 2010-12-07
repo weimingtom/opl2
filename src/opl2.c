@@ -172,6 +172,8 @@ enum
 
 void pl2Reshape(int w, int h)
 {
+    TRACE;
+
     pl2_screen_width  = w;
     pl2_screen_height = h;
 
@@ -193,6 +195,8 @@ void pl2Reshape(int w, int h)
 
 int pl2DoFrame()
 {
+    TRACE;
+
     static int move_mode = 0;
 
     SDL_Event event;
@@ -348,9 +352,15 @@ int pl2DoFrame()
 
     float dt = pl2Tick();
 
+    TRACE;
+
     pl2GlRenderFrame(dt);
 
+    TRACE;
+
+#if 0
     pl2AlSetListenerPosition(&(pl2_active_camera->eye));
+#endif
 
 #ifndef NDEBUG
     static int frames = 0;
@@ -368,8 +378,12 @@ int pl2DoFrame()
     }
 #endif // NDEBUG
 
+    TRACE;
+
     SDL_Delay(10);
     SDL_GL_SwapBuffers();
+
+    TRACE;
 
     return pl2_running;
 }
@@ -378,27 +392,37 @@ int pl2DoFrame()
 
 void pl2SetText(const char *text)
 {
+    TRACE;
+
     pl2Utf8ToUcs4(pl2_text, ARRLEN(pl2_text), text, -1);
 }
 
 void pl2SetName(const char *name, uint32_t color)
 {
+    TRACE;
+
     pl2Utf8ToUcs4(pl2_name_text, ARRLEN(pl2_name_text), name, -1);
     pl2_name_color = color;
 }
 
 void pl2ShowText()
 {
+    TRACE;
+
     pl2Tick();
 
     pl2_text_showing = 1;
     pl2_show_window = 1;
 
     while(pl2_text_showing && pl2DoFrame());
+
+    TRACE;
 }
 
 void pl2TextAdvance()
 {
+    TRACE;
+
     if(!pl2_hide_overlay)
     {
         pl2_text_showing = 0;
@@ -409,12 +433,16 @@ void pl2TextAdvance()
 
 void pl2MenuClear(pl2Menu *menu)
 {
+    TRACE;
+
     menu->numItems = 0;
     //menu->selection = -1;
 }
 
 int pl2MenuAddItem(pl2Menu *menu, const char *text)
 {
+    TRACE;
+
     if(text && (menu->numItems < PL2_MAX_MENUITEMS))
     {
         pl2MenuItem *item = &(menu->items[menu->numItems]);
@@ -446,6 +474,8 @@ int pl2MenuAddItem(pl2Menu *menu, const char *text)
 
 int pl2MenuSelectNext(pl2Menu *menu)
 {
+    TRACE;
+
     if(menu && menu->numItems && pl2_menu_showing && !pl2_hide_overlay)
     {
         return menu->selection = (menu->selection + 1) % menu->numItems;
@@ -455,6 +485,8 @@ int pl2MenuSelectNext(pl2Menu *menu)
 
 int pl2MenuSelectPrev(pl2Menu *menu)
 {
+    TRACE;
+
     if(menu && menu->numItems && pl2_menu_showing && !pl2_hide_overlay)
     {
         return menu->selection = (menu->selection + menu->numItems - 1) % menu->numItems;
@@ -464,6 +496,8 @@ int pl2MenuSelectPrev(pl2Menu *menu)
 
 int pl2MenuSelect(pl2Menu *menu, uint32_t item)
 {
+    TRACE;
+
     if(menu && pl2_menu_showing && !pl2_hide_overlay)
     {
         if((item < menu->numItems) && (menu->items[item].enabled))
@@ -477,6 +511,8 @@ int pl2MenuSelect(pl2Menu *menu, uint32_t item)
 
 int pl2ShowMenu(pl2Menu *menu)
 {
+    TRACE;
+
     if(menu && menu->numItems)
     {
         pl2Tick();
@@ -487,13 +523,20 @@ int pl2ShowMenu(pl2Menu *menu)
 
         while(pl2_menu_showing && pl2DoFrame());
 
+        TRACE;
+
         return menu->selection;
     }
+
+    TRACE;
+
     return -1;
 }
 
 int pl2MenuConfirm(pl2Menu *menu)
 {
+    TRACE;
+
     if(menu && pl2_menu_showing && !pl2_hide_overlay)
     {
         if(((unsigned)menu->selection < menu->numItems) &&
@@ -501,9 +544,15 @@ int pl2MenuConfirm(pl2Menu *menu)
         {
             pl2MenuClear(menu);
             pl2_menu_showing = 0;
+
+            TRACE;
+
             return menu->selection;
         }
     }
+
+    TRACE;
+
     return -1;
 }
 
@@ -511,11 +560,17 @@ int pl2MenuConfirm(pl2Menu *menu)
 
 void pl2ToggleOverlay()
 {
+    TRACE;
+
     pl2_hide_overlay = !pl2_hide_overlay;
+
+    TRACE;
 }
 
 int pl2SetImage(const char *name)
 {
+    TRACE;
+
     if(pl2_current_image)
     {
         pl2ImageFree(pl2_current_image);
@@ -524,6 +579,8 @@ int pl2SetImage(const char *name)
 
     pl2_current_image = pl2ImageLoad(name);
 
+    TRACE;
+
     return name ? (NULL != pl2_current_image) : 1;
 }
 
@@ -531,6 +588,8 @@ int pl2SetImage(const char *name)
 
 void pl2LayerFade(pl2Layer *layer, float target, float length)
 {
+    TRACE;
+
     if(layer)
     {
         target = (target < 0) ? 0 : (target > 1) ? 1 : target;
@@ -547,19 +606,27 @@ void pl2LayerFade(pl2Layer *layer, float target, float length)
             layer->fade_length = layer->fade_time = 0;
         }
     }
+
+    TRACE;
 }
 
 void pl2Wait(float sec)
 {
+    TRACE;
+
     pl2Tick();
 
     int until = SDL_GetTicks() + sec * 1000;
 
     while((SDL_GetTicks() < until) && pl2DoFrame());
+
+    TRACE;
 }
 
 void pl2Quit()
 {
+    TRACE;
+
     pl2_running = 0;
     exit(0);
 }
@@ -615,12 +682,15 @@ static const char *pl2_script_name = NULL;
 
 void pl2GameShutdown()
 {
+    TRACE;
     SDL_CloseAudio();
     pl2PackageClearIndex();
 }
 
 int pl2GameInit(int *argc, char *argv[])
 {
+    TRACE;
+
     atexit(pl2GameShutdown);
 
     pl2PackageBuildIndex();
@@ -805,6 +875,8 @@ static void pl2LuaCloseState()
 
 int pl2GameRun()
 {
+    TRACE;
+
     lua_State *L = pl2LuaGetState();
     atexit(pl2LuaCloseState);
 

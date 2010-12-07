@@ -11,9 +11,21 @@
 #ifndef NDEBUG
 # define DEBUGPRINT(x...) (fprintf(stderr,x))
 # define DEBUGPRINTIF(c,x...) ({if((c))fprintf(stderr,x);})
+
+/* trying to track down a crash on PSP... */
+# if _PSP_FW_VERSION && !defined(TRACING)
+#  define TRACING 1
+# endif
+
 #else
 # define DEBUGPRINT(x...)
 # define DEBUGPRINTIF(c,x...)
+#endif
+
+#if TRACING
+# define TRACE DEBUGPRINT("%s(%d): in %s\n", __FILE__, __LINE__, __PRETTY_FUNCTION__)
+#else
+# define TRACE
 #endif
 
 #include <math.h>

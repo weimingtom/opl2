@@ -20,43 +20,6 @@
 // Reference:
 // http://www.opengl.org/sdk/docs/man/
 
-#if 0 // _PSP_FW_VERSION
-# include <pspuser.h>
-# include <psprtc.h>
-
-static SceUInt32 tick_res = 0;
-static SceUInt64 first_tick = 0;
-
-int glutGet(GLenum what)
-{
-    switch(what)
-    {
-        case GLUT_SCREEN_WIDTH:
-        case GLUT_INIT_WINDOW_WIDTH:
-            return pl2_screen_width;
-
-        case GLUT_SCREEN_HEIGHT:
-        case GLUT_INIT_WINDOW_HEIGHT:
-            return pl2_screen_height;
-
-        case GLUT_ELAPSED_TIME:
-        {
-            if(!first_tick)
-            {
-                tick_res = sceRtcGetTickResolution();
-                sceRtcGetCurrentTick(&first_tick);
-            }
-
-            SceUInt64 this_tick;
-            sceRtcGetCurrentTick(&this_tick);
-            return 1000 * (this_tick - first_tick) / (tick_res);
-        }
-    }
-    return -1;
-}
-
-#endif
-
 void pl2GlClearErrors()
 {
     int err;
@@ -92,6 +55,8 @@ static int pl2_gl_2d = 0;
 
 void pl2GlBegin2D()
 {
+    TRACE;
+
     if(!pl2_gl_2d)
     {
         glMatrixMode(GL_PROJECTION);
@@ -118,6 +83,8 @@ void pl2GlBegin2D()
 
 void pl2GlEnd2D()
 {
+    TRACE;
+
     if(pl2_gl_2d)
     {
         glMatrixMode(GL_PROJECTION);
@@ -183,6 +150,8 @@ void pl2GlTransformInv(fvector3_t *translate, fvector3_t *rotate, fvector3_t *sc
 
 void pl2LayerUpdate(pl2Layer *layer, float delta)
 {
+    TRACE;
+
     if (layer)
     {
         layer->fade_time += delta;
@@ -209,6 +178,8 @@ void pl2LayerUpdate(pl2Layer *layer, float delta)
 
 void pl2LayerDraw(pl2Layer *layer)
 {
+    TRACE;
+
     if(layer)
     {
         glColor4f(0.0f, 0.0f, 0.0f, 1.0f - layer->fade_level);
@@ -231,6 +202,8 @@ void pl2LayerDraw(pl2Layer *layer)
 
 void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha)
 {
+    TRACE;
+
     if(image)
     {
         glColor4f(1.0f, 1.0f, 1.0f, alpha);
@@ -277,6 +250,8 @@ static inline int pl2FontFindChar(pl2Font *font, uint32_t code)
 
 void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const uint32_t *text, size_t len)
 {
+    TRACE;
+
     if(font && text)
     {
         glEnable(GL_TEXTURE_2D);
@@ -337,6 +312,8 @@ void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const
 
 void pl2LightConfig(pl2Light *light, int id)
 {
+    TRACE;
+
     if(light)
     {
         if(light->enabled)
@@ -358,6 +335,8 @@ void pl2LightConfig(pl2Light *light, int id)
 
 void pl2CameraConfig(pl2Camera *cam)
 {
+    TRACE;
+
     if(cam)
     {
         glMatrixMode(GL_PROJECTION);
@@ -399,6 +378,8 @@ void pl2CameraConfig(pl2Camera *cam)
 
 void pl2CameraUpdate(pl2Camera *cam, float dt)
 {
+    TRACE;
+
     if(cam && cam->path)
     {
         cam->time += dt;
@@ -438,6 +419,8 @@ void pl2CameraUpdate(pl2Camera *cam, float dt)
 
 void pl2ModelRender(const pl2Model *model, bool black)
 {
+    TRACE;
+
     if(!model) return;
 
     //glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -478,7 +461,7 @@ void pl2ModelRender(const pl2Model *model, bool black)
 #if !_PSP_FW_VERSION
                 if(tex && !black)
                 {
-                    glTexImage2D(GL_TEXTURE_2D, 0, 4, tex->width, tex->height,
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height,
                                  0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
                 }
 #endif
@@ -493,6 +476,8 @@ void pl2ModelRender(const pl2Model *model, bool black)
 
 void pl2CharRender(pl2Character *chr)
 {
+    TRACE;
+
     if(chr && chr->visible)
     {
         int i;
@@ -546,6 +531,8 @@ void pl2CharRender(pl2Character *chr)
 
 void pl2GlRenderFrame(float dt)
 {
+    TRACE;
+
     int i;
 
     for(i = 0; i < PL2_MAX_LAYERS; i++)
@@ -602,10 +589,12 @@ void pl2GlRenderFrame(float dt)
 
             int h = 2 * pl2_font->glyphSize;
 
+            glDisable(GL_TEXTURE_2D);
             glBegin(GL_QUADS);
             for(i = 0; i < pl2_menu.numItems; i++)
             {
                 int y1 = y + i*h, y2 = y1 + (i+1)*h;
+                glColor4f(1.0f, 1.0f, 1.0f, pl2_menu.items[i].enabled ? 1.0f : 0.5f);
                 glVertex2i(0, y1); glVertex2i(2*x, y1);
                 glVertex2i(2*x, y2); glVertex2i(0, y2);
             }
@@ -614,8 +603,9 @@ void pl2GlRenderFrame(float dt)
             for(i = 0; i < pl2_menu.numItems; i++)
             {
                 uint32_t color = pl2_menu.items[i].enabled ? 0xff000000ul : 0x80000000ul;
-                color |= (i == pl2_menu.selection) ? 0xfffffful : 0x000000ul;
-                pl2FontUcsPrintCenter(pl2_font, x, y, color, pl2_menu.items[i].text);
+                pl2FontUcsPrintCenter(pl2_font, x+2, y+2, color, pl2_menu.items[i].text);
+                //color |= (i == pl2_menu.selection) ? 0xfffffful : 0x000000ul;
+                pl2FontUcsPrintCenter(pl2_font, x, y, color | 0xfffffful, pl2_menu.items[i].text);
                 y += 2 * pl2_font->glyphSize;
             }
         }
@@ -627,10 +617,12 @@ void pl2GlRenderFrame(float dt)
 
             if(pl2_name_color)
             {
+                pl2FontUcsPrint(pl2_font, x+2, y+2, 0xff000000ul, pl2_name_text);
                 pl2FontUcsPrint(pl2_font, x, y, pl2_name_color, pl2_name_text);
                 y += pl2_font->glyphSize;
             }
 
+            pl2FontUcsPrint(pl2_font, x+2, y+2, 0xff000000ul, pl2_text);
             pl2FontUcsPrint(pl2_font, x, y, 0xfffffffful, pl2_text);
         }
     }
@@ -646,6 +638,8 @@ void pl2GlRenderFrame(float dt)
 
 void pl2GlInit()
 {
+    TRACE;
+
     glClearColor(0, 0, 0, 1);
 
     glCullFace(GL_BACK);

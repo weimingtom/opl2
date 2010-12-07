@@ -23,7 +23,7 @@ extern "C" {
 #define PL2_NOMINAL_SCREEN_WIDTH 800
 #define PL2_NOMINAL_SCREEN_HEIGHT 600
 
-#define PL2_SAVEFILE "opl2save.dat"
+#define PL2_SAVEFILE "OPL2SAVE.DAT"
 
 /******************************************************************************/
 
