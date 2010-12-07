@@ -10,7 +10,7 @@ EXTRA_TARGETS = $(PL2EX) $(DUMPTMB) $(VMTEST)
 INCDIR = include/
 
 CFLAGS += -Wall -g $(addprefix -I,$(INCDIR))
-LIBS += -lvorbisfile -lvorbis -lm
+LIBS += -lvorbisfile -lvorbis -logg -lm
 
 WIN_LIBS += -llua -lmingw32 -lSDLmain -lSDL.dll
 WIN_LIBS += -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lOpenAL32

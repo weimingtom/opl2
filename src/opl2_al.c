@@ -3,6 +3,17 @@
 
 #include <SDL/SDL_thread.h>
 
+#if defined(_WIN32)
+typedef struct _AL_device ALCdevice;
+typedef void ALCcontext;
+#endif
+#ifndef ALC_MONO_SOURCES
+# define ALC_MONO_SOURCES 0x1010
+#endif
+#ifndef ALC_STEREO_SOURCES
+# define ALC_STEREO_SOURCES 0x1011
+#endif
+
 #include <AL/al.h>
 #include <AL/alc.h>
 //#include <AL/alut.h>
@@ -86,10 +97,14 @@ void pl2AlExit()
     alcDestroyContext(pl2_alc_context);
     pl2_alc_context = NULL;
 
+#if 0
     if(!alcCloseDevice(pl2_alc_device))
     {
         DEBUGPRINT("%s: error closing AL device\n", __func__);
     }
+#else
+    alcCloseDevice(pl2_alc_device);
+#endif
     pl2_alc_device = NULL;
 }
 
