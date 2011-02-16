@@ -179,8 +179,8 @@ typedef struct
     char name[32];
     uint16_t width, height;
     uint8_t *pixels;
-    uint32_t flags;
-    uint32_t iltex, gltex;
+    //uint32_t flags;
+    uint32_t gltex;
 }
 //__attribute__((packed))
 pl2Texture;
@@ -276,7 +276,8 @@ pl2Model;
 typedef struct
 {
     uint32_t code;
-    uint8_t *glyph;
+    //uint8_t *glyph;
+    uint32_t gltex;
 }
 pl2FontChar;
 

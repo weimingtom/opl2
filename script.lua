@@ -28,6 +28,10 @@ local function voice(...)
     return play('voice',...)
 end
 
+function pl2.onQuit()
+    print'pl2.onQuit called'
+end
+
 --------------------------------------------------------------------------------
 
 local function print(...)
@@ -1590,7 +1594,7 @@ end
 local function test()
     pl2.setQuit(true)
     back:fade(1, 0)
-    fore:fade(1, 0)
+    fore:fade(0, 0)
 
     --camera:setPath('A1cam1', true)
     camera:setEye(0, 10, -20)
@@ -1610,8 +1614,9 @@ local function test()
     light2:setSpecular(0.8, 0.8, 0.8)
     light2:setEnabled(true)
 
-    room:setModels{ 'room_03', 'room_03A' }
-    room:setAnim'room_03A'
+    room:setModels{ 'room_01' }
+    --room:setModels{ 'room_03', 'room_03A' }
+    --room:setAnim'room_03A'
     room:setVisible(true)
 
     imo:setModels{
@@ -1630,10 +1635,16 @@ local function test()
     imo:setPoint'loc_pos01'
     imo:setVisible(true)
 
-    text'test'
+    camera:setPoint'loc_pos01'
+
+    fore:fade(1, 2)
+    wait(2)
+
+    text'ポリゴンラブ２'
 
     voice'0011'
     music(nil, 2)
+
     fore:fade(0, 2)
     wait(2.25)
 end

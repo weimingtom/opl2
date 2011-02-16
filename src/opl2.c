@@ -4,6 +4,10 @@
 #include "opl2_al.h"
 #include "opl2_lua.h"
 
+#define ILUT_USE_OPENGL
+#include <IL/il.h>
+#include <IL/ilut.h>
+
 #include <ctype.h>
 
 int pl2_screen_width = -1, pl2_screen_height = -1;
@@ -157,6 +161,28 @@ size_t pl2Utf8ToUcs4(uint32_t *ucs, size_t size, const char *text, int length)
 
 /******************************************************************************/
 
+static lua_State *pl2_L = NULL;
+
+static lua_State *pl2LuaGetState()
+{
+    if(!pl2_L)
+    {
+        pl2_L = luaL_newstate();
+    }
+    return pl2_L;
+}
+
+static void pl2LuaCloseState()
+{
+    if(pl2_L)
+    {
+        lua_close(pl2_L);
+        pl2_L = NULL;
+    }
+}
+
+/******************************************************************************/
+
 float pl2Tick()
 {
     static Uint32 old_ticks = 0;
@@ -215,6 +241,8 @@ int pl2DoFrame()
 #ifdef _PSP_FW_VERSION
             case SDL_JOYBUTTONDOWN:
             {
+                DEBUGPRINT("button %d down\n", event.jbutton.button);
+
                 switch(event.jbutton.button)
                 {
                     case PSP_JB_CIRCLE:
@@ -255,6 +283,8 @@ int pl2DoFrame()
             }
             case SDL_JOYBUTTONUP:
             {
+                DEBUGPRINT("button %d up\n", event.jbutton.button);
+
                 switch(event.jbutton.button)
                 {
                     case PSP_JB_SQUARE:
@@ -424,7 +454,10 @@ int pl2DoFrame()
 #ifndef _PSP_FW_VERSION
                 if(pl2_can_quit)
 #endif
+                {
+                    DEBUGPRINT("quit\n");
                     pl2Quit();
+                }
                 break;
             }
 
@@ -477,9 +510,13 @@ int pl2DoFrame()
     if((sec += dt) >= 1)
     {
         fps = (float)frames / sec;
+# ifdef _PSP_FW_VERSION
+        printf("%.2ffps\n", fps);
+# else
         char temp[16];
         snprintf(temp, sizeof(temp), "%.2ffps", fps);
         SDL_WM_SetCaption(temp, "OPL2");
+# endif
         frames = sec = 0;
     }
 #endif // NDEBUG
@@ -520,6 +557,8 @@ void pl2ShowText()
     pl2_text_showing = 1;
     pl2_show_window = 1;
 
+    DEBUGPRINT("%s: show text\n", __func__);
+
     while(pl2_text_showing && pl2DoFrame());
 
     TRACE;
@@ -529,8 +568,10 @@ void pl2TextAdvance()
 {
     TRACE;
 
-    if(!pl2_hide_overlay)
+    if(pl2_text_showing && !pl2_hide_overlay)
     {
+        DEBUGPRINT("%s: advance text\n", __func__);
+
         pl2_text_showing = 0;
     }
 }
@@ -584,6 +625,8 @@ int pl2MenuSelectNext(pl2Menu *menu)
 
     if(menu && menu->numItems && pl2_menu_showing && !pl2_hide_overlay)
     {
+        DEBUGPRINT("%s: select next menu item\n", __func__);
+
         return menu->selection = (menu->selection + 1) % menu->numItems;
     }
     return -1;
@@ -595,6 +638,8 @@ int pl2MenuSelectPrev(pl2Menu *menu)
 
     if(menu && menu->numItems && pl2_menu_showing && !pl2_hide_overlay)
     {
+        DEBUGPRINT("%s: select previous menu item\n", __func__);
+
         return menu->selection = (menu->selection + menu->numItems - 1) % menu->numItems;
     }
     return -1;
@@ -608,6 +653,8 @@ int pl2MenuSelect(pl2Menu *menu, uint32_t item)
     {
         if((item < menu->numItems) && (menu->items[item].enabled))
         {
+            DEBUGPRINT("%s: select menu item %d\n", __func__, item);
+
             menu->selection = item;
         }
         return menu->selection;
@@ -626,6 +673,8 @@ int pl2ShowMenu(pl2Menu *menu)
         pl2_menu_showing = 1;
 
         menu->selection = 0;
+
+        DEBUGPRINT("%s: show menu\n", __func__);
 
         while(pl2_menu_showing && pl2DoFrame());
 
@@ -652,6 +701,8 @@ int pl2MenuConfirm(pl2Menu *menu)
             pl2_menu_showing = 0;
 
             TRACE;
+
+            DEBUGPRINT("%s: menu dismissed\n", __func__);
 
             return menu->selection;
         }
@@ -742,6 +793,8 @@ void pl2Wait(float sec)
 
     int until = SDL_GetTicks() + sec * 1000;
 
+    DEBUGPRINT("%s: wait %.2f seconds\n", __func__, sec);
+
     while((SDL_GetTicks() < until) && pl2DoFrame());
 
     TRACE;
@@ -750,6 +803,8 @@ void pl2Wait(float sec)
 void pl2Quit()
 {
     TRACE;
+
+    DEBUGPRINT("%s: quit game\n", __func__);
 
     pl2_running = 0;
     exit(0);
@@ -816,10 +871,6 @@ int pl2GameInit(int *argc, char *argv[])
     TRACE;
 
     atexit(pl2GameShutdown);
-
-    pl2PackageBuildIndex();
-
-    pl2_font = pl2FontLoad("font");
 
     SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     atexit(SDL_Quit);
@@ -978,27 +1029,50 @@ int pl2GameInit(int *argc, char *argv[])
 
     pl2GlInit();
 
+#if 1 //defined(_PSP_FW_VERSION)
+    {
+        void pl2GlBegin2D();
+        void pl2GlEnd2D();
+
+        GLuint splash = ilutGLLoadImage("splash.jpg");
+
+        if(splash)
+        {
+            pl2GlBegin2D();
+
+            float t = 0, a = 0;
+
+            while(t < 5)
+            {
+                a = fmaxf(0, fminf(1, fminf(t, 5-t)));
+
+                glClear(GL_COLOR_BUFFER_BIT);
+
+                glColor4f(1,1,1,a);
+
+                glBegin(GL_QUADS);
+                    glTexCoord2f(0, 1); glVertex2f(  0,   0);
+                    glTexCoord2f(0, 0); glVertex2f(  0, 272);
+                    glTexCoord2f(1, 0); glVertex2f(480, 272);
+                    glTexCoord2f(1, 1); glVertex2f(480,   0);
+                glEnd();
+
+                SDL_GL_SwapBuffers();
+
+                t += pl2Tick();
+            }
+
+            pl2GlEnd2D();
+            glDeleteTextures(1, &splash);
+        }
+    }
+#endif
+
+    pl2PackageBuildIndex();
+
+    pl2_font = pl2FontLoad("font");
+
     return 1;
-}
-
-static lua_State *pl2_L = NULL;
-
-static lua_State *pl2LuaGetState()
-{
-    if(!pl2_L)
-    {
-        pl2_L = luaL_newstate();
-    }
-    return pl2_L;
-}
-
-static void pl2LuaCloseState()
-{
-    if(pl2_L)
-    {
-        lua_close(pl2_L);
-        pl2_L = NULL;
-    }
 }
 
 #ifdef _PSP_FW_VERSION
@@ -1076,8 +1150,8 @@ int main(int argc, char *argv[])
     pl2PspRegisterCallbacks();
     atexit(sceKernelExitGame);
 
-    if(!freopen("stderr.txt", "at", stderr))
-        return 2;
+    //if(!freopen("stderr.txt", "at", stderr))
+    //    return 2;
 
     if(!pl2GameInit(&argc, argv))
         return 1;

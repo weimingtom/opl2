@@ -281,9 +281,10 @@ void pl2FontPrintInternal(pl2Font *font, float x, float y, uint32_t color, const
                 if(j >= 0)
                 {
                     //pl2GlClearErrors();
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA,
-                                 GL_UNSIGNED_BYTE, font->chars[j].glyph);
+                    //glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA,
+                    //             GL_UNSIGNED_BYTE, font->chars[j].glyph);
                     //pl2GlPrintErrors();
+                    glBindTexture(GL_TEXTURE_2D, font->chars[j].gltex);
 
                     const struct { float u, v, x, y, z; } rect[4] = {
                         { 0, 0, x,     y,     0 },
@@ -452,14 +453,17 @@ void pl2ModelRender(const pl2Model *model, bool black)
 
                 pl2Texture *tex = mtl->texture;
 
-#if 1 // !_PSP_FW_VERSION
-                if(tex /*&& !black*/ )
+                if(tex && !black)
                 {
                     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height,
                     //             0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
                     glBindTexture(GL_TEXTURE_2D, tex->gltex);
+                    glEnable(GL_TEXTURE_2D);
                 }
-#endif
+                else
+                {
+                    glDisable(GL_TEXTURE_2D);
+                }
 
                 glDrawArrays(GL_TRIANGLES, m->start, m->count * 3);
             }
@@ -467,6 +471,8 @@ void pl2ModelRender(const pl2Model *model, bool black)
 
         //glPopMatrix();
     }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void pl2CharRender(pl2Character *chr)
@@ -500,17 +506,6 @@ void pl2CharRender(pl2Character *chr)
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glEnable(GL_LIGHTING);
-
-        if(chr->black)
-        {
-            glDisable(GL_TEXTURE_2D);
-        }
-        else
-        {
-            glEnable(GL_TEXTURE_2D);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
 
         for(i = 0; i < PL2_MAX_CHARPARTS; i++)
         {
@@ -661,6 +656,7 @@ void pl2GlInit()
     glEnable(GL_ALPHA_TEST);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
     glEnable(GL_BLEND);
 
     glEnable(GL_LIGHTING);

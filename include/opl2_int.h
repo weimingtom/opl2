@@ -19,7 +19,7 @@
 
 /* trying to track down a crash on PSP... */
 # if _PSP_FW_VERSION && !defined(TRACING)
-#  define TRACING 1
+//#  define TRACING 1
 # endif
 
 #else

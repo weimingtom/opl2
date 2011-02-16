@@ -529,7 +529,10 @@ static SceUID pl2_psp_exit_callback_id = -1;
 
 static int pl2PspExitCallback(int x, int y, void *z)
 {
-    sceKernelExitGame();
+    SDL_Event e = { .type = SDL_QUIT };
+    SDL_PushEvent(&e);
+
+    //sceKernelExitGame();
     return 0;
 }
 

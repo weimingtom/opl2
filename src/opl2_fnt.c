@@ -1824,14 +1824,36 @@ static pl2Font *pl2FontLoadInternal(const uint8_t *data)
     int i;
     uint8_t *glyph = font->glyphs;
 
+    int w = font->glyphSize, h = font->glyphSize;
+
     for(i = 0; i < font->numGlyphs; i++)
     {
         font->chars[i].code = sjis2ucs(READUINT16(data));
-        font->chars[i].glyph = glyph;
+        //font->chars[i].glyph = glyph;
 
         READSTRING(size, glyph, data);
+
+        GLuint texid;
+        glGenTextures(1, &texid);
+        glBindTexture(GL_TEXTURE_2D, texid);
+
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, w, h, 0, GL_ALPHA,
+                     GL_UNSIGNED_BYTE, glyph);
+
+        font->chars[i].gltex = texid;
         glyph += size;
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     qsort(font->chars, font->numGlyphs, sizeof(font->chars[0]),
           pl2FontCompareChars);

@@ -698,6 +698,20 @@ static int l_pl2_wait(lua_State *L)
 
 static int l_pl2_quit(lua_State *L)
 {
+    lua_getglobal(L, "pl2");
+
+    lua_getfield(L, -1, "onQuit");
+
+    if(!lua_isnoneornil(L, -1))
+    {
+        lua_call(L, 0, 1);
+
+        if(!lua_isnoneornil(L, -1) && lua_toboolean(L, -1))
+        {
+            return 0;
+        }
+    }
+
     pl2Quit();
 
     return 0;
@@ -992,10 +1006,7 @@ static int l_pl2SaveState_load(lua_State *L)
         err = lua_pcall(L, 0, 0, 0);
     }
 
-    if(err)
-    {
-        DEBUGPRINT("%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
-    }
+    DEBUGPRINTIF(err, "%s: Lua error: %s\n", __func__, lua_tostring(L, -1));
 
     return 1;
 }
@@ -1074,4 +1085,3 @@ int luaopen_pl2(lua_State *L)
 
     return 1;
 }
-

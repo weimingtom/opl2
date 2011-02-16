@@ -12,15 +12,15 @@ inline void pl2MultMatrix4f_SSE(fmatrix4_t *out, const fmatrix4_t *a, const fmat
 R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
 */
     asm volatile(
-        "movaps  (0)%2, %%xmm4\n"
-        "movaps (16)%2, %%xmm5\n"
-        "movaps (32)%2, %%xmm6\n"
-        "movaps (48)%2, %%xmm7\n"
+        "movaps    %2, %%xmm4\n"
+        "movaps 16+%2, %%xmm5\n"
+        "movaps 32+%2, %%xmm6\n"
+        "movaps 48+%2, %%xmm7\n"
 
-        "pshufd $0x00,  (0)%1, %%xmm0\n"
-        "pshufd $0x55,  (0)%1, %%xmm1\n"
-        "pshufd $0xaa,  (0)%1, %%xmm2\n"
-        "pshufd $0xff,  (0)%1, %%xmm3\n"
+        "pshufd $0x00,  %1, %%xmm0\n"
+        "pshufd $0x55,  %1, %%xmm1\n"
+        "pshufd $0xaa,  %1, %%xmm2\n"
+        "pshufd $0xff,  %1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -28,12 +28,12 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movaps %%xmm0, 0+%0\n"
+        "movaps %%xmm0, %0\n"
 
-        "pshufd $0x00, (16)%1, %%xmm0\n"
-        "pshufd $0x55, (16)%1, %%xmm1\n"
-        "pshufd $0xaa, (16)%1, %%xmm2\n"
-        "pshufd $0xff, (16)%1, %%xmm3\n"
+        "pshufd $0x00, 16+%1, %%xmm0\n"
+        "pshufd $0x55, 16+%1, %%xmm1\n"
+        "pshufd $0xaa, 16+%1, %%xmm2\n"
+        "pshufd $0xff, 16+%1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -43,10 +43,10 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm2, %%xmm0\n"
         "movaps %%xmm0, 16+%0\n"
 
-        "pshufd $0x00, (32)%1, %%xmm0\n"
-        "pshufd $0x55, (32)%1, %%xmm1\n"
-        "pshufd $0xaa, (32)%1, %%xmm2\n"
-        "pshufd $0xff, (32)%1, %%xmm3\n"
+        "pshufd $0x00, 32+%1, %%xmm0\n"
+        "pshufd $0x55, 32+%1, %%xmm1\n"
+        "pshufd $0xaa, 32+%1, %%xmm2\n"
+        "pshufd $0xff, 32+%1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -56,10 +56,10 @@ R = [[ Axx*Bxx+Ayx*Bxy+Azx*Bxz+Awx*Bxw, ... ]]
         "addps  %%xmm2, %%xmm0\n"
         "movaps %%xmm0, 32+%0\n"
 
-        "pshufd $0x00, (48)%1, %%xmm0\n"
-        "pshufd $0x55, (48)%1, %%xmm1\n"
-        "pshufd $0xaa, (48)%1, %%xmm2\n"
-        "pshufd $0xff, (48)%1, %%xmm3\n"
+        "pshufd $0x00, 48+%1, %%xmm0\n"
+        "pshufd $0x55, 48+%1, %%xmm1\n"
+        "pshufd $0xaa, 48+%1, %%xmm2\n"
+        "pshufd $0xff, 48+%1, %%xmm3\n"
         "mulps  %%xmm4, %%xmm0\n"
         "mulps  %%xmm5, %%xmm1\n"
         "mulps  %%xmm6, %%xmm2\n"
@@ -90,17 +90,17 @@ inline void pl2MultMatrix4f_NoSSE(fmatrix4_t *out, const fmatrix4_t *a, const fm
 inline void pl2VectorTransform4f_SSE(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v)
 {
     asm volatile(
-        "movaps  (0)%1, %%xmm4\n"
-        "movaps (16)%1, %%xmm5\n"
-        "movaps (32)%1, %%xmm6\n"
-        "movaps (48)%1, %%xmm7\n"
+        "movaps    %1, %%xmm4\n"
+        "movaps 16+%1, %%xmm5\n"
+        "movaps 32+%1, %%xmm6\n"
+        "movaps 48+%1, %%xmm7\n"
 #if 1
-        "pshufd $0x00, (0)%2, %%xmm0\n"
-        "pshufd $0x55, (0)%2, %%xmm1\n"
-        "pshufd $0xaa, (0)%2, %%xmm2\n"
-        "pshufd $0xff, (0)%2, %%xmm3\n"
+        "pshufd $0x00, %2, %%xmm0\n"
+        "pshufd $0x55, %2, %%xmm1\n"
+        "pshufd $0xaa, %2, %%xmm2\n"
+        "pshufd $0xff, %2, %%xmm3\n"
 #else
-        "movaps (0)%2, %%xmm3\n"
+        "movaps %2, %%xmm3\n"
         "pshufd $0x00, %%xmm3, %%xmm0\n"
         "pshufd $0x55, %%xmm3, %%xmm1\n"
         "pshufd $0xaa, %%xmm3, %%xmm2\n"
@@ -113,7 +113,7 @@ inline void pl2VectorTransform4f_SSE(fvector4_t *out, const fmatrix4_t *m, const
         "addps  %%xmm1, %%xmm0\n"
         "addps  %%xmm3, %%xmm2\n"
         "addps  %%xmm2, %%xmm0\n"
-        "movaps %%xmm0, 0+%0\n"
+        "movaps %%xmm0, %0\n"
         :"=m"(*out)
         :"m"(*m), "m"(*v)
     );
@@ -132,10 +132,10 @@ inline void pl2VectorTransform4f_NoSSE(fvector4_t *out, const fmatrix4_t *m, con
 inline void pl2TransposeMatrix4f_SSE(fmatrix4_t *out, const fmatrix4_t *m)
 {
     asm volatile(
-        "movaps  0 %1, %%xmm0\n"
-        "movaps 16 %1, %%xmm1\n"
-        "movaps 32 %1, %%xmm2\n"
-        "movaps 48 %1, %%xmm3\n"
+        "movaps    %1, %%xmm0\n"
+        "movaps 16+%1, %%xmm1\n"
+        "movaps 32+%1, %%xmm2\n"
+        "movaps 48+%1, %%xmm3\n"
         "movaps %%xmm0, %%xmm4\n"
         "movaps %%xmm2, %%xmm5\n"
         "movaps %%xmm0, %%xmm6\n"
@@ -152,10 +152,10 @@ inline void pl2TransposeMatrix4f_SSE(fmatrix4_t *out, const fmatrix4_t *m)
         "shufps $0xdd, %%xmm5, %%xmm1\n"
         "shufps $0x88, %%xmm7, %%xmm2\n"
         "shufps $0xdd, %%xmm7, %%xmm3\n"
-        "movaps %%xmm0,  0 %0\n"
-        "movaps %%xmm1, 16 %0\n"
-        "movaps %%xmm2, 32 %0\n"
-        "movaps %%xmm3, 48 %0\n"
+        "movaps %%xmm0,    %0\n"
+        "movaps %%xmm1, 16+%0\n"
+        "movaps %%xmm2, 32+%0\n"
+        "movaps %%xmm3, 48+%0\n"
         :"=m"(*out) :"m"(*m)
     );
 }
@@ -293,17 +293,17 @@ inline void pl2VectorTransScaleAdd4f_NoSSE(fvector4_t *out, const fmatrix4_t *m,
 inline void pl2VectorTransScaleAdd4f_SSE(fvector4_t *out, const fmatrix4_t *m, const fvector4_t *v, float s)
 {
     asm volatile(
-        "movaps  0+%1, %%xmm4\n"
+        "movaps    %1, %%xmm4\n"
         "movaps 16+%1, %%xmm5\n"
         "movaps 32+%1, %%xmm6\n"
         "movaps 48+%1, %%xmm7\n"
 #if 1
-        "pshufd $0x00, 0+%2, %%xmm0\n"
-        "pshufd $0x55, 0+%2, %%xmm1\n"
-        "pshufd $0xaa, 0+%2, %%xmm2\n"
-        "pshufd $0xff, 0+%2, %%xmm3\n"
+        "pshufd $0x00, %2, %%xmm0\n"
+        "pshufd $0x55, %2, %%xmm1\n"
+        "pshufd $0xaa, %2, %%xmm2\n"
+        "pshufd $0xff, %2, %%xmm3\n"
 #else
-        "movaps 0 %2, %%xmm3\n"
+        "movaps %2, %%xmm3\n"
         "pshufd $0x00, %%xmm3, %%xmm0\n"
         "pshufd $0x55, %%xmm3, %%xmm1\n"
         "pshufd $0xaa, %%xmm3, %%xmm2\n"
@@ -321,7 +321,7 @@ inline void pl2VectorTransScaleAdd4f_SSE(fvector4_t *out, const fmatrix4_t *m, c
         "addps  %%xmm2, %%xmm0\n"
         "mulps  %%xmm5, %%xmm0\n"
         "addps  %%xmm4, %%xmm0\n"
-        "movaps %%xmm0,  0 %0\n"
+        "movaps %%xmm0, %0\n"
         :"=m"(*out)
         :"m"(*m), "m"(*v), "m"(s)
     );
@@ -333,9 +333,9 @@ inline void pl2VectorAdd3f_SSE(fvector3_t *out, const fvector3_t *a, const fvect
         "movups %1, %%xmm0\n"
         "movups %2, %%xmm1\n"
         "addps  %%xmm1, %%xmm0\n"
-        "movlps %%xmm0, 0 %0\n"
+        "movlps %%xmm0, %0\n"
         "movhlps %%xmm0, %%xmm0\n"
-        "movss  %%xmm0, 8 %0\n"
+        "movss  %%xmm0, 8+%0\n"
         :"=m"(*out)
         :"m"(*a), "m"(*b)
     );
@@ -354,9 +354,9 @@ inline void pl2VectorSub3f_SSE(fvector3_t *out, const fvector3_t *a, const fvect
         "movups %1, %%xmm0\n"
         "movups %2, %%xmm1\n"
         "subps  %%xmm1, %%xmm0\n"
-        "movlps %%xmm0, 0 %0\n"
+        "movlps %%xmm0, %0\n"
         "movhlps %%xmm0, %%xmm0\n"
-        "movss  %%xmm0, 8 %0\n"
+        "movss  %%xmm0, 8+%0\n"
         :"=m"(*out)
         :"m"(*a), "m"(*b)
     );
@@ -403,9 +403,9 @@ inline void pl2VectorCross3f_SSE(fvector3_t *out, const fvector3_t *a, const fve
         "mulps  %%xmm3, %%xmm2\n"
         "mulps  %%xmm1, %%xmm0\n"
         "subps  %%xmm2, %%xmm0\n"
-        "movlps %%xmm0, 0 %0\n"
+        "movlps %%xmm0, %0\n"
         "movhlps %%xmm0, %%xmm0\n"
-        "movss  %%xmm0, 8 %0\n"
+        "movss  %%xmm0, 8+%0\n"
         :"=m"(*out) :"m"(*a), "m"(*b)
     );
 }
@@ -427,9 +427,9 @@ inline void pl2VectorScale3f_SSE(fvector3_t *out, const fvector3_t *v, float s)
         "shufps $0, %%xmm1, %%xmm1\n"
         //"pshufd $0, %2, %%xmm1\n"
         "mulps  %%xmm1, %%xmm0\n"
-        "movlps %%xmm0, 0 %0\n"
+        "movlps %%xmm0, %0\n"
         "movhlps %%xmm0, %%xmm0\n"
-        "movss  %%xmm0, 8 %0\n"
+        "movss  %%xmm0, 8+%0\n"
         :"=m"(*out)
         :"m"(*v), "m"(s)
     );
@@ -452,9 +452,9 @@ inline void pl2VectorScaleAdd3f_SSE(fvector3_t *out, const fvector3_t *v, float 
         //"pshufd $0, %2, %%xmm1\n"
         "mulps  %%xmm2, %%xmm1\n"
         "addps  %%xmm1, %%xmm0\n"
-        "movlps %%xmm0, 0 %0\n"
+        "movlps %%xmm0, %0\n"
         "movhlps %%xmm0, %%xmm0\n"
-        "movss  %%xmm0, 8 %0\n"
+        "movss  %%xmm0, 8+%0\n"
         :"=m"(*out)
         :"m"(*v), "m"(s)
     );
@@ -504,9 +504,9 @@ inline void pl2VectorNormalize3f_SSE(fvector3_t *out, const fvector3_t *v)
         "rsqrtss %%xmm1, %%xmm1\n"
         "pshufd $0x55, %%xmm1, %%xmm1\n"
         "mulps %%xmm1, %%xmm0\n"
-        "movlps %%xmm0, 0 %0\n"
+        "movlps %%xmm0, %0\n"
         "movhlps %%xmm0, %%xmm0\n"
-        "movss  %%xmm0, 8 %0\n"
+        "movss  %%xmm0, 8+%0\n"
         :"=m"(*out) :"m"(*v)
     );
 }
@@ -927,8 +927,8 @@ void pl2DetectSSE()
     asm volatile(
         "mov $1, %%eax\n"
         "cpuid\n"
-        "mov %%ecx, 0 %0\n"
-        "mov %%edx, 4 %0\n"
+        "mov %%ecx,   %0\n"
+        "mov %%edx, 4+%0\n"
         :"=m"(cpu_features)
     );
 

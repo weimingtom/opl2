@@ -6,11 +6,11 @@
 #include <dirent.h>
 
 #ifndef PACKAGELOG
-# ifdef NDEBUG
+//# ifdef NDEBUG
 #  define PACKAGELOG 0
-# else
-#  define PACKAGELOG 1
-# endif
+//# else
+//#  define PACKAGELOG 1
+//# endif
 #endif
 
 /* Must be >= likely maximum number of packages (and should be prime) */

@@ -2,11 +2,6 @@
 #include "opl2_int.h"
 #include "opl2_vm.h"
 
-#define ILUT_USE_OPENGL
-#include <IL/il.h>
-#include <IL/ilu.h>
-#include <IL/ilut.h>
-
 /******************************************************************************/
 
 static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
@@ -84,25 +79,23 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
         //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
-#if 0
-        uint32_t *pixels = (uint32_t*)(t->pixels);
+        glGenTextures(1, &t->gltex);
+        glBindTexture(GL_TEXTURE_2D, t->gltex);
 
-        int j, k = t->width * t->height;
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
-        for(j = 0; j < k; j++)
-        {
-            pixels[j] =
-                ((pixels[j] & 0x000000ff) << 16) |
-                ((pixels[j] & 0x00ff0000) >> 16) |
-                ((pixels[j] & 0xff00ff00));
-        }
-#else
-        ilGenImages(1, &t->iltex);
-        ilBindImage(t->iltex);
-        ilTexImage(t->width, t->height, 1, 4, IL_BGRA, IL_UNSIGNED_BYTE, t->pixels);
-        t->gltex = ilutGLBindTexImage();
-#endif
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+        glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, t->width, t->height,
+                     0, GL_BGRA, GL_UNSIGNED_BYTE, t->pixels);
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
@@ -141,7 +134,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
         m->diffuse.r = m->diffuse.g = m->diffuse.b = t;
         t = fmax(m->specular.r, fmax(m->specular.g, m->specular.b));
         m->specular.r = m->specular.g = m->specular.b = t;
-        //m->ambient.a =
+        m->ambient.a =
         m->diffuse.a = m->specular.a = m->emissive.a = 1.0f;
 
         //DEBUGPRINT("%s: Material %d\n", __func__, i);
@@ -399,6 +392,8 @@ void pl2ModelFree(pl2Model *model)
             int i;
             for(i = 0; i < model->numTextures; i++)
             {
+                glDeleteTextures(1, &(model->textures[i].gltex));
+
                 if(model->textures[i].pixels)
                 {
                     DELETE(model->textures[i].pixels);
