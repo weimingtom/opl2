@@ -5,15 +5,8 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#if 0 // WITH_GLUT
-//#include <GL/glut.h>
-#include <GL/freeglut.h>
-
-/* use freeglut extensions, if available */
-//#if FREEGLUT
-//# include <GL/freeglut_ext.h>
-//#endif
-#endif
+#include <IL/il.h>
+#include <IL/ilut.h>
 
 #include <math.h>
 
@@ -217,8 +210,9 @@ void pl2ImageDraw(pl2Image *image, int x, int y, int cx, int cy, float alpha)
             { x - cx + w, y - cy,     0 }
         };
 
-        glTexImage2D(GL_TEXTURE_2D, 0, 4, image->width, image->height,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, image->data);
+        //glTexImage2D(GL_TEXTURE_2D, 0, 4, image->width, image->height,
+        //             0, GL_RGBA, GL_UNSIGNED_BYTE, image->data);
+        glBindTexture(GL_TEXTURE_2D, image->gltex);
 
         glInterleavedArrays(GL_V3F, 0, rect);
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -458,11 +452,12 @@ void pl2ModelRender(const pl2Model *model, bool black)
 
                 pl2Texture *tex = mtl->texture;
 
-#if !_PSP_FW_VERSION
-                if(tex && !black)
+#if 1 // !_PSP_FW_VERSION
+                if(tex /*&& !black*/ )
                 {
-                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height,
-                                 0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
+                    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height,
+                    //             0, GL_RGBA, GL_UNSIGNED_BYTE, tex->pixels);
+                    glBindTexture(GL_TEXTURE_2D, tex->gltex);
                 }
 #endif
 
@@ -582,6 +577,16 @@ void pl2GlRenderFrame(float dt)
 
     if(pl2_font && !pl2_hide_overlay)
     {
+        if(pl2_current_image)
+        {
+            int x = (int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
+            int y = (int)(0.5f * (float)(PL2_NOMINAL_SCREEN_HEIGHT));
+
+            pl2ImageDraw(pl2_current_image, x, y,
+                (pl2_current_image->width ) >> 1,
+                (pl2_current_image->height) >> 1, 1.f);
+        }
+
         if(pl2_menu_showing)
         {
             int x = (int)(0.5f * pl2_screen_aspect * (float)PL2_NOMINAL_SCREEN_HEIGHT);
@@ -606,7 +611,7 @@ void pl2GlRenderFrame(float dt)
                 pl2FontUcsPrintCenter(pl2_font, x+2, y+2, color, pl2_menu.items[i].text);
                 //color |= (i == pl2_menu.selection) ? 0xfffffful : 0x000000ul;
                 pl2FontUcsPrintCenter(pl2_font, x, y, color | 0xfffffful, pl2_menu.items[i].text);
-                y += 2 * pl2_font->glyphSize;
+                y += h;
             }
         }
 
@@ -639,6 +644,10 @@ void pl2GlRenderFrame(float dt)
 void pl2GlInit()
 {
     TRACE;
+
+    ilInit();
+    ilutInit();
+    ilutRenderer(ILUT_OPENGL);
 
     glClearColor(0, 0, 0, 1);
 

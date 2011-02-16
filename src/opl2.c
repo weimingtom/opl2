@@ -9,6 +9,7 @@
 int pl2_screen_width = -1, pl2_screen_height = -1;
 float pl2_screen_aspect = 1, pl2_screen_scale = 1;
 
+bool pl2_skip = 0;
 bool pl2_censor = 0;
 bool pl2_text_showing = 0;
 bool pl2_menu_showing = 0;
@@ -56,6 +57,10 @@ uint32_t pl2_name_color = 0;
 pl2Camera *pl2_active_camera = &(pl2_cameras[0]);
 
 pl2Image *pl2_current_image = NULL;
+
+#ifdef _PSP_FW_VERSION
+SDL_Joystick *pl2_joystick = 0;
+#endif
 
 /******************************************************************************/
 
@@ -207,6 +212,62 @@ int pl2DoFrame()
     {
         switch(event.type)
         {
+#ifdef _PSP_FW_VERSION
+            case SDL_JOYBUTTONDOWN:
+            {
+                switch(event.jbutton.button)
+                {
+                    case PSP_JB_CIRCLE:
+                    case PSP_JB_CROSS:
+                        pl2TextAdvance();
+                        pl2MenuConfirm(&pl2_menu);
+                        break;
+
+                    case PSP_JB_SELECT:
+                        pl2ToggleOverlay();
+                        break;
+
+                    case PSP_JB_UP:
+                        pl2MenuSelectPrev(&pl2_menu);
+                        break;
+
+                    case PSP_JB_DOWN:
+                        pl2MenuSelectNext(&pl2_menu);
+                        break;
+
+                    case PSP_JB_SQUARE:
+                        move_mode = MOVE_1P;
+                        break;
+
+                    case PSP_JB_LTRIGGER:
+                        pl2CameraZoom(pl2_active_camera, -2.0f);
+                        break;
+
+                    case PSP_JB_RTRIGGER:
+                        pl2CameraZoom(pl2_active_camera,  2.0f);
+                        break;
+
+                    case PSP_JB_TRIANGLE:
+                        pl2_skip = 1;
+                        break;
+                }
+                break;
+            }
+            case SDL_JOYBUTTONUP:
+            {
+                switch(event.jbutton.button)
+                {
+                    case PSP_JB_SQUARE:
+                        move_mode = MOVE_3P;
+                        break;
+
+                    case PSP_JB_TRIANGLE:
+                        pl2_skip = 0;
+                        break;
+                }
+                break;
+            }
+#else
             case SDL_KEYDOWN:
             {
                 switch(event.key.keysym.sym)
@@ -231,6 +292,26 @@ int pl2DoFrame()
 
                     case SDLK_DOWN:
                         pl2MenuSelectNext(&pl2_menu);
+                        break;
+
+                    case SDLK_LCTRL:
+                    case SDLK_RCTRL:
+                        pl2_skip = 1;
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+            }
+
+            case SDL_KEYUP:
+            {
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_LCTRL:
+                    case SDLK_RCTRL:
+                        pl2_skip = 0;
                         break;
 
                     default:
@@ -304,6 +385,8 @@ int pl2DoFrame()
                         else
                             pl2CameraZoom(pl2_active_camera, -2.0f);
                         break;
+#else
+# warning "SDL 1.2.5 or higher required for mouse wheel support"
 #endif
                 }
 
@@ -327,6 +410,7 @@ int pl2DoFrame()
                 SDL_ShowCursor(!move_mode);
                 break;
             }
+#endif
 
             case SDL_VIDEORESIZE:
             {
@@ -336,7 +420,10 @@ int pl2DoFrame()
 
             case SDL_QUIT:
             {
+// PSP game must be able to quit any time
+#ifndef _PSP_FW_VERSION
                 if(pl2_can_quit)
+#endif
                     pl2Quit();
                 break;
             }
@@ -345,10 +432,29 @@ int pl2DoFrame()
         }
     }
 
-    if(SDL_GetModState() & KMOD_CTRL)
+    if(pl2_skip) pl2TextAdvance(); // text skip
+
+#ifdef _PSP_FW_VERSION
+    if(!(pl2_active_camera->locked || pl2_active_camera->path))
     {
-        pl2TextAdvance(); // text skip
+        float x_angle = (float)SDL_JoystickGetAxis(pl2_joystick, 0) * M_PI / 16384.f;
+        float y_angle = (float)SDL_JoystickGetAxis(pl2_joystick, 1) * M_PI / 16384.f;
+
+        if(x_angle || y_angle)
+        {
+            switch(move_mode)
+            {
+                case MOVE_3P:
+                    pl2CameraRotate3P(pl2_active_camera, x_angle, y_angle);
+                    break;
+
+                case MOVE_1P:
+                    pl2CameraRotate1P(pl2_active_camera, x_angle, y_angle);
+                    break;
+            }
+        }
     }
+#endif
 
     float dt = pl2Tick();
 
@@ -563,6 +669,24 @@ void pl2ToggleOverlay()
     TRACE;
 
     pl2_hide_overlay = !pl2_hide_overlay;
+
+    TRACE;
+}
+
+void pl2ShowOverlay()
+{
+    TRACE;
+
+    pl2_hide_overlay = 0;
+
+    TRACE;
+}
+
+void pl2HideOverlay()
+{
+    TRACE;
+
+    pl2_hide_overlay = 1;
 
     TRACE;
 }
@@ -812,6 +936,10 @@ int pl2GameInit(int *argc, char *argv[])
     SDL_PauseAudio(0);
 #endif
 
+#ifdef _PSP_FW_VERSION
+    pl2_joystick = SDL_JoystickOpen(0);
+#endif
+
     bpp = SDL_VideoModeOK(width, height, bpp, flags);
 
     if(!bpp)
@@ -873,6 +1001,11 @@ static void pl2LuaCloseState()
     }
 }
 
+#ifdef _PSP_FW_VERSION
+# include <pspdebug.h>
+# include <pspctrl.h>
+#endif
+
 int pl2GameRun()
 {
     TRACE;
@@ -903,6 +1036,24 @@ int pl2GameRun()
     if(err)
     {
         fprintf(stderr, "Error: %s\n", lua_tostring(L, -1));
+
+#ifdef _PSP_FW_VERSION
+        pspDebugScreenInit();
+        pspDebugScreenPrintf("Error: %s\n\nPress START to exit.", lua_tostring(L, -1));
+
+        SceCtrlData pad;
+
+        do {
+            sceCtrlReadBufferPositive(&pad, 1);
+        }
+        while(0 == (pad.Buttons & PSP_CTRL_START));
+
+        do {
+            sceCtrlReadBufferPositive(&pad, 1);
+        }
+        while(0 != (pad.Buttons & PSP_CTRL_START));
+#endif
+
         return 0;
     }
 
@@ -916,59 +1067,17 @@ int pl2GameRun()
 
 /******************************************************************************/
 
-#if _PSP_FW_VERSION
+#ifdef _PSP_FW_VERSION
 
-#include <pspuser.h>
-
-static SceUID pl2_psp_callback_thread_id = -1;
-static SceUID pl2_psp_exit_callback_id = -1;
-
-static int pl2PspExitCallback(int x, int y, void *z)
-{
-    sceKernelExitGame();
-    return 0;
-}
-
-static int pl2PspCallbackThread(SceSize args, void *argp)
-{
-    int err;
-
-    err = pl2_psp_exit_callback_id = sceKernelCreateCallback(
-        "pl2PspExitCallback", pl2PspExitCallback, NULL);
-
-    if(err < 0) return err;
-
-    err = sceKernelRegisterExitCallback(pl2_psp_exit_callback_id);
-
-    if(err < 0) return err;
-
-    err = sceKernelSleepThread();
-
-    if(err < 0) return err;
-
-    return 0;
-}
-
-static int pl2PspRegisterCallbacks()
-{
-    int err;
-
-    err = pl2_psp_callback_thread_id = sceKernelCreateThread(
-        "pl2PspCallbackThread", pl2PspCallbackThread, 0x10, 0x400, 0, NULL);
-
-    if(err < 0) return err;
-
-    err = sceKernelStartThread(pl2_psp_callback_thread_id, 0, NULL);
-
-    if(err < 0) return err;
-
-    return 0;
-}
+int pl2PspRegisterCallbacks();
 
 int main(int argc, char *argv[])
 {
     pl2PspRegisterCallbacks();
     atexit(sceKernelExitGame);
+
+    if(!freopen("stderr.txt", "at", stderr))
+        return 2;
 
     if(!pl2GameInit(&argc, argv))
         return 1;
@@ -977,7 +1086,9 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-#else
+#else // _PSP_FW_VERSION
+
+void pl2DetectSSE();
 
 int main(int argc, char *argv[])
 {
@@ -990,4 +1101,4 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-#endif
+#endif // _PSP_FW_VERSION

@@ -5,8 +5,12 @@
 
 #include <dirent.h>
 
-#ifndef NDEBUG
-# define PACKAGELOG 1
+#ifndef PACKAGELOG
+# ifdef NDEBUG
+#  define PACKAGELOG 0
+# else
+#  define PACKAGELOG 1
+# endif
 #endif
 
 /* Must be >= likely maximum number of packages (and should be prime) */
@@ -22,7 +26,7 @@ pl2PackageIndex[PACKAGE_INDEX_SIZE];
 static size_t index_size = 0, hash_collisions = 0;
 
 #if PACKAGELOG
-static FILE *packagelog;
+static FILE *packagelog = 0;
 #endif
 
 /******************************************************************************/
@@ -176,7 +180,7 @@ static pl2Package *pl2PackageIndexSearch(const char *name)
 
         if (strncmp(temp, pl2PackageIndex[index].name, 32) == 0)
         {
-            DEBUGPRINT("%s: found \"%s\" @ index %u\n", __func__, pl2PackageIndex[index].name, index);
+            //DEBUGPRINT("%s: found \"%s\" @ index %u\n", __func__, pl2PackageIndex[index].name, index);
 
             return pl2PackageIndex[index].package;
         }
@@ -188,7 +192,7 @@ static pl2Package *pl2PackageIndexSearch(const char *name)
     }
     while (pl2PackageIndex[index].package && (index != hash));
 
-    DEBUGPRINT("%s: \"%s\" not found\n", __func__, name);
+    //DEBUGPRINT("%s: \"%s\" not found\n", __func__, name);
 
     PL2_ERROR(PL2_ERR_NOTFOUND);
 }
@@ -206,9 +210,10 @@ int pl2PackageBuildIndex()
    if (NULL == dir)
    {
 #if PACKAGELOG
-      //printf("Error opening 'add-ons' directory\n");
-      fprintf(packagelog, "Error opening 'add-ons' directory\n");
-      fclose(packagelog);
+        //printf("Error opening 'add-ons' directory\n");
+        fprintf(packagelog, "Error opening 'add-ons' directory\n");
+        fclose(packagelog);
+        packagelog = 0;
 #endif
 
       PL2_ERROR(PL2_ERR_NOTFOUND);
@@ -230,7 +235,7 @@ int pl2PackageBuildIndex()
    {
       int l = strlen(entry->d_name);
 
-      if (0 == strcasecmp(entry->d_name + l - 4, ".pl2"))
+      if (0 == strncasecmp(entry->d_name + l - 4, ".pl2", 4))
       {
 #if PACKAGELOG
          //printf("\n%s\n", entry);
@@ -248,8 +253,14 @@ int pl2PackageBuildIndex()
 
     DEBUGPRINT("%s: indexed %u files in %u packages with %u collisions\n", __func__, index_size, count, hash_collisions);
 
-   closedir(dir);
-   return 1;
+#if PACKAGELOG
+    fprintf(packagelog, "Indexed %u files in %u packages with %u collisions\n", index_size, count, hash_collisions);
+    fclose(packagelog);
+    packagelog = 0;
+#endif
+
+    closedir(dir);
+    return 1;
 }
 
 void pl2PackageClearIndex()

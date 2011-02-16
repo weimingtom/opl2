@@ -3,6 +3,7 @@ PLATFORMS = nix win
 OBJS += src/opl2.o src/opl2_al.o src/opl2_chr.o src/opl2_fnt.o src/opl2_gl.o
 OBJS += src/opl2_idx.o src/opl2_int.o src/opl2_lua.o src/opl2_ogg.o src/opl2_pl2.o
 OBJS += src/opl2_psd.o src/opl2_tcm.o src/opl2_tmb.o src/opl2_tsb.o src/opl2_vm.o
+OBJS += src/opl2_x86.o
 
 EXTRA_OBJS = tools/pl2ex.o tools/dumptmb.o
 EXTRA_TARGETS = $(PL2EX) $(DUMPTMB) $(VMTEST)
@@ -15,7 +16,7 @@ LIBS += -lvorbisfile -lvorbis -logg -lm
 WIN_LIBS += -llua -lmingw32 -lSDLmain -lSDL.dll
 WIN_LIBS += -lGLU32 -lOpenGL32 -lwinmm -lgdi32 -lOpenAL32
 
-NIX_LIBS += -llua5.1 -lSDL -lGLU -lGL -lopenal
+NIX_LIBS += -llua5.1 -lSDL -lILUT -lIL -lpng -lz -lGLU -lGL -lopenal
 
 ARGS = --window 640x480
 
@@ -76,8 +77,6 @@ endif
 
 CC = gcc
 
-OBJS += src/opl2_x86.o
-
 ifeq ($(PLATFORM),win)
 
  WINDRES = windres.exe
@@ -106,7 +105,7 @@ endif
 all: $(TARGET) $(PL2EX) $(DUMPTMB)
 
 $(TARGET): $(OBJS)
-	$(CC) -o $@ $^ $(LIBS) $(WINAPP)
+	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS) $(WINAPP)
 
 clean:
 	rm -f $(TARGET) $(EXTRA_TARGETS) $(OBJS) $(EXTRA_OBJS)
@@ -141,3 +140,6 @@ $(DUMPTMB): tools/dumptmb.o src/opl2_int.o src/opl2_tmb.o src/opl2_pl2.o src/opl
 	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $^ $(LIBS)
 
 .PHONY: _default all $(PLATFORMS) clean rebuild test debug release profile
+
+.c.s:
+	$(CC) $(CFLAGS) -S -o $@ $^

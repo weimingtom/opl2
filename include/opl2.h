@@ -180,6 +180,7 @@ typedef struct
     uint16_t width, height;
     uint8_t *pixels;
     uint32_t flags;
+    uint32_t iltex, gltex;
 }
 //__attribute__((packed))
 pl2Texture;
@@ -304,6 +305,7 @@ typedef struct
     uint16_t channels, bits;
     pl2ImageLayer *layers;
     uint8_t *data;
+    uint32_t iltex, gltex;
 }
 //__attribute__((packed))
 pl2Image;
@@ -562,6 +564,10 @@ void pl2Quit();
 int pl2SetImage(const char *name);
 
 /******************************************************************************/
+
+int pl2GameInit(int *argc, char *argv[]);
+int pl2GameRun();
+void pl2GameShutdown();
 
 #ifdef __cplusplus
 };

@@ -1,6 +1,11 @@
 //#include "opl2.h"
 #include "opl2_int.h"
 
+#define ILUT_USE_OPENGL
+#include <IL/il.h>
+#include <IL/ilu.h>
+#include <IL/ilut.h>
+
 /******************************************************************************/
 
 pl2Image *pl2ImageLoad(const char *name)
@@ -36,7 +41,18 @@ pl2Image *pl2ImageLoad(const char *name)
         PL2_ERROR(PL2_ERR_MEMORY);
     }
 
-    // TODO: load image
+    ilGenImages(1, &(image->iltex));
+
+    if(!ilLoadL(IL_TYPE_UNKNOWN, file->data, file->length))
+    {
+        pl2ImageFree(image);
+        pl2PackageFileFree(file);
+        PL2_ERROR(PL2_ERR_FILEIO);
+    }
+
+    image->width = ilGetInteger(IL_IMAGE_WIDTH);
+    image->height = ilGetInteger(IL_IMAGE_HEIGHT);
+    image->gltex = ilutGLBindTexImage();
 
     pl2PackageFileFree(file);
     return image;

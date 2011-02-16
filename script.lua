@@ -1587,7 +1587,8 @@ function storyF()
     return script()
 end
 
-function test()
+local function test()
+    pl2.setQuit(true)
     back:fade(1, 0)
     fore:fade(1, 0)
 
@@ -1597,8 +1598,37 @@ function test()
     camera:setUp(0, 1, 0)
     camera:setFov(35)
 
-    room:setModels{ 'room_01' }
+    light1:setPosition(-1, -1, -1)
+    light1:setDiffuse(0.6, 0.6, 0.6)
+    light1:setAmbient(0.8, 0.8, 0.8)
+    light1:setSpecular(1.0, 1.0, 1.0)
+    light1:setEnabled(true)
+
+    light2:setPosition(1, 1, 1)
+    light2:setDiffuse(0.2, 0.2, 0.2)
+    light2:setAmbient(0.2, 0.2, 0.2)
+    light2:setSpecular(0.8, 0.8, 0.8)
+    light2:setEnabled(true)
+
+    room:setModels{ 'room_03', 'room_03A' }
+    room:setAnim'room_03A'
     room:setVisible(true)
+
+    imo:setModels{
+        [1]="imo_bodyA_01",
+        [2]="imo_eye_vocaloid_00",
+        [3]="imo_underA_06A",
+        [4]="imo_underA_06B",
+        [6]="imo_cos_vocaloid_00A",
+        [7]="imo_cos_vocaloid_00B",
+        [8]="imo_head_vocaloid_00",
+        [11]="imo_arm_vocaloid_00",
+        [12]="imo_shoes_vocaloid_00",
+        [13]="imo_hair_vocaloid_00",
+    }
+    imo:setAnim'zen_a01_F'
+    imo:setPoint'loc_pos01'
+    imo:setVisible(true)
 
     text'test'
 

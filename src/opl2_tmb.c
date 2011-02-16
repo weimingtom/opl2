@@ -2,6 +2,11 @@
 #include "opl2_int.h"
 #include "opl2_vm.h"
 
+#define ILUT_USE_OPENGL
+#include <IL/il.h>
+#include <IL/ilu.h>
+#include <IL/ilut.h>
+
 /******************************************************************************/
 
 static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
@@ -79,6 +84,7 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
 
         //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);
 
+#if 0
         uint32_t *pixels = (uint32_t*)(t->pixels);
 
         int j, k = t->width * t->height;
@@ -90,6 +96,12 @@ static pl2Model *pl2ModelLoadInternal(const uint8_t *data)
                 ((pixels[j] & 0x00ff0000) >> 16) |
                 ((pixels[j] & 0xff00ff00));
         }
+#else
+        ilGenImages(1, &t->iltex);
+        ilBindImage(t->iltex);
+        ilTexImage(t->width, t->height, 1, 4, IL_BGRA, IL_UNSIGNED_BYTE, t->pixels);
+        t->gltex = ilutGLBindTexImage();
+#endif
     }
 
     //DEBUGPRINT("%s(%d): offset == %d\n", __FILE__, __LINE__, data - org);

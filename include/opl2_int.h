@@ -8,9 +8,14 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
 
+#include <math.h>
+#include <errno.h>
+//#include <error.h>
+
 #ifndef NDEBUG
 # define DEBUGPRINT(x...) (fprintf(stderr,x))
 # define DEBUGPRINTIF(c,x...) ({if((c))fprintf(stderr,x);})
+# define WARN(x...) (error(0,errno,x))
 
 /* trying to track down a crash on PSP... */
 # if _PSP_FW_VERSION && !defined(TRACING)
@@ -27,9 +32,6 @@
 #else
 # define TRACE
 #endif
-
-#include <math.h>
-#include <errno.h>
 
 #ifndef MIN
 # define MIN(a,b) ((a)<(b)?(a):(b))
@@ -77,14 +79,29 @@ int pl2_strlcpy(char *dst, const char *src, int len);
 
 #if _PSP_FW_VERSION
 
+#include <pspuser.h>
+
+enum {
+    PSP_JB_TRIANGLE,
+    PSP_JB_CIRCLE,
+    PSP_JB_CROSS,
+    PSP_JB_SQUARE,
+    PSP_JB_LTRIGGER,
+    PSP_JB_RTRIGGER,
+    PSP_JB_DOWN,
+    PSP_JB_LEFT,
+    PSP_JB_UP,
+    PSP_JB_RIGHT,
+    PSP_JB_SELECT,
+    PSP_JB_START,
+};
+
 uint32_t pl2GetFreeRam();
 
 # define PRINTFREERAM() DEBUGPRINT("%s(%d): %s: %u kB free\n", \
                         __FILE__, __LINE__, __func__, pl2GetFreeRam()>>10)
 #else
 # define PRINTFREERAM()
-
-void pl2DetectSSE();
 
 #endif
 
@@ -140,7 +157,7 @@ extern pl2Image *pl2_current_image;
 #define READINT32(p) READINT32LE(p)
 
 #define READSTRING(n,o,p) { memcpy((o), (p), (n)); (p) = (uint8_t*)(p) + (n); }
-#define READFLOAT(p)  ({union{float f; uint32_t i;}t; t.i = READUINT32(p); t.f;})
+#define READFLOAT(p) ({union{float f; uint32_t i;}t; t.i = READUINT32(p); t.f;})
 
 #define READTEXCOORD2(_T,p) { \
     ftexcoord2_t *_t = (ftexcoord2_t*)&(_T); \

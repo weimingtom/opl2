@@ -3,7 +3,8 @@ PSPSDK = $(shell psp-config --pspsdk-path)
 
 TARGET = opl2
 BUILD_PRX = 1
-CFLAGS += -Wall -g -G0 -mpreferred-stack-boundary=4
+#ENCRYPT = 1
+CFLAGS += -Wall -g -G0 -mpreferred-stack-boundary=4 -DPACKAGELOG=0
 # $(addprefix -I,$(INCDIR))
 
 OBJS += src/opl2.o src/opl2_al.o src/opl2_chr.o src/opl2_fnt.o src/opl2_gl.o
@@ -13,7 +14,7 @@ OBJS += src/opl2_psp.o
 
 INCDIR = include/
 
-LIBS += -lvorbisfile -lvorbis -llua -lSDL -lGLU -lGL -lOpenAL32 -logg -lpthreadlite
+LIBS += -lvorbisfile -lvorbis -llua -lSDL -lIL -ljpeg -lpng -lz -lGLU -lGL -lOpenAL32 -logg -lpthreadlite
 LIBS += -lpspirkeyb -lpsppower -lpspgu -lpspvfpu -lpsprtc -lpspaudio -lpsphprm -lm
 
 ifeq ($(RELEASE),1)
@@ -24,6 +25,9 @@ else
   LIBS += -pg
  endif
 endif
+
+PSP_EBOOT_ICON = ICON0.PNG
+PSP_EBOOT_TITLE = ポリゴンラブ２・ポータブル
 
 include $(PSPSDK)/lib/build.mak
 

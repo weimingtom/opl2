@@ -370,6 +370,7 @@ void pl2VectorZoom(fvector3_t *obj, const fvector3_t *targ, float distance)
         "vdot.t  S032, C020, C020\n"
         "vrsq.s  S032, S032\n"
         "vmul.s  S033, S032, S033\n"
+        // *TODO: check for crossing the y-axis
         "vscl.t  C010, C020, S033\n"
         "vadd.t  C000, C000, C010\n"
         "sv.s    S000, 0 + %0\n"
@@ -523,7 +524,47 @@ uint32_t pl2GetFreeRam()
 
 /******************************************************************************/
 
-//int usleep(useconds_t usec)
-//{
-//    return sceKernelDelayThread(usec);
-//}
+static SceUID pl2_psp_callback_thread_id = -1;
+static SceUID pl2_psp_exit_callback_id = -1;
+
+static int pl2PspExitCallback(int x, int y, void *z)
+{
+    sceKernelExitGame();
+    return 0;
+}
+
+static int pl2PspCallbackThread(SceSize args, void *argp)
+{
+    int err;
+
+    err = pl2_psp_exit_callback_id = sceKernelCreateCallback(
+        "pl2PspExitCallback", pl2PspExitCallback, NULL);
+
+    if(err < 0) return err;
+
+    err = sceKernelRegisterExitCallback(pl2_psp_exit_callback_id);
+
+    if(err < 0) return err;
+
+    err = sceKernelSleepThread();
+
+    if(err < 0) return err;
+
+    return 0;
+}
+
+int pl2PspRegisterCallbacks()
+{
+    int err;
+
+    err = pl2_psp_callback_thread_id = sceKernelCreateThread(
+        "pl2PspCallbackThread", pl2PspCallbackThread, 0x10, 0x400, 0, NULL);
+
+    if(err < 0) return err;
+
+    err = sceKernelStartThread(pl2_psp_callback_thread_id, 0, NULL);
+
+    if(err < 0) return err;
+
+    return 0;
+}
